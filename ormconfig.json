@@ -1,0 +1,18 @@
+[
+  {
+    "name": "default",
+    "type": "postgres",
+    "host": "localhost",
+    "port": 5432,
+    "username": "postgres",
+    "password": "123456",
+    "database": "i18n",
+    "schema": "public",
+    "synchronize": false,
+    "entities": ["packages/server/src/entities/*.ts"],
+    "migrations": ["migration/*.ts"],
+    "cli": {
+      "migrationsDir": "migration"
+    }
+  }
+]

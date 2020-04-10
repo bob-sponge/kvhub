@@ -1,0 +1,54 @@
+{
+  "private": true,
+  "name": "hvhub",
+  "version": "0.0.1",
+  "description": "",
+  "author": "",
+  "npmClient": "yarn",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "start-front": "cross-env-shell EXTRA_SRC=./packages/front  APP_INDEX=./packages/front/src/index.tsx PORT=3101 NODE_OPTIONS=--max_old_space_size=4096 ofm-build-tool start",
+    "build-front": "cross-env-shell EXTRA_SRC=./packages/front  APP_INDEX=./packages/front/src/index.tsx PORT=3101 NODE_OPTIONS=--max_old_space_size=4096 ofm-build-tool build",
+    "test-front": "ofm-build-tool test --env=jsdom",
+    "start-server": "nest start",
+    "start-server:dev": "nest start --watch",
+    "start-server:debug": "nest start --debug --watch",
+    "start-server:prod": "node dist/main",
+    "build-server": "nest build",
+    "prebuild": "rimraf dist",
+    "format": "prettier --write \"packages/**/*.ts\" \"libs/**/*.ts\"",
+    "lint": "eslint \"{packages,libs,test}/**/*.{ts,tsx,jsx}\" --fix -c node_modules/@ofm/build-tool/config/.eslintrc.js",
+    "test-server": "jest --config ./packages/server/jest.json",
+    "test-server:watch": "jest --watch",
+    "test-server:cov": "jest --coverage --config ./packages/server/jest.json",
+    "test-server:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/jest/bin/jest.js --runInBand --config ./packages/server/jest.json",
+    "test-server:e2e": "jest --config ./packages/server/test/jest-e2e.json",
+    "typeorm": "ts-node -P ./packages/server/tsconfig.json -r tsconfig-paths/register ./node_modules/typeorm/cli.js",
+    "migration": "npm run typeorm migration:run",
+    "create-migration": "npm run typeorm migration:create"
+  },
+  "devDependencies": {
+    "husky": "^1.3.1",
+    "typescript": "^3.8.0"
+  },
+  "jest": {
+    "testMatch": [
+      "<rootDir>/packages/front/__tests__/**/*.{js,jsx,ts,tsx}",
+      "<rootDir>/packages/front/**/*.{spec,test}.{js,jsx,ts,tsx}"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}

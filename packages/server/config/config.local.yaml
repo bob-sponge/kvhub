@@ -1,0 +1,5 @@
+test: 2
+
+application:
+    timeout: 120
+    xx.xxx.xxx: 2
