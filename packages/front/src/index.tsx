@@ -3,10 +3,12 @@ import * as ReactDOM from 'react-dom';
 import { createStore, Provider } from 'hookux';
 import { initAjax } from '@ofm/ajax';
 
+import './config';
+
 import { App } from './app';
 
 initAjax({
-  baseURL: 'http://127.0.0.1:5000',
+  baseURL: process.conf.ip,
   withCredentials: true,
 });
 
