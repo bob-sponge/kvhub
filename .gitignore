@@ -33,3 +33,6 @@ coverage
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+
+packages/server/config/config.local.yaml
+packages/front/src/config/local.yaml
