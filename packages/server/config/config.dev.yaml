@@ -1,5 +1,6 @@
-test: 1
-
-aaa:
-    bbb:
-        ccc: 5
+database:
+  host: localhost
+  port: 5432
+  username: postgres
+  password: 123456
+  database: i18n

@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AppModule as TestModule } from './modules/app/app.module';
-import { ConfigModule } from '@ofm/nestjs-utils';
+import { ConfigModule, ConfigService } from '@ofm/nestjs-utils';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './entities/User';
 import { Branch } from './entities/Branch';
@@ -20,30 +20,35 @@ import { ProjectLanguage } from './entities/ProjectLanguage';
 @Module({
   imports: [
     ConfigModule.register({ dir: '/packages/server/config' }),
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: 'postgres',
-      password: '123456',
-      database: 'i18n',
-      entities: [
-        Branch,
-        BranchCommit,
-        BranchKey,
-        BranchMerge,
-        Key,
-        Keyname,
-        Keyvalue,
-        Language,
-        MergeDiffChangeKey,
-        MergeDiffKey,
-        Namespace,
-        Project,
-        ProjectLanguage,
-        User,
-      ],
-      synchronize: false,
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: async (config: ConfigService) =>
+        ({
+          type: 'postgres',
+          host: config.get('database', 'host'),
+          port: config.get('database', 'port'),
+          username: config.get('database', 'username'),
+          password: config.get('database', 'password'),
+          database: config.get('database', 'database'),
+          entities: [
+            Branch,
+            BranchCommit,
+            BranchKey,
+            BranchMerge,
+            Key,
+            Keyname,
+            Keyvalue,
+            Language,
+            MergeDiffChangeKey,
+            MergeDiffKey,
+            Namespace,
+            Project,
+            ProjectLanguage,
+            User,
+          ],
+          synchronize: false,
+        } as any),
     }),
     TestModule,
   ],

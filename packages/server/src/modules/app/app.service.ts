@@ -6,7 +6,7 @@ import { Repository } from 'typeorm';
 
 @Injectable()
 export class AppService {
-  @Config('aaa', 'bbb', 'ccc')
+  @Config('database', 'host')
   ccc = undefined as any;
 
   constructor(

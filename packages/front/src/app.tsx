@@ -4,8 +4,10 @@ import { ajax } from '@ofm/ajax';
 export function App() {
   React.useEffect(() => {
     const res = ajax.get('/hello');
-    // eslint-disable-next-line no-console
-    console.log(res);
+    res.then(rr => {
+      // eslint-disable-next-line no-console
+      console.log(rr);
+    });
   }, []);
 
   return <div>app</div>;
