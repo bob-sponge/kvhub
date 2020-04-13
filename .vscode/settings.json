@@ -11,7 +11,7 @@
     "parserOptions": {
       "project": ["${workspaceFolder}/tsconfig.json"]
     },
-    "configFile": "node_modules\\@ofm\\build-tool\\config\\.eslintrc.js"
+    "configFile": ".eslintrc.js"
   },
   "editor.tabSize": 2,
 

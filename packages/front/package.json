@@ -1,5 +1,5 @@
 {
-  "name": "@hvhub/front",
+  "name": "@kvhub/front",
   "version": "0.0.0",
   "description": "",
   "main": "index.js",
@@ -9,6 +9,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@ofm/ajax": "^1.1.3",
+    "@ofm/history": "^1.0.2",
     "antd": "^4.1.1",
     "hookux": "^0.1.0",
     "react": "^16.13.0",

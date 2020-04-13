@@ -14,8 +14,8 @@ export class AppService {
     private usersRepository: Repository<User>,
   ) {}
 
-  async getHello(): Promise<string> {
+  async getHello() {
     const users = await this.usersRepository.find();
-    return 'Hello World! ' + JSON.stringify(users[0]);
+    return users;
   }
 }
