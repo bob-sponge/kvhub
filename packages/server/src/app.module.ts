@@ -17,12 +17,15 @@ import { Namespace } from './entities/Namespace';
 import { Project } from './entities/Project';
 import { ProjectLanguage } from './entities/ProjectLanguage';
 import { ProjectModule } from './modules/project/project.module';
+import { LanguagesModule } from './modules/languages/languages.module';
+import { BranchModule } from './modules/branch/branch.module';
+import { KeyModule } from './modules/key/key.module';
 
 @Module({
   imports: [
     ConfigModule.register({ dir: '/packages/server/config' }),
     TypeOrmModule.forRootAsync({
-      imports: [ConfigModule, ProjectModule],
+      imports: [ConfigModule, BranchModule, KeyModule, ProjectModule, LanguagesModule],
       inject: [ConfigService],
       useFactory: async (config: ConfigService) =>
         ({

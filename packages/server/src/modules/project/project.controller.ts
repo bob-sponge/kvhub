@@ -1,13 +1,13 @@
 import { Controller, Get } from '@nestjs/common';
-import { Project } from 'src/entities/Project';
 import { ProjectService } from './project.service';
+import { Dashboard } from 'src/vo/Dashboard';
 
 @Controller('project')
 export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
-  // find all projects
+  // find all projects with key and languages
   @Get('all')
-  async findAll(): Promise<Project[]> {
-    return this.projectService.findAll();
+  async findAll(): Promise<Dashboard[]> {
+    return this.projectService.findAllPorjects();
   }
 }

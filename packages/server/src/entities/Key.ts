@@ -5,6 +5,9 @@ export class Key {
   @PrimaryGeneratedColumn({ type: 'integer', name: 'id' })
   id: number;
 
+  @Column('integer', { name: 'actual_id', nullable: false })
+  actualId: number;
+
   @Column('integer', { name: 'namespace_id', nullable: true })
   namespaceId: number | null;
 
