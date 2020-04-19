@@ -16,12 +16,13 @@ import { MergeDiffKey } from './entities/MergeDiffKey';
 import { Namespace } from './entities/Namespace';
 import { Project } from './entities/Project';
 import { ProjectLanguage } from './entities/ProjectLanguage';
+import { ProjectModule } from './modules/project/project.module';
 
 @Module({
   imports: [
     ConfigModule.register({ dir: '/packages/server/config' }),
     TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
+      imports: [ConfigModule, ProjectModule],
       inject: [ConfigService],
       useFactory: async (config: ConfigService) =>
         ({
