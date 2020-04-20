@@ -1,5 +1,7 @@
 import * as React from 'react';
 import { ajax } from '@ofm/ajax';
+import { HashRouter, Route, Switch } from 'react-router-dom';
+import EditNamespace from './namespace/namespaceView';
 
 export function App() {
   React.useEffect(() => {
@@ -10,5 +12,17 @@ export function App() {
     });
   }, []);
 
-  return <div>app</div>;
+  return (
+    <div>
+      <BasicRoute />
+    </div>
+  );
 }
+
+const BasicRoute = () => (
+  <HashRouter>
+    <Switch>
+      <Route exact path="/namespace" component={EditNamespace} />
+    </Switch>
+  </HashRouter>
+);
