@@ -6,4 +6,5 @@ export class Dashboard {
   time: string;
   translatedKeys: number;
   totalKeys: number;
+  keyIds: number[];
 }
