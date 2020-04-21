@@ -7,7 +7,7 @@ const { TextArea } = Input;
 
 const LanguageBox = () => {
   return (
-    <>
+    <div style={{ width: '50%' }}>
       <div className={css.box}>
         <div className={css.key}>
           <div>
@@ -41,7 +41,7 @@ const LanguageBox = () => {
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
