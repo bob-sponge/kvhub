@@ -2,6 +2,7 @@ import * as React from 'react';
 import { ajax } from '@ofm/ajax';
 import { HashRouter, Route, Switch } from 'react-router-dom';
 import EditNamespace from './namespace/namespaceView';
+import Languages from './modules/languages';
 
 export function App() {
   React.useEffect(() => {
@@ -23,6 +24,7 @@ const BasicRoute = () => (
   <HashRouter>
     <Switch>
       <Route exact path="/namespace" component={EditNamespace} />
+      <Route exact path="/languages" component={Languages} />
     </Switch>
   </HashRouter>
 );
