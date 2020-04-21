@@ -1,7 +1,12 @@
 import React from 'react';
+import LanguageBox from './box';
 
-const EditNamespace = () => {
-  return <>editnamespace</>;
+const NamespaceView = () => {
+  return (
+    <>
+      <LanguageBox />
+    </>
+  );
 };
 
-export default EditNamespace;
+export default NamespaceView;
