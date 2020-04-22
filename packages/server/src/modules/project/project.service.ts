@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/member-ordering */
 import { Injectable } from '@nestjs/common';
 import { Project } from 'src/entities/Project';
 import { Namespace } from 'src/entities/Namespace';
@@ -5,12 +6,16 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BranchService } from '../branch/branch.service';
 import { KeyService } from '../key/key.service';
-import { ProjectLanguageService} from '../projectLanguage/projectLanguage.service';
-import { NamespaceService} from '../namespace/namespace.service';
+import { ProjectLanguageService } from '../projectLanguage/projectLanguage.service';
+import { NamespaceService } from '../namespace/namespace.service';
 import { Dashboard } from 'src/vo/Dashboard';
 import { ProjectViewVO } from 'src/vo/ProjectViewVO';
 import { ProjectLanguageDTO } from 'src/dto/ProjectLanguageDTO';
 import { NamespaceVO } from '../../vo/NamespaceVO';
+import { ProjectVO } from 'src/vo/PorjectVO';
+import { ProjectLanguage } from 'src/entities/ProjectLanguage';
+import { LanguagesService } from '../languages/languages.service';
+import { Branch } from 'src/entities/Branch';
 
 @Injectable()
 export class ProjectService {
@@ -21,8 +26,9 @@ export class ProjectService {
     private readonly namespaceRepostiory: Repository<Namespace>,
     private readonly branchService: BranchService,
     private readonly keyService: KeyService,
-    private readonly projectLanguageService : ProjectLanguageService,
-    private readonly namespaceService : NamespaceService
+    private readonly projectLanguageService: ProjectLanguageService,
+    private readonly namespaceService: NamespaceService,
+    private readonly languageService: LanguagesService,
   ) {}
 
   /**
@@ -35,30 +41,40 @@ export class ProjectService {
     return await this.consolidateData(projects, languages, keysMap);
   }
 
-  // project left join branch(only master branch)
-  async findProjectWithBranch(): Promise<any[]> {
-    return await this.projectRepository.query(
-      'SELECT x.*, y.* FROM (SELECT p.id, p.name as project_name, p.modifier, p.modify_time, p.type, ' +
-        'b.id as branch_id FROM project p LEFT JOIN branch b ON p.id = b.project_id WHERE p.delete = FALSE' +
-        ' AND b.master = TRUE ORDER BY p.id) x LEFT JOIN (SELECT a.project_id, a.name as branch_name, ' +
-        'a.master as is_master, key.id as key_id, key.actual_id, key.namespace_id FROM (SELECT * FROM ' +
-        'branch LEFT JOIN branch_key ON branch.id = branch_key.branch_id WHERE branch_key.delete = FALSE ' +
-        'AND branch.master = TRUE) a LEFT JOIN key ON a.key_id = key.id WHERE key.delete = FALSE AND key.id ' +
-        '= key.actual_id) y ON x.id = y.project_id ORDER BY x.id',
-    );
-  }
+  async saveProject(projectVO: ProjectVO): Promise<boolean> {
+    if (await this.languageService.findOne(projectVO.referenceId)) {
+      return false;
+    }
+    // save project
+    let project = new Project();
+    project.name = projectVO.name;
+    project.referenceLanguageId = projectVO.referenceId;
+    project.modifyTime = new Date();
+    project.delete = false;
+    // 暂定
+    project.type = 'i18n';
+    project.modifier = 'admin';
+    const savedProject: Project = await this.projectRepository.save(project);
 
-  // project left join language
-  async findProjectWithLanguages(): Promise<any[]> {
-    return await this.projectRepository.query(
-      'SELECT p.id as project_id, p.name as project_name, p.reference_language_id, ' +
-        'p.type, p.modifier, p.modify_time, b.language_id, b.name as language_name FROM' +
-        ' project p LEFT JOIN (SELECT pl.project_id,pl.language_id,l."name" FROM ' +
-        'project_language pl LEFT JOIN language l on l.id = pl.language_id WHERE ' +
-        'pl.delete = FALSE) b ON p.id = b.project_id WHERE p.delete = FALSE ORDER BY p.id',
-    );
-  }
+    // save middle table
+    let projectLanguage = new ProjectLanguage();
+    projectLanguage.projectId = savedProject.id;
+    projectLanguage.languageId = savedProject.referenceLanguageId;
+    projectLanguage.delete = false;
+    projectLanguage.modifier = 'admin';
+    projectLanguage.modifyTime = new Date();
+    await this.projectLanguageService.save(projectLanguage);
 
+    //save branch
+    let branch = new Branch();
+    branch.name = 'master';
+    branch.projectId = savedProject.id;
+    branch.master = true;
+    branch.modifier = 'admin';
+    branch.modifyTime = new Date();
+    await this.branchService.save(branch);
+    return true;
+  }
   /**
    * 整合数据返回Dashborad[]
    * @param projects
@@ -124,29 +140,53 @@ export class ProjectService {
     return dashboards;
   }
 
+  // project left join branch(only master branch)
+  async findProjectWithBranch(): Promise<any[]> {
+    return await this.projectRepository.query(
+      'SELECT x.*, y.* FROM (SELECT p.id, p.name as project_name, p.modifier, p.modify_time, p.type, ' +
+        'b.id as branch_id FROM project p LEFT JOIN branch b ON p.id = b.project_id WHERE p.delete = FALSE' +
+        ' AND b.master = TRUE ORDER BY p.id) x LEFT JOIN (SELECT a.project_id, a.name as branch_name, ' +
+        'a.master as is_master, key.id as key_id, key.actual_id, key.namespace_id FROM (SELECT * FROM ' +
+        'branch LEFT JOIN branch_key ON branch.id = branch_key.branch_id WHERE branch_key.delete = FALSE ' +
+        'AND branch.master = TRUE) a LEFT JOIN key ON a.key_id = key.id WHERE key.delete = FALSE AND key.id ' +
+        '= key.actual_id) y ON x.id = y.project_id ORDER BY x.id',
+    );
+  }
+
+  // project left join language
+  async findProjectWithLanguages(): Promise<any[]> {
+    return await this.projectRepository.query(
+      'SELECT p.id as project_id, p.name as project_name, p.reference_language_id, ' +
+        'p.type, p.modifier, p.modify_time, b.language_id, b.name as language_name FROM' +
+        ' project p LEFT JOIN (SELECT pl.project_id,pl.language_id,l."name" FROM ' +
+        'project_language pl LEFT JOIN language l on l.id = pl.language_id WHERE ' +
+        'pl.delete = FALSE) b ON p.id = b.project_id WHERE p.delete = FALSE ORDER BY p.id',
+    );
+  }
+
   /**
    * 通过项目id获取项目详情
    */
-  async getProjectView(id:number,branchId:number): Promise<ProjectViewVO[]> {
-    const result : ProjectViewVO[] = [];
-    const projectLanguageList : ProjectLanguageDTO[] = await this.projectLanguageService.findByProjectId(id); 
-    const namespaceList : Namespace[] = await this.namespaceService.findByProjectId(id);
+  async getProjectView(id: number, branchId: number): Promise<ProjectViewVO[]> {
+    const result: ProjectViewVO[] = [];
+    const projectLanguageList: ProjectLanguageDTO[] = await this.projectLanguageService.findByProjectId(id);
+    const namespaceList: Namespace[] = await this.namespaceService.findByProjectId(id);
     projectLanguageList.forEach(p => {
       let vo = new ProjectViewVO();
-      let namespaceVOList : NamespaceVO[];
-      let totalKeys : number = 0;
-      let tranferKeys : number = 0;
+      let namespaceVOList: NamespaceVO[];
+      let totalKeys: number = 0;
+      let tranferKeys: number = 0;
       vo.id = p.id;
       vo.languageName = p.languageName;
       namespaceList.forEach(n => {
         let namespaceVO = new NamespaceVO();
         namespaceVO.id = n.id;
         namespaceVO.name = n.name;
-        this.keyService.count(branchId,n.id).then(value => namespaceVO.totalKeys = value);
+        this.keyService.count(branchId, n.id).then(value => (namespaceVO.totalKeys = value));
         totalKeys += namespaceVO.totalKeys;
         tranferKeys += namespaceVO.translatedKeys;
         namespaceVOList.push(namespaceVO);
-      })
+      });
       vo.namespaceList = namespaceVOList;
       vo.totalKeys = totalKeys;
       vo.translatedKeys = tranferKeys;

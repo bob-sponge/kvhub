@@ -78,6 +78,17 @@
     insert-css "^2.0.0"
     rc-util "^4.9.0"
 
+"@ant-design/icons@^4.0.6":
+  version "4.0.6"
+  resolved "https://registry.npm.taobao.org/@ant-design/icons/download/@ant-design/icons-4.0.6.tgz#a1b9860d4de5dece59ba98d0025b07a3d13cba2a"
+  integrity sha1-obmGDU3l3s5ZupjQAlsHo9E8uio=
+  dependencies:
+    "@ant-design/colors" "^3.1.0"
+    "@ant-design/icons-svg" "^4.0.0"
+    classnames "^2.2.6"
+    insert-css "^2.0.0"
+    rc-util "^4.9.0"
+
 "@ant-design/react-slick@~0.25.5":
   version "0.25.5"
   resolved "https://registry.yarnpkg.com/@ant-design/react-slick/-/react-slick-0.25.5.tgz#18f40abaa22c15dc26da9c473d24da38d4d8f334"
@@ -2081,6 +2092,11 @@
   resolved "https://registry.yarnpkg.com/@types/unist/-/unist-2.0.3.tgz#9c088679876f374eb5983f150d4787aa6fb32d7e"
   integrity sha512-FvUupuM3rlRsRtCN+fDudtmytGO6iHJuuRKS1Ss0pG5z8oX0diNEw94UEL7hgDbpN94rgaK5R7sWm6RrSkZuAQ==
 
+"@types/validator@13.0.0":
+  version "13.0.0"
+  resolved "https://registry.npm.taobao.org/@types/validator/download/@types/validator-13.0.0.tgz#365f1bf936aeaddd0856fc41aa1d6f82d88ee5b3"
+  integrity sha1-Nl8b+Taurd0IVvxBqh1vgtiO5bM=
+
 "@types/vfile-message@*":
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/@types/vfile-message/-/vfile-message-2.0.0.tgz#690e46af0fdfc1f9faae00cd049cc888957927d5"
@@ -3880,6 +3896,11 @@ circular-json-for-egg@^1.0.0:
   resolved "https://registry.yarnpkg.com/circular-json-for-egg/-/circular-json-for-egg-1.0.0.tgz#eacb71b57af28b4822cabc52a5961cd2f0817fc5"
   integrity sha512-BzMR1dg0+YqcFoMETHq0gFeQNNKliXI1Oe+C0nx/4npLaohsR7/Oj3UFht65MLwF7zs6x13gOr+f4+JeYni6vw==
 
+class-transformer@^0.2.3:
+  version "0.2.3"
+  resolved "https://registry.npm.taobao.org/class-transformer/download/class-transformer-0.2.3.tgz#598c92ca71dcca73f91ccb875d74a3847ccfa32d"
+  integrity sha1-WYySynHcynP5HMuHXXSjhHzPoy0=
+
 class-utils@^0.3.5:
   version "0.3.6"
   resolved "https://registry.yarnpkg.com/class-utils/-/class-utils-0.3.6.tgz#f93369ae8b9a7ce02fd41faad0ca83033190c463"
@@ -3889,6 +3910,15 @@ class-utils@^0.3.5:
     define-property "^0.2.5"
     isobject "^3.0.0"
     static-extend "^0.1.1"
+
+class-validator@^0.12.1:
+  version "0.12.1"
+  resolved "https://registry.npm.taobao.org/class-validator/download/class-validator-0.12.1.tgz?cache=0&sync_timestamp=1587212511747&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fclass-validator%2Fdownload%2Fclass-validator-0.12.1.tgz#9e89a9b7e8288ac07e0b9f5586cc089369d22790"
+  integrity sha1-nompt+goisB+C59VhswIk2nSJ5A=
+  dependencies:
+    "@types/validator" "13.0.0"
+    google-libphonenumber "^3.2.8"
+    validator "13.0.0"
 
 classnames@2.x, classnames@^2.2.0, classnames@^2.2.1, classnames@^2.2.3, classnames@^2.2.5, classnames@^2.2.6, classnames@~2.2.6:
   version "2.2.6"
@@ -6690,6 +6720,11 @@ gonzales-pe@^4.2.3, gonzales-pe@^4.3.0:
   integrity sha512-otgSPpUmdWJ43VXyiNgEYE4luzHCL2pz4wQ0OnDluC6Eg4Ko3Vexy/SrSynglw/eR+OhkzmqFCZa/OFa/RgAOQ==
   dependencies:
     minimist "^1.2.5"
+
+google-libphonenumber@^3.2.8:
+  version "3.2.8"
+  resolved "https://registry.npm.taobao.org/google-libphonenumber/download/google-libphonenumber-3.2.8.tgz#fb5898cbae18104d456e0fd80df52d860a3eb2b8"
+  integrity sha1-+1iYy64YEE1Fbg/YDfUthgo+srg=
 
 graceful-fs@4.1.4:
   version "4.1.4"
@@ -15090,6 +15125,11 @@ validate-npm-package-license@^3.0.1:
   dependencies:
     spdx-correct "^3.0.0"
     spdx-expression-parse "^3.0.0"
+
+validator@13.0.0:
+  version "13.0.0"
+  resolved "https://registry.npm.taobao.org/validator/download/validator-13.0.0.tgz?cache=0&sync_timestamp=1584674192977&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fvalidator%2Fdownload%2Fvalidator-13.0.0.tgz#0fb6c6bb5218ea23d368a8347e6d0f5a70e3bcab"
+  integrity sha1-D7bGu1IY6iPTaKg0fm0PWnDjvKs=
 
 value-equal@^1.0.1:
   version "1.0.1"

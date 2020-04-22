@@ -50,5 +50,9 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "dependencies": {
+    "class-transformer": "^0.2.3",
+    "class-validator": "^0.12.1"
   }
 }

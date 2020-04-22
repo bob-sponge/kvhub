@@ -1,8 +1,8 @@
-import { Controller, Get, Post, Param} from '@nestjs/common';
+import { Controller, Get, Post, Param, Body } from '@nestjs/common';
 import { ProjectService } from './project.service';
 import { ResponseBody } from 'src/vo/ResponseBody';
-import { Dashboard } from 'src/vo/Dashboard';
 import { ProjectViewVO } from 'src/vo/ProjectViewVO';
+import { ProjectVO } from 'src/vo/PorjectVO';
 
 @Controller('project')
 export class ProjectController {
@@ -14,11 +14,11 @@ export class ProjectController {
   }
 
   @Post('save')
-  async addProject(): Promise<ResponseBody> {
-    return ResponseBody.ok();
+  async addProject(@Body() projectVO: ProjectVO): Promise<ResponseBody> {
+    return this.projectService.saveProject(projectVO) ? ResponseBody.ok() : ResponseBody.error();
   }
   @Get('view/:id/:branchId')
-  async projectView(@Param('id') id:number, @Param('branchId') branchId:number): Promise<ProjectViewVO[]> {
-    return this.projectService.getProjectView(id,branchId);
+  async projectView(@Param('id') id: number, @Param('branchId') branchId: number): Promise<ProjectViewVO[]> {
+    return this.projectService.getProjectView(id, branchId);
   }
 }

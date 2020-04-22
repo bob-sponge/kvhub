@@ -11,6 +11,23 @@ export class BranchService {
     @InjectRepository(BranchKey) private readonly branchKeyRepository: Repository<BranchKey>,
   ) {}
 
+  // 查询branch and中间表
+  async findAll(): Promise<Branch[]> {
+    return await this.branchRepository.find();
+  }
+
+  /**
+   * 通过项目id查询分支
+   * @param projectId
+   */
+  async findBranchByProjectId(projectId: number): Promise<Branch[]> {
+    return await this.branchRepository.find({ projectId });
+  }
+
+  async save(branch: Branch): Promise<void> {
+    await this.branchRepository.save(branch);
+  }
+
   // branch branch_key key
   async findKeyWithBranch(): Promise<any[]> {
     return await this.branchRepository.query(
@@ -19,18 +36,5 @@ export class BranchService {
         'branch.id = branch_key.branch_id WHERE branch_key.delete = FALSE AND branch.master = TRUE) a ' +
         'LEFT JOIN key ON a.key_id = key.id WHERE key.delete = FALSE',
     );
-  }
-
-  // 查询branch and中间表
-  async findAll(): Promise<Branch[]> {
-    return await this.branchRepository.find();
-  }
-
-  /**
-   * 通过项目id查询分支
-   * @param projectId 
-   */
-  async findBranchByProjectId(projectId:number) : Promise<Branch[]> {
-    return await this.branchRepository.find({projectId});
   }
 }

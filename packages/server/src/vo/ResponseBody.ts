@@ -1,16 +1,16 @@
 export class ResponseBody {
-  code: number;
+  statusCode: number;
   data: any;
   message: string;
 
-  constructor(code: number, data: any, message: string) {
-    this.code = code;
+  constructor(statusCode: number, data: any, message: string) {
+    this.statusCode = statusCode;
     this.data = data;
     this.message = message;
   }
 
   static ok() {
-    return new ResponseBody(0, null, 'success');
+    return new ResponseBody(0, true, 'success');
   }
 
   static okWithData(data: any) {
@@ -18,6 +18,14 @@ export class ResponseBody {
   }
 
   static okWithMsg(message: string) {
-    return new ResponseBody(0, null, message);
+    return new ResponseBody(0, true, message);
+  }
+
+  static error() {
+    return new ResponseBody(-1, false, 'failure');
+  }
+
+  static errorWithMsg(message: string) {
+    return new ResponseBody(-1, false, message);
   }
 }
