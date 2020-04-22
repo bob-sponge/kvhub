@@ -1,7 +1,7 @@
 import React from 'react';
 
-const NamespaceView = () => {
-  return <>namespaceview</>;
+const EditNamespace = () => {
+  return <>editspaceview</>;
 };
 
-export default NamespaceView;
+export default EditNamespace;

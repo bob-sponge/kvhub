@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { ajax } from '@ofm/ajax';
 import { HashRouter, Route, Switch } from 'react-router-dom';
-import EditNamespace from './namespace/namespaceView';
+import NamespaceView from './namespace';
 import Languages from './modules/languages';
 
 export function App() {
@@ -23,7 +23,7 @@ export function App() {
 const BasicRoute = () => (
   <HashRouter>
     <Switch>
-      <Route exact path="/namespace" component={EditNamespace} />
+      <Route exact path="/namespace" component={NamespaceView} />
       <Route exact path="/languages" component={Languages} />
     </Switch>
   </HashRouter>

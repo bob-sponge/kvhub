@@ -1,7 +1,18 @@
 import React from 'react';
+import LanguageBox from './box';
 
-const EditNamespace = () => {
-  return <>editnamespace</>;
+const NamespaceView = () => {
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+      <LanguageBox />
+      <LanguageBox />
+      <LanguageBox />
+      <LanguageBox />
+      <LanguageBox />
+      <LanguageBox />
+      <LanguageBox />
+    </div>
+  );
 };
 
-export default EditNamespace;
+export default NamespaceView;
