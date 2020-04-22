@@ -1,20 +1,29 @@
 /* eslint-disable max-len */
 import { Injectable } from '@nestjs/common';
 import { Project } from 'src/entities/Project';
+import { Namespace } from 'src/entities/Namespace';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BranchService } from '../branch/branch.service';
 import { KeyService } from '../key/key.service';
+import { ProjectLanguageService} from '../projectLanguage/projectLanguage.service';
+import { NamespaceService} from '../namespace/namespace.service';
 import { Dashboard } from 'src/vo/Dashboard';
-import { watchFile } from 'fs';
+import { ProjectViewVO } from 'src/vo/ProjectViewVO';
+import { ProjectLanguageDTO } from 'src/dto/ProjectLanguageDTO';
+import { NamespaceVO } from '../../vo/NamespaceVO';
 
 @Injectable()
 export class ProjectService {
   constructor(
     @InjectRepository(Project)
     private readonly projectRepository: Repository<Project>,
+    @InjectRepository(Namespace)
+    private readonly namespaceRepostiory: Repository<Namespace>,
     private readonly branchService: BranchService,
     private readonly keyService: KeyService,
+    private readonly projectLanguageService : ProjectLanguageService,
+    private readonly namespaceService : NamespaceService
   ) {}
 
   async findAllPorjects(): Promise<Dashboard[]> {
@@ -82,5 +91,36 @@ export class ProjectService {
         'project_language pl LEFT JOIN language l on l.id = pl.language_id WHERE ' +
         'pl.delete = FALSE) b ON p.id = b.project_id WHERE p.delete = FALSE ORDER BY p.id',
     );
+  }
+
+  /**
+   * 通过项目id获取项目详情
+   */
+  async getProjectView(id:number,branchId:number): Promise<ProjectViewVO[]> {
+    const result : ProjectViewVO[] = [];
+    const projectLanguageList : ProjectLanguageDTO[] = await this.projectLanguageService.findByProjectId(id); 
+    const namespaceList : Namespace[] = await this.namespaceService.findByProjectId(id);
+    projectLanguageList.forEach(p => {
+      let vo = new ProjectViewVO();
+      let namespaceVOList : NamespaceVO[];
+      let totalKeys : number = 0;
+      let tranferKeys : number = 0;
+      vo.id = p.id;
+      vo.languageName = p.languageName;
+      namespaceList.forEach(n => {
+        let namespaceVO = new NamespaceVO();
+        namespaceVO.id = n.id;
+        namespaceVO.name = n.name;
+        this.keyService.countKey(branchId,n.id).then(value => namespaceVO.totalKeys = value);
+        totalKeys += namespaceVO.totalKeys;
+        tranferKeys += namespaceVO.translatedKeys;
+        namespaceVOList.push(namespaceVO);
+      })
+      vo.namespaceList = namespaceVOList;
+      vo.totalKeys = totalKeys;
+      vo.translatedKeys = tranferKeys;
+      result.push(vo);
+    });
+    return result;
   }
 }

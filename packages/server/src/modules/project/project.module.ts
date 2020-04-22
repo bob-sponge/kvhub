@@ -6,9 +6,11 @@ import { Project } from 'src/entities/Project';
 import { BranchModule } from '../branch/branch.module';
 import { KeyModule } from '../key/key.module';
 import { LanguagesModule } from '../languages/languages.module';
+import { ProjectLanguageModule } from '../projectLanguage/projectLanguage.module';
+import { NamespaceModule } from '../namespace/namespace.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Project]), BranchModule, KeyModule, LanguagesModule],
+  imports: [TypeOrmModule.forFeature([Project]), BranchModule, KeyModule, LanguagesModule, ProjectLanguageModule, NamespaceModule],
   controllers: [ProjectController],
   providers: [ProjectService],
   exports: [ProjectService],
