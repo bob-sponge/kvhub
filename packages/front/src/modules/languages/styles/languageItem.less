@@ -1,0 +1,80 @@
+.language-item {
+  width: calc(~'50% - 12px');
+  background: white;
+  padding: 14px;
+  margin-bottom: 24px;
+
+  .language-title {
+    display: flex;
+    justify-content: space-between;
+
+    p {
+      font-family: SiemensSans-Bold;
+      color: #192228;
+      font-size: 16px;
+
+      span {
+        font-family: SiemensSans-Roman;
+        color: #7a8990;
+        font-size: 12px;
+      }
+    }
+
+    .language-iocn-list {
+      button {
+        margin: 0 6px;
+      }
+    }
+  }
+
+  .language-progress {
+    .language-progress-text {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+
+      .language-progress-text-value {
+        font-family: SiemensSans-Roman;
+        color: #2baf82;
+        font-size: 32px;
+        margin-bottom: 0;
+
+        span {
+          font-family: SiemensSans-Roman;
+          color: #627279;
+          font-size: 12px;
+        }
+      }
+
+      .language-progress-text-status {
+        font-family: SiemensSans-Roman;
+        color: #2baf82;
+        font-size: 12px;
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  .language-namespaces-progress {
+    display: flex;
+    flex-wrap: wrap;
+
+    .language-namespaces-progress-item {
+      width: calc(~'50% - 7px');
+    }
+
+    .language-namespaces-progress-item:nth-child(odd) {
+      margin-right: 14px;
+    }
+
+    .language-namespaces-progress-title {
+      font-family: SiemensSans-Bold;
+      color: #22313D;
+      margin: 10px 0 0;
+    }
+  }
+}
+
+.language-item:nth-child(odd) {
+  margin-right: 24px;
+}

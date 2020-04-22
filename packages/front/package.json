@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@ant-design/icons": "^4.0.6",
     "@ofm/ajax": "^1.1.3",
     "@ofm/history": "^1.0.2",
     "antd": "^4.1.1",

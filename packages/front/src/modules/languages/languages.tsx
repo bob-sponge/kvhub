@@ -1,7 +1,9 @@
 import React from 'react';
-import { Header, SideBar } from '../siderBar';
-import './languages.less';
-import { Button, Progress } from 'antd';
+import SideBar from '../siderBar';
+import Header from '../header';
+import './styles/languages.less';
+import { Button } from 'antd';
+import LanguageItem from './languageItem';
 
 // const Option = Select.Option;
 
@@ -23,22 +25,9 @@ const Languages = () => {
             <Button type="primary">{'Add Language'}</Button>
           </div>
           <div className={'languages-content'}>
-            <div className={'content-item'}>
-              <p>{'English'}</p>
-              <h4>
-                {'1354 '}
-                <span>{'/ 1354'}</span>
-              </h4>
-              <Progress percent={100} />
-              <div className={'language-namespaces-item'}>
-                <p>{'Namespaces-1'}</p>
-                <h4>
-                  {'673 '}
-                  <span>{'/ 673'}</span>
-                </h4>
-                <Progress percent={100} />
-              </div>
-            </div>
+            <LanguageItem />
+            <LanguageItem />
+            <LanguageItem />
           </div>
         </div>
       </div>
