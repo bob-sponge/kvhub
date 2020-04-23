@@ -1,52 +1,62 @@
 import React from 'react';
-import './styles/languageItem.less';
-import { Button, Progress } from 'antd';
+import * as css from './styles/languageItem.modules.less';
+import { Button, Progress, Popover } from 'antd';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 
 const LanguageItem = () => {
   const progressRender = (size: string) => {
     return (
-      <div className={'language-progress'}>
-        <div className={'language-progress-text'}>
-          <p className={'language-progress-text-value'} style={{ fontSize: size === 'small' ? '24px' : '32px' }}>
+      <div className={css.languageProgress}>
+        <div className={css.languageProgressText}>
+          <p className={css.languageProgressTextValue} style={{ fontSize: size === 'small' ? '24px' : '32px' }}>
             {'1,354'} <span>{' / 1,354 Keys'}</span>
           </p>
-          <p className={'language-progress-text-status'}>{'Done 100%'}</p>
+          <p className={css.languageProgressTextStatus}>{'Done 100%'}</p>
         </div>
         <Progress percent={100} showInfo={false} />
       </div>
     );
   };
 
+  const content = (
+    <div>
+      <p>Content</p>
+    </div>
+  );
+
   return (
     <>
-      <div className={'language-item'}>
-        <div className={'language-title'}>
+      <div className={css.languageItem}>
+        <div className={css.languageTitle}>
           <p>
             {'English'}
             <span>{' (Reference Language)'}</span>
           </p>
-          <div className={'language-iocn-list'}>
-            <Button>
-              <DeleteOutlined />
-            </Button>
-            <Button>
-              <PlusOutlined />
-            </Button>
+          <div className={css.languageIocnList}>
+            <Popover content={content} trigger="click" placement="bottomRight">
+              <Button>
+                <DeleteOutlined />
+              </Button>
+            </Popover>
+            <Popover content={content} trigger="click" placement="bottomRight">
+              <Button>
+                <PlusOutlined />
+              </Button>
+            </Popover>
           </div>
         </div>
         {progressRender('large')}
-        <div className={'language-namespaces-progress'}>
-          <div className={'language-namespaces-progress-item'}>
-            <p className={'language-namespaces-progress-title'}>{'Namespaces-1'}</p>
+        <div className={css.languageNamespacesProgress}>
+          <div className={css.languageNamespacesProgressItem}>
+            <p className={css.languageNamespacesProgressTitle}>{'Namespaces-1'}</p>
             {progressRender('small')}
           </div>
-          <div className={'language-namespaces-progress-item'}>
-            <p className={'language-namespaces-progress-title'}>{'Namespaces-3'}</p>
+          <div className={css.languageNamespacesProgressItem}>
+            <p className={css.languageNamespacesProgressTitle}>{'Namespaces-3'}</p>
             {progressRender('small')}
           </div>
-          <div className={'language-namespaces-progress-item'}>
-            <p className={'language-namespaces-progress-title'}>{'Namespaces-4'}</p>
+          <div className={css.languageNamespacesProgressItem}>
+            <p className={css.languageNamespacesProgressTitle}>{'Namespaces-4'}</p>
             {progressRender('small')}
           </div>
         </div>
