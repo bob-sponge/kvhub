@@ -1,27 +1,30 @@
-.i18n-main {
+.main {
   display: flex;
 
   .languages {
     width: calc(~'100vw - 264px');
     padding: 24px;
+    margin-left: 264px;
 
     .languages-title {
       display: flex;
       justify-content: space-between;
+      margin-bottom: 14px;
+
+      p {
+        font-family: SiemensSans-Bold;
+        color: #192228;
+        font-size: 24px;
+        margin-bottom: 0;
+      }
 
       .title-left {
         display: flex;
         justify-content: flex-start;
 
-        p {
-          font-family: SiemensSans-Bold;
-          color: #192228;
-          font-size: 24px;
-          margin-bottom: 0;
-        }
-
         .language-select {
-          margin-left: 14px;
+          margin-right: 14px;
+          width: 120px;
         }
       }
     }

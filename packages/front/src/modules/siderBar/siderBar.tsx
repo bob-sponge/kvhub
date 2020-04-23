@@ -1,6 +1,6 @@
 import React from 'react';
 import { Menu } from 'antd';
-import './sideBar.less';
+import * as css from './styles/sideBar.modules.less';
 
 const SideBar = () => {
   const handleClick = (e: any) => {
@@ -10,7 +10,7 @@ const SideBar = () => {
   return (
     <Menu
       onClick={handleClick}
-      className={'sideBar'}
+      className={css.sidebar}
       defaultSelectedKeys={['1']}
       defaultOpenKeys={['sub1']}
       mode="inline">
