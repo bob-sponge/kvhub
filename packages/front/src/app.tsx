@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { ajax } from '@ofm/ajax';
-import { HashRouter, Route, Switch } from 'react-router-dom';
+import { Router, Route, Switch } from 'react-router-dom';
+import { history } from '@ofm/history';
 import NamespaceView from './namespace';
 import Languages from './modules/languages';
 import Dashboard from './modules/dashboard';
@@ -22,11 +23,11 @@ export function App() {
 }
 
 const BasicRoute = () => (
-  <HashRouter>
+  <Router history={history}>
     <Switch>
       <Route exact path="/namespace" component={NamespaceView} />
       <Route exact path="/languages" component={Languages} />
       <Route exact path="/dashboard" component={Dashboard} />
     </Switch>
-  </HashRouter>
+  </Router>
 );

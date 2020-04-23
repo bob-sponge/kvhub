@@ -3,16 +3,16 @@ import * as css from './style/dashboard.modules.less';
 import { Button } from 'antd';
 import { UploadOutlined, PlusOutlined } from '@ant-design/icons';
 import Container from '../../container';
-// import { cardListData } from './constant';
+import { cardListData } from './constant';
 
 const Dashboard: React.SFC = () => {
-  // const renderCardList = (data: any[]) => {
-  //   if (data && data.length) {
-  //     data.map(item => {
-  //       window.console.log(item);
-  //     });
-  //   }
-  // };
+  const renderCardList = (data: any[]) => {
+    if (data && data.length) {
+      data.map(item => {
+        window.console.log(item);
+      });
+    }
+  };
 
   return (
     <Container>
@@ -29,7 +29,7 @@ const Dashboard: React.SFC = () => {
           </div>
         </div>
         <div className={css.dashboardContent}>
-          {/* {renderCardList(cardListData)} */}
+          {renderCardList(cardListData)}
           {/* {cardListData &&
             cardListData.length > 0 &&
             cardListData.map(item => {
