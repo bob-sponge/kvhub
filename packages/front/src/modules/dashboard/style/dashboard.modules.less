@@ -1,0 +1,87 @@
+@import '../../../style/main.less';
+
+.dashboard {
+  &-title {
+    display: flex;
+    justify-content: space-between;
+
+    .title {
+      color: @black;
+      font-size: 24px;
+    }
+
+    .operation {
+      button:first-child {
+        margin-right: 16px;
+      }
+    }
+  }
+
+  &-content {
+    margin-top: 16px;
+    .i18n-card-list();
+  }
+}
+
+.i18n-card-list(@width: 33%) {
+  display: flex;
+  flex-wrap: wrap;
+  .card {
+    &-list {
+      width: @width;
+      background-color: @white;
+      padding: 16px;
+    }
+
+    &-title {
+      color: @black;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    &-translate {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-top: 12px;
+      .keys {
+        display: flex;
+        align-items: baseline;
+        &-current {
+          font-size: 32px;
+        }
+        &-total {
+          color: @light-grey;
+          margin-left: 8px;
+
+          &::before {
+            content: '/';
+          }
+        }
+      }
+      .precent {
+        font-size: 14px;
+      }
+    }
+
+    &-bar {
+      width: 100%;
+    }
+
+    &-update {
+      color: @light-grey;
+      font-size: 12px;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      .language {
+        &::before {
+          content: '(';
+        }
+        &::afeter {
+          content: ')';
+        }
+      }
+    }
+  }
+}

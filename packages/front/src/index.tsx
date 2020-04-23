@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { createStore, Provider } from 'hookux';
 import { initAjax } from '@ofm/ajax';
-import './index.less';
+import './style/main.less';
 
 import './config';
 

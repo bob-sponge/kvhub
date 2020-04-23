@@ -3,6 +3,7 @@ import { ajax } from '@ofm/ajax';
 import { HashRouter, Route, Switch } from 'react-router-dom';
 import NamespaceView from './namespace';
 import Languages from './modules/languages';
+import Dashboard from './modules/dashboard';
 
 export function App() {
   React.useEffect(() => {
@@ -25,6 +26,7 @@ const BasicRoute = () => (
     <Switch>
       <Route exact path="/namespace" component={NamespaceView} />
       <Route exact path="/languages" component={Languages} />
+      <Route exact path="/dashboard" component={Dashboard} />
     </Switch>
   </HashRouter>
 );
