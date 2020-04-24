@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/member-ordering */
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { Project } from 'src/entities/Project';
 import { Namespace } from 'src/entities/Namespace';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -19,6 +19,9 @@ import { Branch } from 'src/entities/Branch';
 
 @Injectable()
 export class ProjectService {
+  private projectConfig: string = 'i18n';
+  private modifier: string = 'admin';
+  private branchName: string = 'master';
   constructor(
     @InjectRepository(Project)
     private readonly projectRepository: Repository<Project>,
@@ -41,9 +44,18 @@ export class ProjectService {
     return await this.consolidateData(projects, languages, keysMap);
   }
 
-  async saveProject(projectVO: ProjectVO): Promise<boolean> {
+  /**
+   * 首页添加project
+   * @param projectVO projectVO
+   */
+  async saveProject(projectVO: ProjectVO): Promise<void> {
+    // language_id是否存在
     if (await this.languageService.findOne(projectVO.referenceId)) {
-      return false;
+      throw new BadRequestException('referenceId is not exist');
+    }
+    // 判断名称是否重复
+    if ((await this.projectRepository.findOne({ name: projectVO.name })) !== undefined) {
+      throw new BadRequestException('project name is exist');
     }
     // save project
     let project = new Project();
@@ -52,8 +64,8 @@ export class ProjectService {
     project.modifyTime = new Date();
     project.delete = false;
     // 暂定
-    project.type = 'i18n';
-    project.modifier = 'admin';
+    project.type = this.projectConfig;
+    project.modifier = this.modifier;
     const savedProject: Project = await this.projectRepository.save(project);
 
     // save middle table
@@ -61,19 +73,18 @@ export class ProjectService {
     projectLanguage.projectId = savedProject.id;
     projectLanguage.languageId = savedProject.referenceLanguageId;
     projectLanguage.delete = false;
-    projectLanguage.modifier = 'admin';
+    projectLanguage.modifier = this.modifier;
     projectLanguage.modifyTime = new Date();
     await this.projectLanguageService.save(projectLanguage);
 
     //save branch
     let branch = new Branch();
-    branch.name = 'master';
+    branch.name = this.branchName;
     branch.projectId = savedProject.id;
     branch.master = true;
-    branch.modifier = 'admin';
+    branch.modifier = this.modifier;
     branch.modifyTime = new Date();
     await this.branchService.save(branch);
-    return true;
   }
   /**
    * 整合数据返回Dashborad[]
@@ -86,7 +97,9 @@ export class ProjectService {
     // 获取project_ids
     const ids = new Set();
     projects.forEach(p => {
-      ids.add(p.project_id);
+      if (p.project_id !== null) {
+        ids.add(p.project_id);
+      }
     });
 
     // project -> dashboard

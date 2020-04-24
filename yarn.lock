@@ -3898,7 +3898,7 @@ circular-json-for-egg@^1.0.0:
 
 class-transformer@^0.2.3:
   version "0.2.3"
-  resolved "https://registry.npm.taobao.org/class-transformer/download/class-transformer-0.2.3.tgz#598c92ca71dcca73f91ccb875d74a3847ccfa32d"
+  resolved "http://10.192.30.129:80/npm/class-transformer/-/class-transformer-0.2.3.tgz#598c92ca71dcca73f91ccb875d74a3847ccfa32d"
   integrity sha1-WYySynHcynP5HMuHXXSjhHzPoy0=
 
 class-utils@^0.3.5:
