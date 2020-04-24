@@ -19,6 +19,7 @@ export class ProjectController {
     await this.projectService.saveProject(projectVO);
     return ResponseBody.okWithMsg('save project success');
   }
+
   @Get('view/:id/:branchId')
   async projectView(@Param('id') id: number, @Param('branchId') branchId: number): Promise<ProjectViewVO[]> {
     return this.projectService.getProjectView(id, branchId);

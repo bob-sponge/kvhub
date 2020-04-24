@@ -1,17 +1,22 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Branch } from 'src/entities/Branch';
 import { Repository } from 'typeorm';
 import { BranchKey } from 'src/entities/BranchKey';
+import { BranchVO } from 'src/vo/BranchVO';
+import { Project } from 'src/entities/Project';
+import { ConfigService } from '@ofm/nestjs-utils';
 
 @Injectable()
 export class BranchService {
   constructor(
     @InjectRepository(Branch) private readonly branchRepository: Repository<Branch>,
     @InjectRepository(BranchKey) private readonly branchKeyRepository: Repository<BranchKey>,
+    @InjectRepository(Project) private readonly projectRepository: Repository<Project>,
+    private readonly config: ConfigService,
   ) {}
 
-  // 查询branch and中间表
+  // 返回branch list
   async findAll(): Promise<Branch[]> {
     return await this.branchRepository.find();
   }
@@ -24,8 +29,17 @@ export class BranchService {
     return await this.branchRepository.find({ projectId });
   }
 
-  async save(branch: Branch): Promise<void> {
-    await this.branchRepository.save(branch);
+  async save(branchVO: BranchVO): Promise<void> {
+    if ((await this.projectRepository.findOne({ id: branchVO.projectId })) === undefined) {
+      throw new BadRequestException('project_id is not exist');
+    }
+    await this.branchRepository.save({
+      name: branchVO.name,
+      project_id: branchVO.projectId,
+      master: false,
+      modifier: this.config.get('constants', 'modifier'),
+      modify_time: new Date(),
+    });
   }
 
   // branch branch_key key

@@ -16,10 +16,11 @@ import { ProjectVO } from 'src/vo/PorjectVO';
 import { ProjectLanguage } from 'src/entities/ProjectLanguage';
 import { LanguagesService } from '../languages/languages.service';
 import { Branch } from 'src/entities/Branch';
+import { ConfigService } from '@ofm/nestjs-utils';
 
 @Injectable()
 export class ProjectService {
-  private projectConfig: string = 'i18n';
+  private projectType: string;
   private modifier: string = 'admin';
   private branchName: string = 'master';
   constructor(
@@ -32,7 +33,12 @@ export class ProjectService {
     private readonly projectLanguageService: ProjectLanguageService,
     private readonly namespaceService: NamespaceService,
     private readonly languageService: LanguagesService,
-  ) {}
+    private readonly config: ConfigService,
+  ) {
+    this.projectType = this.config.get('constants', 'project_type');
+    this.branchName = this.config.get('constants', 'branch_name');
+    this.modifier = this.config.get('constants', 'modifier');
+  }
 
   /**
    * 获取首页相关数据
@@ -64,7 +70,7 @@ export class ProjectService {
     project.modifyTime = new Date();
     project.delete = false;
     // 暂定
-    project.type = this.projectConfig;
+    project.type = this.projectType;
     project.modifier = this.modifier;
     const savedProject: Project = await this.projectRepository.save(project);
 
