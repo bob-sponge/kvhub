@@ -1,11 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import * as css from './style/dashboard.modules.less';
 import { Button, Progress } from 'antd';
 import { UploadOutlined, PlusOutlined } from '@ant-design/icons';
 import Container from '../../container';
 import { cardListData, doneColor, processColor, formatNumber, timeAgo } from './constant';
+import AddOrEditProject from './addOrEditProject';
 
 const Dashboard: React.SFC = () => {
+  const [visible, setVisible] = useState<boolean>(true);
+
+  const addProject = () => {
+    setVisible(true);
+  }
   return (
     <Container>
       <div>
@@ -15,7 +21,7 @@ const Dashboard: React.SFC = () => {
             <Button type="primary" ghost icon={<UploadOutlined />}>
               secondary
             </Button>
-            <Button type="primary" icon={<PlusOutlined />}>
+            <Button type="primary" icon={<PlusOutlined />} onClick={addProject}>
               Add Project
             </Button>
           </div>
@@ -64,6 +70,7 @@ const Dashboard: React.SFC = () => {
               );
             })}
         </div>
+        <AddOrEditProject visible={visible} setVisible={setVisible} />
       </div>
     </Container>
   );
