@@ -1,19 +1,11 @@
 import React from 'react';
 import * as css from './style/dashboard.modules.less';
-import { Button } from 'antd';
+import { Button, Progress } from 'antd';
 import { UploadOutlined, PlusOutlined } from '@ant-design/icons';
 import Container from '../../container';
-import { cardListData } from './constant';
+import { cardListData, doneColor, processColor, formatNumber, timeAgo } from './constant';
 
 const Dashboard: React.SFC = () => {
-  const renderCardList = (data: any[]) => {
-    if (data && data.length) {
-      data.map(item => {
-        window.console.log(item);
-      });
-    }
-  };
-
   return (
     <Container>
       <div>
@@ -29,30 +21,48 @@ const Dashboard: React.SFC = () => {
           </div>
         </div>
         <div className={css.dashboardContent}>
-          {renderCardList(cardListData)}
-          {/* {cardListData &&
+          {cardListData &&
             cardListData.length > 0 &&
             cardListData.map(item => {
+              const isDone = item.translateKeysNumber === item.keysNumber;
+              const precent = item.translateKeysNumber / item.keysNumber * 100;
               return (
-                <div className={css.cardList}>
-                  <div className={css.cardTitle}>{item.name}</div>
-                  <div className={css.cardTranslate}>
-                    <div className={css.keys}>
-                      <div className={css.keysCurrent}>123</div>
-                      <div className={css.keysTotal}>1111</div>
+                <div className={css.cardWapper}>
+                  <div className={css.cardList}>
+                    <div className={css.cardTitle}>{item.name}</div>
+                    <div className={css.cardTranslate}>
+                      <div className={css.keys}>
+                        <div className={css.keysCurrent} style={{ color: isDone ? doneColor : processColor }}>
+                          {formatNumber(item.translateKeysNumber)}
+                        </div>
+                        <div className={css.keysTotal}>
+                          {formatNumber(item.keysNumber)}
+                        </div>
+                      </div>
+                      <div className={css.precent} style={{ color: isDone ? doneColor : processColor }}>
+                        <span>
+                          {isDone ? 'Done 100' : precent.toFixed(2)}
+                        </span>
+                      </div>
                     </div>
-                    <div className={css.precent}>Done 100%</div>
-                  </div>
-                  <div className={css.cardBar}>
-                    <Progress percent={30} size="small" showInfo={false} />
-                  </div>
-                  <div className={css.cardUpdate}>
-                    <div className={css.language}>(1212)</div>
-                    <div>1111</div>
+                    <div className={css.cardBar}>
+                      <Progress percent={precent} size="small" strokeColor={
+                        isDone ? doneColor : processColor
+                      } showInfo={false} />
+                    </div>
+                    <div className={css.cardUpdate}>
+                      <div className={css.language}>
+                        {item.languages.map((list: string) => {
+                          return <span>{list}</span>;
+                        })}
+                        {` ${item.languages.length} languages`}
+                      </div>
+                      <div>{timeAgo(item.time)}</div>
+                    </div>
                   </div>
                 </div>
               );
-            })} */}
+            })}
         </div>
       </div>
     </Container>
