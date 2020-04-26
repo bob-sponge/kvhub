@@ -8,7 +8,7 @@
     "password": "123456",
     "database": "i18n",
     "schema": "public",
-    "synchronize": true,
+    "synchronize": false,
     "entities": ["packages/server/src/entities/*.ts"],
     "migrations": ["migration/*.ts"],
     "cli": {
