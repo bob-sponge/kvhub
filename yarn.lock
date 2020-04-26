@@ -3898,7 +3898,7 @@ circular-json-for-egg@^1.0.0:
 
 class-transformer@^0.2.3:
   version "0.2.3"
-  resolved "http://10.192.30.129:80/npm/class-transformer/-/class-transformer-0.2.3.tgz#598c92ca71dcca73f91ccb875d74a3847ccfa32d"
+  resolved "https://registry.npm.taobao.org/class-transformer/download/class-transformer-0.2.3.tgz#598c92ca71dcca73f91ccb875d74a3847ccfa32d"
   integrity sha1-WYySynHcynP5HMuHXXSjhHzPoy0=
 
 class-utils@^0.3.5:
@@ -4836,12 +4836,12 @@ date-fns@^1.27.2:
 
 date-format@^2.1.0:
   version "2.1.0"
-  resolved "http://10.192.30.129:80/npm/date-format/-/date-format-2.1.0.tgz#31d5b5ea211cf5fd764cd38baf9d033df7e125cf"
+  resolved "https://registry.npm.taobao.org/date-format/download/date-format-2.1.0.tgz#31d5b5ea211cf5fd764cd38baf9d033df7e125cf"
   integrity sha1-MdW16iEc9f12TNOLr50DPffhJc8=
 
 date-format@^3.0.0:
   version "3.0.0"
-  resolved "http://10.192.30.129:80/npm/date-format/-/date-format-3.0.0.tgz#eb8780365c7d2b1511078fb491e6479780f3ad95"
+  resolved "https://registry.npm.taobao.org/date-format/download/date-format-3.0.0.tgz#eb8780365c7d2b1511078fb491e6479780f3ad95"
   integrity sha1-64eANlx9KxURB4+0keZHl4DzrZU=
 
 debug@2, debug@2.6.9, debug@^2.2.0, debug@^2.3.3, debug@^2.6.0, debug@^2.6.8, debug@^2.6.9:
@@ -9126,7 +9126,7 @@ log-update@^2.3.0:
 
 log4js@^6.2.1:
   version "6.2.1"
-  resolved "http://10.192.30.129:80/npm/log4js/-/log4js-6.2.1.tgz#fc23a3bf287f40f5b48259958e5e0ed30d558eeb"
+  resolved "https://registry.npm.taobao.org/log4js/download/log4js-6.2.1.tgz#fc23a3bf287f40f5b48259958e5e0ed30d558eeb"
   integrity sha1-/COjvyh/QPW0glmVjl4O0w1Vjus=
   dependencies:
     date-format "^3.0.0"
@@ -12961,7 +12961,7 @@ reusify@^1.0.4:
 
 rfdc@^1.1.4:
   version "1.1.4"
-  resolved "http://10.192.30.129:80/npm/rfdc/-/rfdc-1.1.4.tgz#ba72cc1367a0ccd9cf81a870b3b58bd3ad07f8c2"
+  resolved "https://registry.npm.taobao.org/rfdc/download/rfdc-1.1.4.tgz#ba72cc1367a0ccd9cf81a870b3b58bd3ad07f8c2"
   integrity sha1-unLME2egzNnPgahws7WL060H+MI=
 
 rgb-regex@^1.0.1:
@@ -13710,7 +13710,7 @@ stream-shift@^1.0.0:
 
 streamroller@^2.2.4:
   version "2.2.4"
-  resolved "http://10.192.30.129:80/npm/streamroller/-/streamroller-2.2.4.tgz#c198ced42db94086a6193608187ce80a5f2b0e53"
+  resolved "https://registry.npm.taobao.org/streamroller/download/streamroller-2.2.4.tgz?cache=0&sync_timestamp=1587335376986&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fstreamroller%2Fdownload%2Fstreamroller-2.2.4.tgz#c198ced42db94086a6193608187ce80a5f2b0e53"
   integrity sha1-wZjO1C25QIamGTYIGHzoCl8rDlM=
   dependencies:
     date-format "^2.1.0"
