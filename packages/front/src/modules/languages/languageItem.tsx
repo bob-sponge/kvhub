@@ -1,6 +1,6 @@
 import React from 'react';
 import * as css from './styles/languageItem.modules.less';
-import { Button, Progress, Popover } from 'antd';
+import { Button, Progress, Popover, Input } from 'antd';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 
 const LanguageItem = () => {
@@ -18,9 +18,14 @@ const LanguageItem = () => {
     );
   };
 
-  const content = (
-    <div>
-      <p>Content</p>
+  const AddNamespace = (
+    <div className={css.addNamespace}>
+      <p className={css.title}>{'Add New Namespace'}</p>
+      <Input placeholder={'Namespace Name'} />
+      <div className={css.buttonList}>
+        <Button>{'Discard'}</Button>
+        <Button type="primary">{'Save'}</Button>
+      </div>
     </div>
   );
 
@@ -33,12 +38,12 @@ const LanguageItem = () => {
             <span>{' (Reference Language)'}</span>
           </p>
           <div className={css.languageIocnList}>
-            <Popover content={content} trigger="click" placement="bottomRight">
-              <Button>
-                <DeleteOutlined />
-              </Button>
-            </Popover>
-            <Popover content={content} trigger="click" placement="bottomRight">
+            {/* <Popover content={AddNamespace} trigger="click" placement="bottomRight"> */}
+            <Button>
+              <DeleteOutlined />
+            </Button>
+            {/* </Popover> */}
+            <Popover content={AddNamespace} trigger="click" placement="bottomRight">
               <Button>
                 <PlusOutlined />
               </Button>
