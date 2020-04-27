@@ -1,21 +1,28 @@
-import { Controller, Get, Param, Body, UsePipes, ValidationPipe, Post } from '@nestjs/common';
+import { Controller, Get, Param, Body, UsePipes, ValidationPipe, Post, Delete, Logger, UseInterceptors } from '@nestjs/common';
 import { Branch } from 'src/entities/Branch';
 import { BranchService } from './branch.service';
 import { ResponseBody } from 'src/vo/ResponseBody';
 import { BranchVO } from 'src/vo/BranchVO';
+import { LoggerInterceptor } from 'src/interceptor/logger.inteceptor';
 
 @Controller('branch')
 export class BranchController {
-  constructor(private readonly branchService: BranchService) {}
+  constructor(private readonly branchService: BranchService) { }
 
   @Get('/list/:projectId')
   async findListByProjectId(@Param('projectId') projectId: number): Promise<Branch[]> {
     return this.branchService.findBranchByProjectId(projectId);
   }
 
-  @Get('/list')
-  async findList(): Promise<Branch[]> {
-    return await this.branchService.findAll();
+  @Get('/all')
+  async findBranchList(): Promise<ResponseBody> {
+    return ResponseBody.okWithData(await this.branchService.findAll());
+  }
+
+  @Delete('delete/:id')
+  async deleteBranch(@Param('id') id: number): Promise<ResponseBody> {
+    await this.branchService.deleteBranch(id);
+    return ResponseBody.okWithMsg('delete success');
   }
 
   @Post('save')

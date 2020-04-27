@@ -43,7 +43,7 @@ export class ProjectService {
   /**
    * 获取首页相关数据
    */
-  async findAllPorjects(): Promise<Dashboard[]> {
+  async dashboardPorjects(): Promise<Dashboard[]> {
     const projects: any[] = await this.findProjectWithBranch();
     const languages: any[] = await this.findProjectWithLanguages();
     const keysMap: any[] = await this.keyService.countKey();
@@ -159,16 +159,20 @@ export class ProjectService {
     return dashboards;
   }
 
+  async allProjects(): Promise<Project[]> {
+    return await this.projectRepository.find({ delete: false });
+  }
+
   // project left join branch(only master branch)
   async findProjectWithBranch(): Promise<any[]> {
     return await this.projectRepository.query(
       'SELECT x.*, y.* FROM (SELECT p.id, p.name as project_name, p.modifier, p.modify_time, p.type, ' +
-        'b.id as branch_id FROM project p LEFT JOIN branch b ON p.id = b.project_id WHERE p.delete = FALSE' +
-        ' AND b.master = TRUE ORDER BY p.id) x LEFT JOIN (SELECT a.project_id, a.name as branch_name, ' +
-        'a.master as is_master, key.id as key_id, key.actual_id, key.namespace_id FROM (SELECT * FROM ' +
-        'branch LEFT JOIN branch_key ON branch.id = branch_key.branch_id WHERE branch_key.delete = FALSE ' +
-        'AND branch.master = TRUE) a LEFT JOIN key ON a.key_id = key.id WHERE key.delete = FALSE AND key.id ' +
-        '= key.actual_id) y ON x.id = y.project_id ORDER BY x.id',
+      'b.id as branch_id FROM project p LEFT JOIN branch b ON p.id = b.project_id WHERE p.delete = FALSE' +
+      ' AND b.master = TRUE ORDER BY p.id) x LEFT JOIN (SELECT a.project_id, a.name as branch_name, ' +
+      'a.master as is_master, key.id as key_id, key.actual_id, key.namespace_id FROM (SELECT * FROM ' +
+      'branch LEFT JOIN branch_key ON branch.id = branch_key.branch_id WHERE branch_key.delete = FALSE ' +
+      'AND branch.master = TRUE) a LEFT JOIN key ON a.key_id = key.id WHERE key.delete = FALSE AND key.id ' +
+      '= key.actual_id) y ON x.id = y.project_id ORDER BY x.id',
     );
   }
 
@@ -176,10 +180,10 @@ export class ProjectService {
   async findProjectWithLanguages(): Promise<any[]> {
     return await this.projectRepository.query(
       'SELECT p.id as project_id, p.name as project_name, p.reference_language_id, ' +
-        'p.type, p.modifier, p.modify_time, b.language_id, b.name as language_name FROM' +
-        ' project p LEFT JOIN (SELECT pl.project_id,pl.language_id,l."name" FROM ' +
-        'project_language pl LEFT JOIN language l on l.id = pl.language_id WHERE ' +
-        'pl.delete = FALSE) b ON p.id = b.project_id WHERE p.delete = FALSE ORDER BY p.id',
+      'p.type, p.modifier, p.modify_time, b.language_id, b.name as language_name FROM' +
+      ' project p LEFT JOIN (SELECT pl.project_id,pl.language_id,l."name" FROM ' +
+      'project_language pl LEFT JOIN language l on l.id = pl.language_id WHERE ' +
+      'pl.delete = FALSE) b ON p.id = b.project_id WHERE p.delete = FALSE ORDER BY p.id',
     );
   }
 
