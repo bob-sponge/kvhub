@@ -17,8 +17,6 @@ export class ProjectService {
   constructor(
     @InjectRepository(Project)
     private readonly projectRepository: Repository<Project>,
-    @InjectRepository(Namespace)
-    private readonly namespaceRepostiory: Repository<Namespace>,
     private readonly branchService: BranchService,
     private readonly keyService: KeyService,
     private readonly projectLanguageService : ProjectLanguageService,
@@ -129,8 +127,28 @@ export class ProjectService {
    */
   async getProjectView(id:number,branchId:number): Promise<ProjectViewVO[]> {
     const result : ProjectViewVO[] = [];
-    const projectLanguageList : ProjectLanguageDTO[] = await this.projectLanguageService.findByProjectId(id); 
+    let isMasterBranch = false;
+    // 数据校验
+    const project = await this.projectRepository.find({id,delete:false});
+    if (null === project || project.length === 0 ){
+      
+    }
+    const branch = await this.branchService.getBranchById(branchId);
+    if (null === branch){
+
+    } else {
+      if (branch.master !== null && branch.master) {
+        isMasterBranch = true;
+      }
+    }
+
+    //获取项目的语言
+    const projectLanguageList : ProjectLanguageDTO[] = await this.projectLanguageService.findByProjectId(id);
+
+    //获取项目的命名空间
     const namespaceList : Namespace[] = await this.namespaceService.findByProjectId(id);
+
+    // 
     projectLanguageList.forEach(p => {
       let vo = new ProjectViewVO();
       let namespaceVOList : NamespaceVO[];
@@ -142,7 +160,11 @@ export class ProjectService {
         let namespaceVO = new NamespaceVO();
         namespaceVO.id = n.id;
         namespaceVO.name = n.name;
-        this.keyService.count(branchId,n.id).then(value => namespaceVO.totalKeys = value);
+        if (isMasterBranch){
+          this.keyService.countMaster(branchId,n.id).then(value => namespaceVO.totalKeys = value);
+        } else {
+          
+        }
         totalKeys += namespaceVO.totalKeys;
         tranferKeys += namespaceVO.translatedKeys;
         namespaceVOList.push(namespaceVO);

@@ -33,4 +33,19 @@ export class BranchService {
   async findBranchByProjectId(projectId:number) : Promise<Branch[]> {
     return await this.branchRepository.find({projectId});
   }
+
+  /**
+   * 通过项目id查询master分支
+   * @param projectId 
+   */
+  async findMasterBranchByProjectId(projectId:number) : Promise<Branch[]> {
+    return await this.branchRepository.find({projectId,master:true});
+  }
+
+  /**
+   * 通过分支ID获取分支信息
+   */
+  async getBranchById(id:number) : Promise<Branch>{
+    return await this.branchRepository.findOne(id);
+  }
 }
