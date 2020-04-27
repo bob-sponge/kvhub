@@ -1,12 +1,11 @@
-import {NamespaceVO} from "./NamespaceVO";
+import { NamespaceVO } from './NamespaceVO';
 
 export class ProjectViewVO {
-    id: number;
-    languageName: string;
-    modifier: string;
-    time: string;
-    translatedKeys: number;
-    totalKeys: number;
-    namespaceList:NamespaceVO[];
-  }
-  
+  id: number;
+  languageName: string;
+  modifier: string;
+  time: string;
+  translatedKeys: number;
+  totalKeys: number;
+  namespaceList: NamespaceVO[];
+}

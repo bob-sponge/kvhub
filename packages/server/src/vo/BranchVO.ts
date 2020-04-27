@@ -1,9 +1,6 @@
-import { IsString, IsNotEmpty, IsNumber } from 'class-validator';
-
 export class BranchVO {
-  @IsString()
-  @IsNotEmpty()
+  id: number;
   name: string;
-  @IsNumber()
-  projectId: number;
+  time: Date;
+  merge: string;
 }

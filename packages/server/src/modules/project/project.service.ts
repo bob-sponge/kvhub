@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/member-ordering */
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { Project } from 'src/entities/Project';
 import { Namespace } from 'src/entities/Namespace';
@@ -36,6 +35,10 @@ export class ProjectService {
     this.projectType = this.config.get('constants', 'project_type');
     this.branchName = this.config.get('constants', 'branch_name');
     this.modifier = this.config.get('constants', 'modifier');
+  }
+
+  async allProjects(): Promise<Project[]> {
+    return await this.projectRepository.find({ delete: false });
   }
 
   /**
@@ -96,7 +99,7 @@ export class ProjectService {
    * @param languages
    * @param keysMap
    */
-  private async consolidateData(projects: any[], languages: any[], keysMap: any[]): Promise<Dashboard[]> {
+  async consolidateData(projects: any[], languages: any[], keysMap: any[]): Promise<Dashboard[]> {
     const dashboards: Dashboard[] = [];
     // 获取project_ids
     const ids = new Set();
@@ -157,10 +160,59 @@ export class ProjectService {
     return dashboards;
   }
 
-  async allProjects(): Promise<Project[]> {
-    return await this.projectRepository.find({ delete: false });
-  }
+  /**
+   * 通过项目id获取项目详情
+   */
+  async getProjectView(id: number, branchId: number): Promise<ProjectViewVO[]> {
+    const result: ProjectViewVO[] = [];
+    let isMasterBranch = false;
+    // 数据校验
+    const project = await this.projectRepository.find({ id, delete: false });
+    if (null === project || project.length === 0) {
 
+    }
+    const branch = await this.branchService.getBranchById(branchId);
+    if (null === branch) {
+
+    } else {
+      if (branch.master !== null && branch.master) {
+        isMasterBranch = true;
+      }
+    }
+
+    //获取项目的语言
+    const projectLanguageList: ProjectLanguageDTO[] = await this.projectLanguageService.findByProjectId(id);
+
+    //获取项目的命名空间
+    const namespaceList: Namespace[] = await this.namespaceService.findByProjectId(id);
+
+    projectLanguageList.forEach(p => {
+      let vo = new ProjectViewVO();
+      let namespaceVOList: NamespaceVO[];
+      let totalKeys: number = 0;
+      let tranferKeys: number = 0;
+      vo.id = p.id;
+      vo.languageName = p.languageName;
+      namespaceList.forEach(n => {
+        let namespaceVO = new NamespaceVO();
+        namespaceVO.id = n.id;
+        namespaceVO.name = n.name;
+        if (isMasterBranch) {
+          this.keyService.countMaster(branchId, n.id).then(value => namespaceVO.totalKeys = value);
+        } else {
+
+        }
+        totalKeys += namespaceVO.totalKeys;
+        tranferKeys += namespaceVO.translatedKeys;
+        namespaceVOList.push(namespaceVO);
+      });
+      vo.namespaceList = namespaceVOList;
+      vo.totalKeys = totalKeys;
+      vo.translatedKeys = tranferKeys;
+      result.push(vo);
+    });
+    return result;
+  }
   // project left join branch(only master branch)
   async findProjectWithBranch(): Promise<any[]> {
     return await this.projectRepository.query(
@@ -185,58 +237,4 @@ export class ProjectService {
     );
   }
 
-  /**
-   * 通过项目id获取项目详情
-   */
-  async getProjectView(id:number,branchId:number): Promise<ProjectViewVO[]> {
-    const result : ProjectViewVO[] = [];
-    let isMasterBranch = false;
-    // 数据校验
-    const project = await this.projectRepository.find({id,delete:false});
-    if (null === project || project.length === 0 ){
-      
-    }
-    const branch = await this.branchService.getBranchById(branchId);
-    if (null === branch){
-
-    } else {
-      if (branch.master !== null && branch.master) {
-        isMasterBranch = true;
-      }
-    }
-
-    //获取项目的语言
-    const projectLanguageList : ProjectLanguageDTO[] = await this.projectLanguageService.findByProjectId(id);
-
-    //获取项目的命名空间
-    const namespaceList : Namespace[] = await this.namespaceService.findByProjectId(id);
-
-    // 
-    projectLanguageList.forEach(p => {
-      let vo = new ProjectViewVO();
-      let namespaceVOList: NamespaceVO[];
-      let totalKeys: number = 0;
-      let tranferKeys: number = 0;
-      vo.id = p.id;
-      vo.languageName = p.languageName;
-      namespaceList.forEach(n => {
-        let namespaceVO = new NamespaceVO();
-        namespaceVO.id = n.id;
-        namespaceVO.name = n.name;
-        if (isMasterBranch){
-          this.keyService.countMaster(branchId,n.id).then(value => namespaceVO.totalKeys = value);
-        } else {
-          
-        }
-        totalKeys += namespaceVO.totalKeys;
-        tranferKeys += namespaceVO.translatedKeys;
-        namespaceVOList.push(namespaceVO);
-      });
-      vo.namespaceList = namespaceVOList;
-      vo.totalKeys = totalKeys;
-      vo.translatedKeys = tranferKeys;
-      result.push(vo);
-    });
-    return result;
-  }
 }
