@@ -1,6 +1,6 @@
 import React from 'react';
 
-const EditNamespace = () => {
+const EditNamespace: React.FC = () => {
   return <>editspaceview</>;
 };
 

@@ -1,22 +1,40 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
+import { Input, Button, Popover } from 'antd';
+import EditKeyDrawer from './editKeyDrawer';
 import * as css from './styles/namespace.modules.less';
-import { Input } from 'antd';
 import { KeyOutlined, SettingOutlined, SwapRightOutlined } from '@ant-design/icons';
 
 const { TextArea } = Input;
 
-const LanguageBox = () => {
+const LanguageBox: React.FC = () => {
+  const [showDrawer, setShowDrawer] = useState<boolean>(false);
+
+  const settingContent = useCallback(() => {
+    const content = (
+      <div>
+        <p>Edit Key</p>
+        <p>Rename Key</p>
+        <p>Delete Key</p>
+      </div>
+    );
+    return content;
+  }, []);
+
+  const editKey = useCallback(() => {
+    setShowDrawer(true);
+  }, []);
+
   return (
-    <div style={{ width: '50%' }}>
+    <>
       <div className={css.box}>
         <div className={css.key}>
-          <div>
+          <div onClick={editKey}>
             <KeyOutlined />
-            <label className={css.title}>ACTIVITY_LINE_NOT_EXITS</label>
+            <label className={css.boxTitle}>ACTIVITY_LINE_NOT_EXITS</label>
           </div>
-          <div className={css.icon} style={{ color: '#627279' }}>
-            <SettingOutlined />
-          </div>
+          <Popover placement="bottomRight" content={settingContent} trigger="click">
+            <Button className={css.settingIcon} icon={<SettingOutlined />} />
+          </Popover>
         </div>
         <div className={css.language}>
           <div className={css.left}>
@@ -41,7 +59,8 @@ const LanguageBox = () => {
           </div>
         </div>
       </div>
-    </div>
+      <EditKeyDrawer visible={showDrawer} onClose={() => setShowDrawer(false)} />
+    </>
   );
 };
 

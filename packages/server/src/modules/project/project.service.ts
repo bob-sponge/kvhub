@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/member-ordering */
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { Project } from 'src/entities/Project';
 import { Namespace } from 'src/entities/Namespace';
@@ -36,6 +35,10 @@ export class ProjectService {
     this.projectType = this.config.get('constants', 'project_type');
     this.branchName = this.config.get('constants', 'branch_name');
     this.modifier = this.config.get('constants', 'modifier');
+  }
+
+  async allProjects(): Promise<Project[]> {
+    return await this.projectRepository.find({ delete: false });
   }
 
   /**
@@ -96,7 +99,7 @@ export class ProjectService {
    * @param languages
    * @param keysMap
    */
-  private async consolidateData(projects: any[], languages: any[], keysMap: any[]): Promise<Dashboard[]> {
+  async consolidateData(projects: any[], languages: any[], keysMap: any[]): Promise<Dashboard[]> {
     const dashboards: Dashboard[] = [];
     // 获取project_ids
     const ids = new Set();
@@ -157,34 +160,6 @@ export class ProjectService {
     return dashboards;
   }
 
-  async allProjects(): Promise<Project[]> {
-    return await this.projectRepository.find({ delete: false });
-  }
-
-  // project left join branch(only master branch)
-  async findProjectWithBranch(): Promise<any[]> {
-    return await this.projectRepository.query(
-      'SELECT x.*, y.* FROM (SELECT p.id, p.name as project_name, p.modifier, p.modify_time, p.type, ' +
-      'b.id as branch_id FROM project p LEFT JOIN branch b ON p.id = b.project_id WHERE p.delete = FALSE' +
-      ' AND b.master = TRUE ORDER BY p.id) x LEFT JOIN (SELECT a.project_id, a.name as branch_name, ' +
-      'a.master as is_master, key.id as key_id, key.actual_id, key.namespace_id FROM (SELECT * FROM ' +
-      'branch LEFT JOIN branch_key ON branch.id = branch_key.branch_id WHERE branch_key.delete = FALSE ' +
-      'AND branch.master = TRUE) a LEFT JOIN key ON a.key_id = key.id WHERE key.delete = FALSE AND key.id ' +
-      '= key.actual_id) y ON x.id = y.project_id ORDER BY x.id',
-    );
-  }
-
-  // project left join language
-  async findProjectWithLanguages(): Promise<any[]> {
-    return await this.projectRepository.query(
-      'SELECT p.id as project_id, p.name as project_name, p.reference_language_id, ' +
-      'p.type, p.modifier, p.modify_time, b.language_id, b.name as language_name FROM' +
-      ' project p LEFT JOIN (SELECT pl.project_id,pl.language_id,l."name" FROM ' +
-      'project_language pl LEFT JOIN language l on l.id = pl.language_id WHERE ' +
-      'pl.delete = FALSE) b ON p.id = b.project_id WHERE p.delete = FALSE ORDER BY p.id',
-    );
-  }
-
   /**
    * 通过项目id获取项目详情
    */
@@ -228,7 +203,7 @@ export class ProjectService {
         if (isMasterBranch){
           namespaceVO.totalKeys = await this.keyService.countMaster(branchId,n.id);
         } else {
-          
+
         }
         totalKeys += namespaceVO.totalKeys;
         totalTranferKeys += namespaceVO.translatedKeys;
@@ -241,4 +216,28 @@ export class ProjectService {
     };
     return result;
   }
+  // project left join branch(only master branch)
+  async findProjectWithBranch(): Promise<any[]> {
+    return await this.projectRepository.query(
+      'SELECT x.*, y.* FROM (SELECT p.id, p.name as project_name, p.modifier, p.modify_time, p.type, ' +
+      'b.id as branch_id FROM project p LEFT JOIN branch b ON p.id = b.project_id WHERE p.delete = FALSE' +
+      ' AND b.master = TRUE ORDER BY p.id) x LEFT JOIN (SELECT a.project_id, a.name as branch_name, ' +
+      'a.master as is_master, key.id as key_id, key.actual_id, key.namespace_id FROM (SELECT * FROM ' +
+      'branch LEFT JOIN branch_key ON branch.id = branch_key.branch_id WHERE branch_key.delete = FALSE ' +
+      'AND branch.master = TRUE) a LEFT JOIN key ON a.key_id = key.id WHERE key.delete = FALSE AND key.id ' +
+      '= key.actual_id) y ON x.id = y.project_id ORDER BY x.id',
+    );
+  }
+
+  // project left join language
+  async findProjectWithLanguages(): Promise<any[]> {
+    return await this.projectRepository.query(
+      'SELECT p.id as project_id, p.name as project_name, p.reference_language_id, ' +
+      'p.type, p.modifier, p.modify_time, b.language_id, b.name as language_name FROM' +
+      ' project p LEFT JOIN (SELECT pl.project_id,pl.language_id,l."name" FROM ' +
+      'project_language pl LEFT JOIN language l on l.id = pl.language_id WHERE ' +
+      'pl.delete = FALSE) b ON p.id = b.project_id WHERE p.delete = FALSE ORDER BY p.id',
+    );
+  }
+
 }

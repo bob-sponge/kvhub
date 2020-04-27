@@ -1,5 +1,5 @@
-import { Page } from "./Page";
-import { IsString } from "class-validator";
+import { Page } from './Page';
+import { IsString } from 'class-validator';
 
 export class PageSearch extends Page {
   @IsString()

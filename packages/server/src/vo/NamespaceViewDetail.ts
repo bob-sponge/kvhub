@@ -1,4 +1,4 @@
-export class NamespaceViewDetail{
+export class NamespaceViewDetail {
   namespaceId: number;
   referenceLanguageId: number;
   targetLanguageId: number;
