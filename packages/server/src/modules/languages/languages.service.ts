@@ -10,4 +10,8 @@ export class LanguagesService {
   async findAll(): Promise<Language[]> {
     return await this.languagesRepository.find();
   }
+
+  async findOne(id: number): Promise<boolean> {
+    return (await this.languagesRepository.findOne({ id: id })) === undefined;
+  }
 }

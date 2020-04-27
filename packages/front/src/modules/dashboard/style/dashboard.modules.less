@@ -1,0 +1,118 @@
+@import '../../../style/main.less';
+
+.dashboard {
+ 
+  &-title {
+    display: flex;
+    justify-content: space-between;
+    margin: 0 24px;
+    .title {
+      color: @black;
+      font-size: 24px;
+    }
+
+    .operation {
+      button:first-child {
+        margin-right: 16px;
+      }
+    }
+  }
+
+  &-content {
+    margin-top: 16px;
+    .i18n-card-list();
+  }
+}
+
+.i18n-card-list(@width: 33%) {
+  display: flex;
+  flex-wrap: wrap;
+  padding-right:12px;
+
+  .card {
+    &-wapper{
+      padding: 0 0 24px 24px;
+      width: @width;
+    }
+    &-list {
+      background-color: @white;
+      padding: 16px;
+    }
+
+    &-title {
+      color: @black;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    &-translate {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-top: 12px;
+
+      .keys {
+        display: flex;
+        align-items: baseline;
+
+        &-current {
+          font-size: 32px;
+        }
+
+        &-total {
+          color: @light-grey;
+          margin-left: 8px;
+
+          &::before {
+            content: '/';
+            display: inline;
+            padding-right: 4px;
+          }
+        }
+      }
+
+      .precent {
+        font-size: 14px;
+
+        &::after {
+          content: '%'
+        }
+      }
+    }
+
+    &-bar {
+      width: 100%;
+    }
+
+    &-update {
+      color: @light-grey;
+      font-size: 12px;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-top: 12px;
+
+      .language {
+        span {
+          &::after {
+            content: '/';
+          }
+
+          &:last-child {
+            &::after {
+              content: ',';
+            }
+          }
+        }
+
+        &::before {
+          content: '(';
+        }
+
+        &::after {
+          content: ')';
+        }
+      }
+    }
+  }
+}

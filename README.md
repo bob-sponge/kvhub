@@ -2,8 +2,7 @@
 
 Key value system.
 
-
-### First Step 
+### First Step
 
 #### If no postgres database
 
@@ -16,6 +15,7 @@ Key value system.
 
   docker ps -a
   ```
+
   > tips: using the latest version of postgres image will cause the lower version of Navicat to not display the table properly
 
 - Create the database manually: i18n
@@ -51,11 +51,21 @@ yarn typeorm migration:generate -n Migration
 ```js
 yarn migration
 ```
+
 ---
 
+### yarn workspace
 
+use yarn workspace
 
+add dependency for @kvhub/front
 
+```
+yarn workspace @kvhub/front add xxx
+```
 
+add dependency for @kvhub/server
 
-
+```
+yarn workspace @kvhub/server add xxx
+```

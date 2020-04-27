@@ -4,3 +4,7 @@ database:
   username: postgres
   password: 123456
   database: i18n
+constants:
+  modifier: admin
+  project_type: i18n
+  branch_name: master
