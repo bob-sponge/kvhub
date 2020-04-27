@@ -189,16 +189,16 @@ export class ProjectService {
    * 通过项目id获取项目详情
    */
   async getProjectView(id:number,branchId:number): Promise<ProjectViewVO[]> {
-    const result : ProjectViewVO[] = [];
+    let result = [];
     let isMasterBranch = false;
     // 数据校验
     const project = await this.projectRepository.find({id,delete:false});
     if (null === project || project.length === 0 ){
-      
+      throw new BadRequestException('project is not exist');
     }
     const branch = await this.branchService.getBranchById(branchId);
     if (null === branch){
-
+      throw new BadRequestException('branch is not exist');
     } else {
       if (branch.master !== null && branch.master) {
         isMasterBranch = true;
@@ -206,37 +206,39 @@ export class ProjectService {
     }
 
     //获取项目的语言
-    const projectLanguageList : ProjectLanguageDTO[] = await this.projectLanguageService.findByProjectId(id);
+    let projectLanguageList : ProjectLanguageDTO[] = await this.projectLanguageService.findByProjectId(id);
 
     //获取项目的命名空间
-    const namespaceList : Namespace[] = await this.namespaceService.findByProjectId(id);
+    let namespaceList : Namespace[] = await this.namespaceService.findByProjectId(id);
 
     // 
-    projectLanguageList.forEach(p => {
+    for (let i =0; i<projectLanguageList.length;i++){
+      const p = projectLanguageList[i];
       let vo = new ProjectViewVO();
-      let namespaceVOList: NamespaceVO[];
+      let namespaceVOList: NamespaceVO[] = [];
       let totalKeys: number = 0;
-      let tranferKeys: number = 0;
+      let totalTranferKeys: number = 0;
       vo.id = p.id;
       vo.languageName = p.languageName;
-      namespaceList.forEach(n => {
+      for (let j =0; j<namespaceList.length;j++){
+        const n = namespaceList[j];
         let namespaceVO = new NamespaceVO();
         namespaceVO.id = n.id;
         namespaceVO.name = n.name;
         if (isMasterBranch){
-          this.keyService.countMaster(branchId,n.id).then(value => namespaceVO.totalKeys = value);
+          namespaceVO.totalKeys = await this.keyService.countMaster(branchId,n.id);
         } else {
           
         }
         totalKeys += namespaceVO.totalKeys;
-        tranferKeys += namespaceVO.translatedKeys;
+        totalTranferKeys += namespaceVO.translatedKeys;
         namespaceVOList.push(namespaceVO);
-      });
+      }
       vo.namespaceList = namespaceVOList;
       vo.totalKeys = totalKeys;
-      vo.translatedKeys = tranferKeys;
+      vo.translatedKeys = totalTranferKeys;
       result.push(vo);
-    });
+    };
     return result;
   }
 }
