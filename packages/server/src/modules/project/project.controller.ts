@@ -3,7 +3,6 @@ import { ProjectService } from './project.service';
 import { ResponseBody } from 'src/vo/ResponseBody';
 import { ProjectViewVO } from 'src/vo/ProjectViewVO';
 import { ProjectVO } from 'src/vo/PorjectVO';
-import { Project } from 'src/entities/Project';
 
 @Controller('project')
 export class ProjectController {
