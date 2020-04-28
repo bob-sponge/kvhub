@@ -3,7 +3,8 @@ import { Branch } from 'src/entities/Branch';
 import { BranchService } from './branch.service';
 import { ResponseBody } from 'src/vo/ResponseBody';
 import { BranchVO } from 'src/vo/BranchVO';
-import { LoggerInterceptor } from 'src/interceptor/logger.inteceptor';
+import { Page } from 'src/vo/Page';
+import { PageSearch } from 'src/vo/PageSearch';
 
 @Controller('branch')
 export class BranchController {
@@ -14,18 +15,27 @@ export class BranchController {
     return this.branchService.findBranchByProjectId(projectId);
   }
 
-  @Get('/all')
-  async findBranchList(): Promise<ResponseBody> {
-    return ResponseBody.okWithData(await this.branchService.findAll());
+  @Post('/find')
+  async findBranchByCondition(@Body() pageSearch: PageSearch): Promise<ResponseBody> {
+    return ResponseBody.okWithData(await this.branchService.findByCondition(pageSearch));
   }
 
-  @Delete('delete/:id')
+  /**
+   * 分页查询
+   */
+  @Post('/all')
+  @UsePipes(new ValidationPipe())
+  async findBranchList(@Body() page: Page): Promise<ResponseBody> {
+    return ResponseBody.okWithData(await this.branchService.findAllWithPage(page));
+  }
+
+  @Delete('/delete/:id')
   async deleteBranch(@Param('id') id: number): Promise<ResponseBody> {
     await this.branchService.deleteBranch(id);
     return ResponseBody.okWithMsg('delete success');
   }
 
-  @Post('save')
+  @Post('/save')
   @UsePipes(new ValidationPipe())
   async addBranch(@Body() branchVO: BranchVO): Promise<ResponseBody> {
     await this.branchService.save(branchVO);
