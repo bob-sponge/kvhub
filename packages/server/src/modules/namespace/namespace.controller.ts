@@ -1,11 +1,19 @@
 import { Controller, Post, Body, Get, Param } from '@nestjs/common';
 import { NamespaceService } from './namespace.service';
 import { ResponseBody } from 'src/vo/ResponseBody';
+import { Namespace } from 'src/entities/Namespace';
 import { NamespaceViewDetail } from 'src/vo/NamespaceViewDetail';
 
 @Controller('namespace')
 export class NamespaceController {
   constructor(private readonly namespaceService: NamespaceService) {}
+
+  @Post('/save')
+  async save(@Body() vo: Namespace): Promise<ResponseBody> {
+    await this.namespaceService.save(vo);
+    return ResponseBody.ok();
+  }
+
   /**
    * @description
    * 根据namespaceId, languageId,KeyTranslateProgressStatus(all, unfinished, finished)查询key

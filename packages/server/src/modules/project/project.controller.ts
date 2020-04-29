@@ -6,14 +6,24 @@ import { ProjectVO } from 'src/vo/PorjectVO';
 
 @Controller('project')
 export class ProjectController {
-  constructor(private readonly projectService: ProjectService) {}
-  // find all projects with key and languages
-  @Get('all')
-  async findAll(): Promise<ResponseBody> {
-    return ResponseBody.okWithData(await this.projectService.findAllPorjects());
+  constructor(private readonly projectService: ProjectService) { }
+  /**
+   * find all projects with key and languages
+   */
+  @Get('dashboard/all')
+  async findAllDashboardProjects(): Promise<ResponseBody> {
+    return ResponseBody.okWithData(await this.projectService.dashboardPorjects());
   }
 
-  @Post('save')
+  /**
+   * find all projects
+   */
+  @Get('all')
+  async findAllProjects(): Promise<ResponseBody> {
+    return ResponseBody.okWithData(await this.projectService.allProjects());
+  }
+
+  @Post('dashboard/save')
   @UsePipes(new ValidationPipe())
   async addProject(@Body() projectVO: ProjectVO): Promise<ResponseBody> {
     await this.projectService.saveProject(projectVO);
@@ -21,7 +31,7 @@ export class ProjectController {
   }
 
   @Get('view/:id/:branchId')
-  async projectView(@Param('id') id: number, @Param('branchId') branchId: number): Promise<ProjectViewVO[]> {
-    return this.projectService.getProjectView(id, branchId);
+  async projectView(@Param('id') id: number, @Param('branchId') branchId: number): Promise<ResponseBody> {
+    return ResponseBody.okWithData(await this.projectService.getProjectView(id, branchId));
   }
 }

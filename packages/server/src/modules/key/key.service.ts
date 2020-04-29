@@ -19,13 +19,14 @@ export class KeyService {
     );
   }
 
-  async count(branchId:number,namespaceId:number):Promise<number> {
+  async countMaster(branchId:number,namespaceId:number):Promise<number> {
     return await this.keyRepository.query(
       ' select count(*) from key k left join branch_key bk ' + 
       ' on k.id = bk.key_id where bk.delete = false and k.delete = false ' +
-      ' and bk.branch_id = '+branchId+' and k.namespace_id = '+ namespaceId +' ');
+      ' and bk.branch_id = '+branchId+' and k.namespace_id = '+ namespaceId +' '
+    );
+  }
   
-    }
   // key: count(key) 因为只会获取keyvalue的最新值，所以count(key)既是count(language)
   async countKey(): Promise<any[]> {
     return await this.keyRepository.query(

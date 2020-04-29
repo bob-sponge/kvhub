@@ -2,7 +2,7 @@ import * as React from 'react';
 import { ajax } from '@ofm/ajax';
 import { Router, Route, Switch } from 'react-router-dom';
 import { history } from '@ofm/history';
-import NamespaceView from './namespace';
+import NamespaceView from './modules/namespace';
 import Languages from './modules/languages';
 import Dashboard from './modules/dashboard';
 

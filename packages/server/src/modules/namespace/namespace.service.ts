@@ -192,4 +192,10 @@ export class NamespaceService {
   async count() {
     return await this.namespaceRepository.count();
   }
+
+  async save(vo:Namespace){
+    vo.delete = false;
+    vo.modifyTime = new Date();
+    this.namespaceRepository.save(vo);
+  }
 }

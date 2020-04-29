@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/member-ordering */
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { Project } from 'src/entities/Project';
 import { Namespace } from 'src/entities/Namespace';
@@ -26,8 +25,6 @@ export class ProjectService {
   constructor(
     @InjectRepository(Project)
     private readonly projectRepository: Repository<Project>,
-    @InjectRepository(Namespace)
-    private readonly namespaceRepostiory: Repository<Namespace>,
     private readonly branchService: BranchService,
     private readonly keyService: KeyService,
     private readonly projectLanguageService: ProjectLanguageService,
@@ -40,10 +37,14 @@ export class ProjectService {
     this.modifier = this.config.get('constants', 'modifier');
   }
 
+  async allProjects(): Promise<Project[]> {
+    return await this.projectRepository.find({ delete: false });
+  }
+
   /**
    * 获取首页相关数据
    */
-  async findAllPorjects(): Promise<Dashboard[]> {
+  async dashboardPorjects(): Promise<Dashboard[]> {
     const projects: any[] = await this.findProjectWithBranch();
     const languages: any[] = await this.findProjectWithLanguages();
     const keysMap: any[] = await this.keyService.countKey();
@@ -98,7 +99,7 @@ export class ProjectService {
    * @param languages
    * @param keysMap
    */
-  private async consolidateData(projects: any[], languages: any[], keysMap: any[]): Promise<Dashboard[]> {
+  async consolidateData(projects: any[], languages: any[], keysMap: any[]): Promise<Dashboard[]> {
     const dashboards: Dashboard[] = [];
     // 获取project_ids
     const ids = new Set();
@@ -159,16 +160,72 @@ export class ProjectService {
     return dashboards;
   }
 
+  /**
+   * 通过项目id获取项目详情
+   */
+  async getProjectView(id:number,branchId:number): Promise<ProjectViewVO[]> {
+    let result = [];
+    let isMasterBranch = false;
+    // 数据校验
+    const project = await this.projectRepository.find({id,delete:false});
+    if (null === project || project.length === 0 ){
+      throw new BadRequestException('project is not exist');
+    }
+    const branch = await this.branchService.getBranchById(branchId);
+    if (null === branch){
+      throw new BadRequestException('branch is not exist');
+    } else {
+      if (branch.master !== null && branch.master) {
+        isMasterBranch = true;
+      }
+    }
+
+    //获取项目的语言
+    let projectLanguageList : ProjectLanguageDTO[] = await this.projectLanguageService.findByProjectId(id);
+
+    //获取项目的命名空间
+    let namespaceList : Namespace[] = await this.namespaceService.findByProjectId(id);
+
+    // 
+    for (let i =0; i<projectLanguageList.length;i++){
+      const p = projectLanguageList[i];
+      let vo = new ProjectViewVO();
+      let namespaceVOList: NamespaceVO[] = [];
+      let totalKeys: number = 0;
+      let totalTranferKeys: number = 0;
+      vo.id = p.id;
+      vo.languageName = p.languageName;
+      for (let j =0; j<namespaceList.length;j++){
+        const n = namespaceList[j];
+        let namespaceVO = new NamespaceVO();
+        namespaceVO.id = n.id;
+        namespaceVO.name = n.name;
+        if (isMasterBranch){
+          namespaceVO.totalKeys = await this.keyService.countMaster(branchId,n.id);
+        } else {
+
+        }
+        totalKeys += namespaceVO.totalKeys;
+        totalTranferKeys += namespaceVO.translatedKeys;
+        namespaceVOList.push(namespaceVO);
+      }
+      vo.namespaceList = namespaceVOList;
+      vo.totalKeys = totalKeys;
+      vo.translatedKeys = totalTranferKeys;
+      result.push(vo);
+    };
+    return result;
+  }
   // project left join branch(only master branch)
   async findProjectWithBranch(): Promise<any[]> {
     return await this.projectRepository.query(
       'SELECT x.*, y.* FROM (SELECT p.id, p.name as project_name, p.modifier, p.modify_time, p.type, ' +
-        'b.id as branch_id FROM project p LEFT JOIN branch b ON p.id = b.project_id WHERE p.delete = FALSE' +
-        ' AND b.master = TRUE ORDER BY p.id) x LEFT JOIN (SELECT a.project_id, a.name as branch_name, ' +
-        'a.master as is_master, key.id as key_id, key.actual_id, key.namespace_id FROM (SELECT * FROM ' +
-        'branch LEFT JOIN branch_key ON branch.id = branch_key.branch_id WHERE branch_key.delete = FALSE ' +
-        'AND branch.master = TRUE) a LEFT JOIN key ON a.key_id = key.id WHERE key.delete = FALSE AND key.id ' +
-        '= key.actual_id) y ON x.id = y.project_id ORDER BY x.id',
+      'b.id as branch_id FROM project p LEFT JOIN branch b ON p.id = b.project_id WHERE p.delete = FALSE' +
+      ' AND b.master = TRUE ORDER BY p.id) x LEFT JOIN (SELECT a.project_id, a.name as branch_name, ' +
+      'a.master as is_master, key.id as key_id, key.actual_id, key.namespace_id FROM (SELECT * FROM ' +
+      'branch LEFT JOIN branch_key ON branch.id = branch_key.branch_id WHERE branch_key.delete = FALSE ' +
+      'AND branch.master = TRUE) a LEFT JOIN key ON a.key_id = key.id WHERE key.delete = FALSE AND key.id ' +
+      '= key.actual_id) y ON x.id = y.project_id ORDER BY x.id',
     );
   }
 
@@ -176,41 +233,11 @@ export class ProjectService {
   async findProjectWithLanguages(): Promise<any[]> {
     return await this.projectRepository.query(
       'SELECT p.id as project_id, p.name as project_name, p.reference_language_id, ' +
-        'p.type, p.modifier, p.modify_time, b.language_id, b.name as language_name FROM' +
-        ' project p LEFT JOIN (SELECT pl.project_id,pl.language_id,l."name" FROM ' +
-        'project_language pl LEFT JOIN language l on l.id = pl.language_id WHERE ' +
-        'pl.delete = FALSE) b ON p.id = b.project_id WHERE p.delete = FALSE ORDER BY p.id',
+      'p.type, p.modifier, p.modify_time, b.language_id, b.name as language_name FROM' +
+      ' project p LEFT JOIN (SELECT pl.project_id,pl.language_id,l."name" FROM ' +
+      'project_language pl LEFT JOIN language l on l.id = pl.language_id WHERE ' +
+      'pl.delete = FALSE) b ON p.id = b.project_id WHERE p.delete = FALSE ORDER BY p.id',
     );
   }
 
-  /**
-   * 通过项目id获取项目详情
-   */
-  async getProjectView(id: number, branchId: number): Promise<ProjectViewVO[]> {
-    const result: ProjectViewVO[] = [];
-    const projectLanguageList: ProjectLanguageDTO[] = await this.projectLanguageService.findByProjectId(id);
-    const namespaceList: Namespace[] = await this.namespaceService.findByProjectId(id);
-    projectLanguageList.forEach(p => {
-      let vo = new ProjectViewVO();
-      let namespaceVOList: NamespaceVO[];
-      let totalKeys: number = 0;
-      let tranferKeys: number = 0;
-      vo.id = p.id;
-      vo.languageName = p.languageName;
-      namespaceList.forEach(n => {
-        let namespaceVO = new NamespaceVO();
-        namespaceVO.id = n.id;
-        namespaceVO.name = n.name;
-        this.keyService.count(branchId, n.id).then(value => (namespaceVO.totalKeys = value));
-        totalKeys += namespaceVO.totalKeys;
-        tranferKeys += namespaceVO.translatedKeys;
-        namespaceVOList.push(namespaceVO);
-      });
-      vo.namespaceList = namespaceVOList;
-      vo.totalKeys = totalKeys;
-      vo.translatedKeys = tranferKeys;
-      result.push(vo);
-    });
-    return result;
-  }
 }
