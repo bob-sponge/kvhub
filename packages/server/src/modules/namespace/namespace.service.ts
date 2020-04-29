@@ -14,6 +14,33 @@ export class NamespaceService {
     private readonly namespaceRepository: Repository<Namespace>,
   ) {}
 
+  async editKeyValueOnlanguage(languageId: number, keyId: number, keyvalue: string) {
+    const logger = Log4js.getLogger();
+    logger.level = 'INFO';
+    logger.info(languageId, keyId, keyvalue);
+  }
+
+  async getNamespaceLanguage(id: number) {
+    const logger = Log4js.getLogger();
+    logger.level = 'INFO';
+    const languageQuery = `
+    SELECT *
+    FROM language
+    WHERE id IN (
+      SELECT language_id
+      FROM project_language
+      WHERE project_id IN (
+        SELECT project_id
+        FROM namespace
+        WHERE id = ${id}
+      )
+    )
+    `;
+    logger.info(`query2 is ${languageQuery}`);
+    const language: any[] = await this.namespaceRepository.query(languageQuery);
+    return language;
+  }
+
   async getKeysByCondition(namespaceViewDetail: NamespaceViewDetail): Promise<any[]> {
     const logger = Log4js.getLogger();
     logger.level = 'INFO';
@@ -74,7 +101,7 @@ export class NamespaceService {
       for (const namespaceKey of namespaceKeys) {
         const kid = namespaceKey.keyid;
         const kn = namespaceKey.keyname;
-        const lg = namespaceKey.languageid;
+        const lg = namespaceKey.languageid === null ? targetLanguageId : namespaceKey.languageid;
         const kv = namespaceKey.keyvalue;
         const vue = namespaceKey.valueid;
         const targetLanguageValue = {
@@ -122,7 +149,7 @@ export class NamespaceService {
           const keyId = namespaceRefKey.keyid;
           const valueId = namespaceRefKey.valueid;
           const keyValue = namespaceRefKey.keyvalue;
-          const languageId = namespaceRefKey.languageid;
+          const languageId = namespaceRefKey.languageid === null ? referenceLanguageId : namespaceRefKey.languageid;
           const value = {
             valueId,
             keyValue,
@@ -133,14 +160,14 @@ export class NamespaceService {
         for (const namespaceKey of namespaceKeys) {
           const kid = namespaceKey.keyid;
           const kn = namespaceKey.keyname;
-          const lg = namespaceKey.languageid;
+          let lg = namespaceKey.languageid;
           const kv = namespaceKey.keyvalue;
           const vue = namespaceKey.valueid;
           const refreLanguageValue = map.get(kid);
           const targetLanguageValue = {
             valueId: vue,
             keyValue: kv,
-            languageId: lg,
+            languageId: lg === null ? targetLanguageId : lg,
           };
           const value = {
             keyId: kid,
