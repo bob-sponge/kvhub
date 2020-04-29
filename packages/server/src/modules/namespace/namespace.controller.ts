@@ -2,7 +2,6 @@ import { Controller, Post, Body, Get, Param } from '@nestjs/common';
 import { NamespaceService } from './namespace.service';
 import { ResponseBody } from 'src/vo/ResponseBody';
 import { NamespaceViewDetail } from 'src/vo/NamespaceViewDetail';
-import { Keyvalue } from 'src/entities/Keyvalue';
 
 @Controller('namespace')
 export class NamespaceController {
