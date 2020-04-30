@@ -11,6 +11,8 @@ import { PageSearch } from 'src/vo/PageSearch';
 import { BranchMerge } from 'src/entities/BranchMerge';
 import { BranchBody } from 'src/vo/BranchBody';
 import { BranchVO } from 'src/vo/BranchVO';
+import { ResponseBody } from 'src/vo/ResponseBody';
+import { CompareVO } from 'src/vo/CompareVO';
 
 @Injectable()
 export class BranchService {
@@ -29,6 +31,29 @@ export class BranchService {
     ]);
   }
 
+  async compare(compareVO: CompareVO): Promise<void> {
+    const ids = [compareVO.branchIdOne, compareVO.branchIdTwo];
+    const branchs: Branch[] = await this.branchRepository.findByIds(ids);
+    if (branchs.length !== 2) {
+      throw new BadRequestException('branchId is not exist');
+    }
+    const oneSet = await this.getAllBranchId(compareVO.branchIdOne);
+    const twoSet = await this.getAllBranchId(compareVO.branchIdTwo);
+    // 通过branch id 找key
+  }
+
+  /**
+   * 通过传入的branch id 查找其对应project下的master branch
+   * @param id branch id
+   */
+  async getAllBranchId(id: number): Promise<Set<number>> {
+    const branch: Branch = await this.branchRepository.findOne({ id: id });
+    const masterId: number = await this.branchRepository.query(
+      'select id from branch where project_id = ' +
+      '(select id from project where id = ' +
+      `(select project_id from branch where id = '${branch.id}')) and master = true`);
+    return new Set<number>([masterId, id]);;
+  }
   /**
    * 分页返回branchs
    * @param page page
