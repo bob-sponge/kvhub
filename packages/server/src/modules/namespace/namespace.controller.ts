@@ -34,42 +34,45 @@ export class NamespaceController {
    * @returns
    * {
     "statusCode": 0,
-    "data": [
-        {
-            "keyId": 1,
-            "keyName": "t1",
-            "refreLanguageValue": {
-                "valueId": 1,
-                "keyValue": "aaaa",
-                "languageId": 1
+    "data": {
+        "keys": [
+            {
+                "keyId": 1,
+                "keyName": "t1",
+                "refreLanguageValue": {
+                    "valueId": 1,
+                    "keyValue": "aaaa",
+                    "languageId": 1
+                },
+                "targetLanguageValue": {
+                    "valueId": 6,
+                    "keyValue": "wewee",
+                    "languageId": 2
+                }
             },
-            "targetLanguageValue": {
-                "valueId": 6,
-                "keyValue": "wewee",
-                "languageId": 2
+            {
+                "keyId": 2,
+                "keyName": "t2",
+                "refreLanguageValue": {
+                    "valueId": 2,
+                    "keyValue": "ass",
+                    "languageId": 1
+                },
+                "targetLanguageValue": {
+                    "valueId": null,
+                    "keyValue": null,
+                    "languageId": 2
+                }
             }
-        },
-        {
-            "keyId": 2,
-            "keyName": "t2",
-            "refreLanguageValue": {
-                "valueId": 2,
-                "keyValue": "ass",
-                "languageId": 1
-            },
-            "targetLanguageValue": {
-                "valueId": null,
-                "keyValue": null,
-                "languageId": "2"
-            }
-        },
-      ],
+        ],
+        "totalNum": 7
+    },
     "message": "success"
-    }
+}
    */
   @Post('/view/keys')
   async view(@Body() namespaceViewDetail: NamespaceViewDetail): Promise<ResponseBody> {
-    const namespaceKey: any[] = await this.namespaceService.getKeysByCondition(namespaceViewDetail);
+    const namespaceKey = await this.namespaceService.getKeysByCondition(namespaceViewDetail);
     return ResponseBody.okWithData(namespaceKey);
   }
   /**
@@ -101,13 +104,38 @@ export class NamespaceController {
     return ResponseBody.okWithData(language);
   }
 
+  /**
+   * @description
+   * 修改 key 的 value
+   * @request
+   *  url: http://localhost:5000/namespace/view/language/1/key/3
+   *  method: post
+   *  param: languageId # language id
+   *  param: keyId # key id
+   *  body: keyvalue # key value
+   *  request body example:
+   *  {
+	      "keyvalue": "ssdsdsd11"
+      }
+   * @returns
+    {
+      "statusCode": 0,
+      "data": [
+          {
+              "id": 17  //record id
+          }
+      ],
+      "message": "success"
+    }
+   */
   @Post('/view/language/:languageId/key/:keyId')
   async editKeyValue(
     @Param('languageId') languageId: number,
     @Param('keyId') keyId: number,
-    @Body() keyvalue: string,
+    @Body() keyvalue: any,
   ): Promise<ResponseBody> {
-    await this.namespaceService.editKeyValueOnlanguage(languageId, keyId, keyvalue);
-    return ResponseBody.okWithMsg('operate success');
+    const value = keyvalue.keyvalue;
+    const data = await (await this.namespaceService.editKeyValueOnlanguage(languageId, keyId, value)).raw;
+    return ResponseBody.okWithData(data);
   }
 }

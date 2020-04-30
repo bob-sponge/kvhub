@@ -6,18 +6,26 @@ import { Namespace } from 'src/entities/Namespace';
 import { Repository } from 'typeorm';
 import { NamespaceViewDetail } from 'src/vo/NamespaceViewDetail';
 import * as Log4js from 'log4js';
+import { Keyvalue } from 'src/entities/Keyvalue';
 
 @Injectable()
 export class NamespaceService {
   constructor(
     @InjectRepository(Namespace)
     private readonly namespaceRepository: Repository<Namespace>,
+    @InjectRepository(Keyvalue)
+    private readonly keyvalueRepository: Repository<Keyvalue>,
   ) {}
 
   async editKeyValueOnlanguage(languageId: number, keyId: number, keyvalue: string) {
     const logger = Log4js.getLogger();
     logger.level = 'INFO';
     logger.info(languageId, keyId, keyvalue);
+    const value = new Keyvalue();
+    value.keyId = keyId;
+    value.languageId = languageId;
+    value.value = keyvalue;
+    return await this.keyvalueRepository.insert(value);
   }
 
   async getNamespaceLanguage(id: number) {
@@ -41,7 +49,7 @@ export class NamespaceService {
     return language;
   }
 
-  async getKeysByCondition(namespaceViewDetail: NamespaceViewDetail): Promise<any[]> {
+  async getKeysByCondition(namespaceViewDetail: NamespaceViewDetail): Promise<any> {
     const logger = Log4js.getLogger();
     logger.level = 'INFO';
     const namespaceId = namespaceViewDetail.namespaceId;
@@ -62,39 +70,25 @@ export class NamespaceService {
     } else {
       statusCondition = '';
     }
-    const query = `SELECT *
-    FROM (
-     SELECT kkk.keyId AS keyId, kkk.keyNameId AS keyNameId, kkk.keyName AS keyName, kkk.id AS valueId, kkk.language_id AS languageId\
-       , kkk.value AS keyValue
-     FROM (
-       SELECT *
-       FROM (
-         SELECT kkn.keyid AS keyId, kkn.id AS keyNameId, kkn.name AS keyName
-         FROM (
-           SELECT *
-           FROM (
-             SELECT k.id AS keyid
-             FROM key k
-             WHERE k.delete = 'f'
-               AND namespace_id = ${namespaceId}
-           ) kt
-             JOIN keyname kn ON kt.keyid = kn.key_id
-         ) kkn
-         WHERE kkn.name LIKE '%${condition}%'
-       ) kknt
-         LEFT JOIN (
-           SELECT *
-           FROM keyvalue
-           WHERE language_id = ${targetLanguageId}
-         ) kv
-         ON kknt.keyid = kv.key_id
-     ) kkk
-   ) kkkt
-   ${statusCondition}
-   ORDER BY keyName ASC
-   LIMIT ${pageSize} OFFSET ${offset}`;
-    logger.info(`query is ${query}`);
-    const namespaceKeys: any[] = await this.namespaceRepository.query(query);
+    // 获取target language key
+    let pageCondition = `LIMIT ${pageSize} OFFSET ${offset}`;
+    const namespaceKeys: any[] = await this.getNamespaceTargetLanguageKeys(
+      namespaceId,
+      condition,
+      targetLanguageId,
+      statusCondition,
+      pageCondition,
+    );
+    // 获取总数
+    pageCondition = '';
+    const namespaceAllKeys: any[] = await this.getNamespaceTargetLanguageKeys(
+      namespaceId,
+      condition,
+      targetLanguageId,
+      statusCondition,
+      pageCondition,
+    );
+    const totalNum = namespaceAllKeys.length;
     let keyidlist = [];
     let retNsKey = [];
     if (referenceLanguageId === targetLanguageId) {
@@ -179,7 +173,49 @@ export class NamespaceService {
         }
       }
     }
-    return retNsKey;
+    const result = {
+      keys: retNsKey,
+      totalNum,
+    };
+    return result;
+  }
+
+  async getNamespaceTargetLanguageKeys(namespaceId, searchCondition, targetLanguageId, statusCondition, pageCondition) {
+    const logger = Log4js.getLogger();
+    logger.level = 'INFO';
+    const query = `SELECT *
+    FROM (
+     SELECT kkk.keyId AS keyId, kkk.keyNameId AS keyNameId, kkk.keyName AS keyName, kkk.id AS valueId, kkk.language_id AS languageId\
+       , kkk.value AS keyValue
+     FROM (
+       SELECT *
+       FROM (
+         SELECT kkn.keyid AS keyId, kkn.id AS keyNameId, kkn.name AS keyName
+         FROM (
+           SELECT *
+           FROM (
+             SELECT k.id AS keyid
+             FROM key k
+             WHERE k.delete = 'f'
+               AND namespace_id = ${namespaceId}
+           ) kt
+             JOIN keyname kn ON kt.keyid = kn.key_id
+         ) kkn
+         WHERE kkn.name LIKE '%${searchCondition}%'
+       ) kknt
+         LEFT JOIN (
+           SELECT *
+           FROM keyvalue
+           WHERE language_id = ${targetLanguageId}
+         ) kv
+         ON kknt.keyid = kv.key_id
+     ) kkk
+   ) kkkt
+   ${statusCondition}
+   ORDER BY keyName ASC
+   ${pageCondition}`;
+    logger.info(`query is ${query}`);
+    return await this.namespaceRepository.query(query);
   }
   async findAll(): Promise<Namespace[]> {
     return await this.namespaceRepository.find();
@@ -193,7 +229,7 @@ export class NamespaceService {
     return await this.namespaceRepository.count();
   }
 
-  async save(vo:Namespace){
+  async save(vo: Namespace) {
     vo.delete = false;
     vo.modifyTime = new Date();
     this.namespaceRepository.save(vo);
