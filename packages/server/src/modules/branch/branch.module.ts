@@ -13,4 +13,4 @@ import { BranchMerge } from 'src/entities/BranchMerge';
   providers: [BranchService],
   exports: [BranchService],
 })
-export class BranchModule { }
+export class BranchModule {}

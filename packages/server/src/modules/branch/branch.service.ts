@@ -11,8 +11,8 @@ import { PageSearch } from 'src/vo/PageSearch';
 import { BranchMerge } from 'src/entities/BranchMerge';
 import { BranchBody } from 'src/vo/BranchBody';
 import { BranchVO } from 'src/vo/BranchVO';
-import { ResponseBody } from 'src/vo/ResponseBody';
 import { CompareVO } from 'src/vo/CompareVO';
+import { KeyVO } from 'src/vo/KeyVO';
 
 @Injectable()
 export class BranchService {
@@ -37,22 +37,44 @@ export class BranchService {
     if (branchs.length !== 2) {
       throw new BadRequestException('branchId is not exist');
     }
-    const oneSet = await this.getAllBranchId(compareVO.branchIdOne);
-    const twoSet = await this.getAllBranchId(compareVO.branchIdTwo);
+    const one = await this.getAllBranchId(compareVO.branchIdOne);
+    const two = await this.getAllBranchId(compareVO.branchIdTwo);
+
     // 通过branch id 找key
+  }
+
+  // branch_ids -> key_ids -> (key-value)s
+  async getValueByBranchId(ids: number[]): Promise<KeyVO[]> {
+    // 需要根据branch_Id去对应的表中查询 todo
+    // branch_id -> key_ids
+    const keys: number[] = await this.findKeyIdsByBranchIds(ids);
+    if (keys.length === 0) {
+      return null;
+    }
+    const result: any[] = await this.findKeysByKeyIds(keys);
+    let keyVOs: KeyVO[] = [];
+    result.forEach(r => {
+      let keyVO = new KeyVO();
+      keyVO.name = r.name;
+      keyVO.value = r.value;
+      keyVO.language = r.language_name;
+      keyVOs.push(keyVO);
+    });
+    return keyVOs;
   }
 
   /**
    * 通过传入的branch id 查找其对应project下的master branch
    * @param id branch id
    */
-  async getAllBranchId(id: number): Promise<Set<number>> {
+  async getAllBranchId(id: number): Promise<Array<number>> {
     const branch: Branch = await this.branchRepository.findOne({ id: id });
     const masterId: number = await this.branchRepository.query(
       'select id from branch where project_id = ' +
-      '(select id from project where id = ' +
-      `(select project_id from branch where id = '${branch.id}')) and master = true`);
-    return new Set<number>([masterId, id]);;
+        '(select id from project where id = ' +
+        `(select project_id from branch where id = '${branch.id}')) and master = true`,
+    );
+    return [masterId, id];
   }
   /**
    * 分页返回branchs
@@ -180,13 +202,32 @@ export class BranchService {
     }
   }
 
+  // branch_id -> key_Ids
+  async findKeyIdsByBranchIds(ids: number[]): Promise<any[]> {
+    return await this.branchRepository.query(
+      'SELECT key.id as key_id FROM (SELECT * FROM branch LEFT JOIN branch_key ON ' +
+        'branch.id = branch_key.branch_id WHERE branch_key.delete = FALSE AND branch.master = TRUE ' +
+        `AND branch.id in '${ids}') a ` +
+        'LEFT JOIN key ON a.key_id = key.id WHERE key.delete = FALSE',
+    );
+  }
+
+  // key_ids -> key-value
+  async findKeysByKeyIds(ids: number[]): Promise<any[]> {
+    return await this.branchRepository.query(
+      'SELECT k.key_id as id, k.name, a.value, a.language_name FROM keyname k inner join ' +
+        '(SELECT keyvalue.id, keyvalue.key_id, keyvalue.value, language.name as language_name, ' +
+        'keyvalue.latest from keyvalue LEFT JOIN language on keyvalue.language_id = language.id) ' +
+        `a on k.key_id = a.key_id WHERE a.latest = true AND k.id in '${ids}'`,
+    );
+  }
   // branch branch_key key
-  async findKeyWithBranch(): Promise<any[]> {
+  async findKeyWithBranch(): Promise<Set<number>> {
     return await this.branchRepository.query(
       'SELECT a.project_id, a.branch_id, a.name as branch_name, a.master as is_master, key.id as key_id, ' +
-      'key.actual_id, key.namespace_id FROM (SELECT * FROM branch LEFT JOIN branch_key ON ' +
-      'branch.id = branch_key.branch_id WHERE branch_key.delete = FALSE AND branch.master = TRUE) a ' +
-      'LEFT JOIN key ON a.key_id = key.id WHERE key.delete = FALSE',
+        'key.actual_id, key.namespace_id FROM (SELECT * FROM branch LEFT JOIN branch_key ON ' +
+        'branch.id = branch_key.branch_id WHERE branch_key.delete = FALSE AND branch.master = TRUE) a ' +
+        'LEFT JOIN key ON a.key_id = key.id WHERE key.delete = FALSE',
     );
   }
 

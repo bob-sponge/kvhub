@@ -10,7 +10,7 @@ async function bootstrap() {
     origin: true,
     credentials: true,
   });
-  app.useGlobalInterceptors(new LoggerInterceptor())
+  app.useGlobalInterceptors(new LoggerInterceptor());
   app.use(session({ secret: 'you know who', cookie: { maxAge: 3600000 } }, new ValidationPipe()));
   await app.listen(5000);
 }
