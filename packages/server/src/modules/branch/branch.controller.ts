@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Body, UsePipes, ValidationPipe, Post, Delete, Logger } from '@nestjs/common';
+import { Controller, Get, Param, Body, UsePipes, ValidationPipe, Post, Delete } from '@nestjs/common';
 import { Branch } from 'src/entities/Branch';
 import { BranchService } from './branch.service';
 import { ResponseBody } from 'src/vo/ResponseBody';
@@ -6,10 +6,11 @@ import { Page } from 'src/vo/Page';
 import { PageSearch } from 'src/vo/PageSearch';
 import { BranchBody } from 'src/vo/BranchBody';
 import { CompareVO } from 'src/vo/CompareVO';
+import { KeyVO } from 'src/vo/KeyVO';
 
 @Controller('branch')
 export class BranchController {
-  constructor(private readonly branchService: BranchService) { }
+  constructor(private readonly branchService: BranchService) {}
 
   /**
    * 根据projectId查询branch
@@ -61,7 +62,6 @@ export class BranchController {
 
   @Post('/compare')
   async branchCompare(@Body() compareVO: CompareVO): Promise<ResponseBody> {
-    await this.branchService.compare(compareVO);
-    return ResponseBody.okWithData('');
+    return ResponseBody.okWithData(await this.branchService.compare(compareVO));
   }
 }
