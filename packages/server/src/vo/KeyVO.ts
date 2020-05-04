@@ -1,6 +1,7 @@
+import { KeyValueVO } from './KeyValueVO';
+
 export class KeyVO {
-  id: number;
+  branchId: number;
   name: string;
-  value: string;
-  language: string;
+  values: KeyValueVO[];
 }
