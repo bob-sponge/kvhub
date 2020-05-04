@@ -251,6 +251,19 @@ export class BranchService {
     return await this.branchRepository.find({ projectId });
   }
 
+    /**
+   * 通过项目id查询分支
+   * @param projectId
+   */
+  async findBranchByProjectIdAndKeyword(projectId: number, keyword: string): Promise<Branch[]> {
+    return await this.branchRepository.createQueryBuilder('branch')
+    .where('branch.name Like :name and branch.projectid = :projectId')
+    .setParameters({
+      projectId,
+      name: '%' + keyword + '%',
+    }).getMany();
+  }
+
   /**
    * 保存branch,默认创建master
    * @param branchBody branchBody
