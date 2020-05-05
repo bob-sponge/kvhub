@@ -16,7 +16,6 @@ import { KeyVO } from 'src/vo/KeyVO';
 import { MergeDiffChangeKey } from 'src/entities/MergeDiffChangeKey';
 import { KeyValueVO } from 'src/vo/KeyValueVO';
 import { CompareBranchVO } from 'src/vo/CompareBranchVO';
-import { CompareResultVO } from 'src/vo/CompareResultVO';
 
 @Injectable()
 export class BranchService {
