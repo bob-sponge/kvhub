@@ -15,6 +15,8 @@ import { CompareVO } from 'src/vo/CompareVO';
 import { KeyVO } from 'src/vo/KeyVO';
 import { MergeDiffChangeKey } from 'src/entities/MergeDiffChangeKey';
 import { KeyValueVO } from 'src/vo/KeyValueVO';
+import { CompareBranchVO } from 'src/vo/CompareBranchVO';
+import { CompareResultVO } from 'src/vo/CompareResultVO';
 
 @Injectable()
 export class BranchService {
@@ -38,16 +40,19 @@ export class BranchService {
    * 不同branch间key的value比较
    * @param compareVO compareVO
    */
-  async compare(compareVO: CompareVO): Promise<KeyVO[]> {
+  async compare(compareVO: CompareVO): Promise<CompareBranchVO[]> {
     const ids = [compareVO.source, compareVO.destination];
     const branchs: Branch[] = await this.branchRepository.findByIds(ids);
     if (branchs.length !== 2) {
       throw new BadRequestException('branchId is not exist');
     }
-    let map = new Map<number, KeyVO[]>();
-    map.set(compareVO.source, await this.getValueByBranchId(compareVO.source));
-    map.set(compareVO.destination, await this.getValueByBranchId(compareVO.destination));
-    return null;
+    let source = new CompareBranchVO();
+    let destination = new CompareBranchVO();
+    source.id = compareVO.source;
+    source.keys = await this.getValueByBranchId(compareVO.source);
+    destination.id = compareVO.destination;
+    destination.keys = await this.getValueByBranchId(compareVO.destination);
+    return [source, destination];
   }
 
   /**
@@ -55,9 +60,67 @@ export class BranchService {
    * @param source source
    * @param destination destination
    */
-  async getDiff(source: string, destination: string) {
-    const start = 0;
-    const end = source.length > destination.length ? source.length : destination.length;
+  async getDiff(source: string, destination: string): Promise<string> {
+    if (source === destination) {
+      return destination;
+    }
+    if (source === '' && destination !== '') {
+      return '';
+    }
+    // eslint-disable-next-line prettier/prettier
+    const prefix = '<span style=\'color:blue\'>';
+    const suffix = '</sapn>';
+    if (source === '' && destination !== '') {
+      return prefix + destination + suffix;
+    }
+    let end;
+    let append;
+    if (source.length >= destination.length) {
+      end = destination.length;
+      append = true;
+    } else {
+      end = source.length;
+      append = false;
+    }
+    const result = [];
+    const sourceArray = source.split('');
+    const destArray = destination.split('');
+    let flag = false;
+    for (let index = 0; index < end; index++) {
+      if (sourceArray[index] !== destArray[index]) {
+        if (index === 0) {
+          result.push(prefix);
+          result.push(destArray[index]);
+          flag = true;
+          continue;
+        }
+        if (index > 0 && sourceArray[index - 1] !== destArray[index - 1]) {
+          result.push(destArray[index]);
+        } else {
+          result.push(prefix);
+          result.push(destArray[index]);
+        }
+        flag = true;
+      } else {
+        if (flag) {
+          result.push(suffix);
+          result.push(destArray[index]);
+          flag = false;
+        } else {
+          result.push(sourceArray[index]);
+        }
+      }
+      // 此时到末尾
+      if (index === end - 1 && flag) {
+        if (append) {
+          result.push(source.substring(end, source.length));
+        } else {
+          result.push(destination.substring(end, destination.length));
+        }
+        result.push(suffix);
+      }
+    }
+    return result.toString().replace(/,/g, '');
   }
 
   /**
@@ -78,7 +141,6 @@ export class BranchService {
         let values = [];
         let keyVO = new KeyVO();
         keys.forEach(k => {
-          keyVO.branchId = k.branchId;
           keyVO.name = k.key;
           let value = new KeyValueVO();
           value.value = k.value;
@@ -109,11 +171,10 @@ export class BranchService {
           let values = [];
           result.forEach(r => {
             if (i === r.id) {
-              keyVO.branchId = b.id;
               keyVO.name = r.name;
               let keyValue = new KeyValueVO();
               keyValue.value = r.value;
-              keyValue.language = r.language;
+              keyValue.language = r.language_name;
               values.push(keyValue);
             }
           });
@@ -122,7 +183,7 @@ export class BranchService {
         });
       }
     }
-    return keyVOs;
+    return keyVOs.sort((a, b) => a.name.localeCompare(b.name));
   }
 
   /**
@@ -251,17 +312,19 @@ export class BranchService {
     return await this.branchRepository.find({ projectId });
   }
 
-    /**
+  /**
    * 通过项目id查询分支
    * @param projectId
    */
   async findBranchByProjectIdAndKeyword(projectId: number, keyword: string): Promise<Branch[]> {
-    return await this.branchRepository.createQueryBuilder('branch')
-    .where('branch.name Like :name and branch.projectid = :projectId')
-    .setParameters({
-      projectId,
-      name: '%' + keyword + '%',
-    }).getMany();
+    return await this.branchRepository
+      .createQueryBuilder('branch')
+      .where('branch.name Like :name and branch.projectid = :projectId')
+      .setParameters({
+        projectId,
+        name: '%' + keyword + '%',
+      })
+      .getMany();
   }
 
   /**
