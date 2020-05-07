@@ -11,8 +11,11 @@ import { PageSearch } from 'src/vo/PageSearch';
 import { BranchMerge } from 'src/entities/BranchMerge';
 import { BranchBody } from 'src/vo/BranchBody';
 import { BranchVO } from 'src/vo/BranchVO';
-import { ResponseBody } from 'src/vo/ResponseBody';
 import { CompareVO } from 'src/vo/CompareVO';
+import { KeyVO } from 'src/vo/KeyVO';
+import { MergeDiffChangeKey } from 'src/entities/MergeDiffChangeKey';
+import { KeyValueVO } from 'src/vo/KeyValueVO';
+import { CompareBranchVO } from 'src/vo/CompareBranchVO';
 
 @Injectable()
 export class BranchService {
@@ -22,6 +25,7 @@ export class BranchService {
     @InjectRepository(BranchKey) private readonly branchKeyRepository: Repository<BranchKey>,
     @InjectRepository(Project) private readonly projectRepository: Repository<Project>,
     @InjectRepository(BranchMerge) private readonly branchMergeRepository: Repository<BranchMerge>,
+    @InjectRepository(MergeDiffChangeKey) private readonly mergeDiffChangeKeyRepository: Repository<MergeDiffChangeKey>,
     private readonly config: ConfigService,
   ) {
     this.constant = new Map([
@@ -31,28 +35,180 @@ export class BranchService {
     ]);
   }
 
-  async compare(compareVO: CompareVO): Promise<void> {
-    const ids = [compareVO.branchIdOne, compareVO.branchIdTwo];
+  /**
+   * 不同branch间key的value比较
+   * @param compareVO compareVO
+   */
+  async compare(compareVO: CompareVO): Promise<CompareBranchVO[]> {
+    const ids = [compareVO.source, compareVO.destination];
     const branchs: Branch[] = await this.branchRepository.findByIds(ids);
     if (branchs.length !== 2) {
       throw new BadRequestException('branchId is not exist');
     }
-    const oneSet = await this.getAllBranchId(compareVO.branchIdOne);
-    const twoSet = await this.getAllBranchId(compareVO.branchIdTwo);
-    // 通过branch id 找key
+    let source = new CompareBranchVO();
+    let destination = new CompareBranchVO();
+    source.id = compareVO.source;
+    source.keys = await this.getValueByBranchId(compareVO.source);
+    destination.id = compareVO.destination;
+    destination.keys = await this.getValueByBranchId(compareVO.destination);
+    return [source, destination];
   }
 
   /**
-   * 通过传入的branch id 查找其对应project下的master branch
+   * 找出string不同的地方并高亮显示
+   * @param source source
+   * @param destination destination
+   */
+  async getDiff(source: string, destination: string): Promise<string> {
+    if (source === destination) {
+      return destination;
+    }
+    if (source === '' && destination !== '') {
+      return '';
+    }
+    // eslint-disable-next-line prettier/prettier
+    const prefix = '<span style=\'color:blue\'>';
+    const suffix = '</sapn>';
+    if (source === '' && destination !== '') {
+      return prefix + destination + suffix;
+    }
+    let end;
+    let append;
+    if (source.length >= destination.length) {
+      end = destination.length;
+      append = true;
+    } else {
+      end = source.length;
+      append = false;
+    }
+    const result = [];
+    const sourceArray = source.split('');
+    const destArray = destination.split('');
+    let flag = false;
+    for (let index = 0; index < end; index++) {
+      if (sourceArray[index] !== destArray[index]) {
+        if (index === 0) {
+          result.push(prefix);
+          result.push(destArray[index]);
+          flag = true;
+          continue;
+        }
+        if (index > 0 && sourceArray[index - 1] !== destArray[index - 1]) {
+          result.push(destArray[index]);
+        } else {
+          result.push(prefix);
+          result.push(destArray[index]);
+        }
+        flag = true;
+      } else {
+        if (flag) {
+          result.push(suffix);
+          result.push(destArray[index]);
+          flag = false;
+        } else {
+          result.push(sourceArray[index]);
+        }
+      }
+      // 此时到末尾
+      if (index === end - 1 && flag) {
+        if (append) {
+          result.push(source.substring(end, source.length));
+        } else {
+          result.push(destination.substring(end, destination.length));
+        }
+        result.push(suffix);
+      }
+    }
+    return result.toString().replace(/,/g, '');
+  }
+
+  /**
+   * 查询branchId对应的key name & value
+   * @param branchId branchId
+   */
+  async getValueByBranchId(branchId: number): Promise<KeyVO[]> {
+    // 获取全部的branch
+    const branches: Branch[] = await this.getAllBranch(branchId);
+    // 判断对应的branchVO
+    const branchVOs: BranchVO[] = await this.calculateMerge(branches);
+    // 根据branchVO中merge参数不同查询不同的表并进行参数封装
+    let keyVOs: KeyVO[] = [];
+    for (let index = 0; index < branchVOs.length; index++) {
+      const b = branchVOs[index];
+      if (b.merge !== this.constant.get('0')) {
+        const keys: MergeDiffChangeKey[] = await this.mergeDiffChangeKeyRepository.find({ branchId: b.id });
+        let values = [];
+        let keyVO = new KeyVO();
+        keys.forEach(k => {
+          keyVO.name = k.key;
+          let value = new KeyValueVO();
+          value.value = k.value;
+          value.language = k.language;
+          values.push(value);
+        });
+        keyVO.values = values;
+        keyVOs.push(keyVO);
+      } else {
+        // 通过branchId查询keyIds
+        const keys = await this.findKeyIdsByBranchIds(b.id);
+        if (keys.length === 0) {
+          return keyVOs;
+        }
+        let keyIds = [];
+        keys.forEach(k => {
+          keyIds.push(k.key_id);
+        });
+        // 通过keyIds查询对应的name和value
+        const result: any[] = await this.findKeysByKeyIds('(' + keyIds.join(',') + ')');
+        let ids = new Set<number>();
+        result.map(r => {
+          ids.add(r.id);
+        });
+
+        ids.forEach(i => {
+          let keyVO = new KeyVO();
+          let values = [];
+          result.forEach(r => {
+            if (i === r.id) {
+              keyVO.name = r.name;
+              let keyValue = new KeyValueVO();
+              keyValue.value = r.value;
+              keyValue.language = r.language_name;
+              values.push(keyValue);
+            }
+          });
+          keyVO.values = values;
+          keyVOs.push(keyVO);
+        });
+      }
+    }
+    return keyVOs.sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  /**
+   * 通过传入的 branch id 查找其对应 project下的 master branch
    * @param id branch id
    */
-  async getAllBranchId(id: number): Promise<Set<number>> {
+  async getAllBranch(id: number): Promise<Branch[]> {
     const branch: Branch = await this.branchRepository.findOne({ id: id });
-    const masterId: number = await this.branchRepository.query(
-      'select id from branch where project_id = ' +
-      '(select id from project where id = ' +
-      `(select project_id from branch where id = '${branch.id}')) and master = true`);
-    return new Set<number>([masterId, id]);;
+    if (branch.master) {
+      return Array.of(branch);
+    }
+    const branches: Branch[] = await this.branchRepository.query(
+      `SELECT * FROM branch WHERE project_id = (SELECT project_id FROM branch WHERE id = '${id}') AND master=true`,
+    );
+    let result = [branch];
+    branches.forEach(a => {
+      let b = new Branch();
+      b.id = a.id;
+      b.master = a.master;
+      b.name = a.name;
+      b.projectId = a.projectId;
+      b.modifier = a.modifier;
+      b.modifyTime = a.modifyTime;
+      result.push(b);
+    });
+    return result;
   }
   /**
    * 分页返回branchs
@@ -101,6 +257,10 @@ export class BranchService {
     return result;
   }
 
+  /**
+   * 获取branch merge参数状态
+   * @param data data
+   */
   async calculateMerge(data: Branch[]): Promise<BranchVO[]> {
     // merge table source & target 都不存在
     const mergeResult: BranchMerge[] = await this.branchMergeRepository.find();
@@ -152,6 +312,21 @@ export class BranchService {
   }
 
   /**
+   * 通过项目id查询分支
+   * @param projectId
+   */
+  async findBranchByProjectIdAndKeyword(projectId: number, keyword: string): Promise<Branch[]> {
+    return await this.branchRepository
+      .createQueryBuilder('branch')
+      .where('branch.name Like :name and branch.projectid = :projectId')
+      .setParameters({
+        projectId,
+        name: '%' + keyword + '%',
+      })
+      .getMany();
+  }
+
+  /**
    * 保存branch,默认创建master
    * @param branchBody branchBody
    */
@@ -180,13 +355,33 @@ export class BranchService {
     }
   }
 
+  // branch_id -> key_Ids
+  async findKeyIdsByBranchIds(id: number): Promise<any[]> {
+    return await this.branchRepository.query(
+      'SELECT key.id as key_id FROM (SELECT * FROM branch LEFT JOIN branch_key ON ' +
+        'branch.id = branch_key.branch_id WHERE branch_key.delete = FALSE AND branch.master = TRUE ' +
+        `AND branch.id = '${id}') a ` +
+        'LEFT JOIN key ON a.key_id = key.id WHERE key.delete = FALSE AND key.id = key.actual_id',
+    );
+  }
+
+  // key_ids -> key-value
+  async findKeysByKeyIds(ids: string): Promise<any[]> {
+    return await this.branchRepository.query(
+      'SELECT k.key_id as id, k.name, a.value, a.language_name FROM keyname k inner join ' +
+        '(SELECT keyvalue.id, keyvalue.key_id, keyvalue.value, language.name as language_name, ' +
+        'keyvalue.latest from keyvalue LEFT JOIN language on keyvalue.language_id = language.id) ' +
+        'a on k.key_id = a.key_id WHERE a.latest = true AND k.id in ' +
+        ids,
+    );
+  }
   // branch branch_key key
   async findKeyWithBranch(): Promise<any[]> {
     return await this.branchRepository.query(
-      'SELECT a.project_id, a.branch_id, a.name as branch_name, a.master as is_master, key.id as key_id, ' +
-      'key.actual_id, key.namespace_id FROM (SELECT * FROM branch LEFT JOIN branch_key ON ' +
-      'branch.id = branch_key.branch_id WHERE branch_key.delete = FALSE AND branch.master = TRUE) a ' +
-      'LEFT JOIN key ON a.key_id = key.id WHERE key.delete = FALSE',
+      'SELECT a.project_id, a.branch_id as branchId, a.name as branch_name, a.master as is_master, key.id as key_id, ' +
+        'key.actual_id, key.namespace_id FROM (SELECT * FROM branch LEFT JOIN branch_key ON ' +
+        'branch.id = branch_key.branch_id WHERE branch_key.delete = FALSE AND branch.master = TRUE) a ' +
+        'LEFT JOIN key ON a.key_id = key.id WHERE key.delete = FALSE',
     );
   }
 
