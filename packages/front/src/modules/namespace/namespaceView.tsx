@@ -7,15 +7,15 @@ import { DeleteFilled, ArrowLeftOutlined, PlusOutlined } from '@ant-design/icons
 const { Option } = Select;
 const { Search } = Input;
 
-const createLanguageBox = () => {
-  const boxes = [];
-  for (let i = 0; i < 10; i++) {
-    boxes.push(<LanguageBox />);
-  }
-  return boxes;
-};
-
 const NamespaceView: React.FC = () => {
+  const createLanguageBox = () => {
+    const boxes = [];
+    for (let i = 0; i < 10; i++) {
+      boxes.push(<LanguageBox />);
+    }
+    return boxes;
+  };
+
   const onShowSizeChange = useCallback((current, pageSize) => {
     window.console.log(current, pageSize);
   }, []);
