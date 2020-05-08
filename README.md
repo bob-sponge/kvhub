@@ -22,13 +22,9 @@ Key value system.
 
 #### If no tables
 
-- Modify the value of `synchronize` in the `ormconfig.json` to `true`
-
-- Modify the value of database config to your own database configuration
-
-- jump to [Database Migration](#Database)
-
-- Modify the value of `synchronize` in the `ormconfig.json` to `false` at last
+```js
+yarn migration
+```
 
 ---
 
