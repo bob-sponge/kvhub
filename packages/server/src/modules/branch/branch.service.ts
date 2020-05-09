@@ -318,7 +318,7 @@ export class BranchService {
   async findBranchByProjectIdAndKeyword(projectId: number, keyword: string): Promise<Branch[]> {
     return await this.branchRepository
       .createQueryBuilder('branch')
-      .where('branch.name Like :name and branch.projectid = :projectId')
+      .where('branch.name Like :name and branch.project_id = :projectId')
       .setParameters({
         projectId,
         name: '%' + keyword + '%',

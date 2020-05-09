@@ -1,8 +1,9 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { Project } from 'src/entities/Project';
 import { Namespace } from 'src/entities/Namespace';
+import { Keyvalue } from 'src/entities/Keyvalue';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { BranchService } from '../branch/branch.service';
 import { KeyService } from '../key/key.service';
 import { ProjectLanguageService } from '../projectLanguage/projectLanguage.service';
@@ -25,6 +26,8 @@ export class ProjectService {
   constructor(
     @InjectRepository(Project)
     private readonly projectRepository: Repository<Project>,
+    @InjectRepository(Keyvalue)
+    private readonly keyValueRepository: Repository<Keyvalue>,
     private readonly branchService: BranchService,
     private readonly keyService: KeyService,
     private readonly projectLanguageService: ProjectLanguageService,
@@ -166,6 +169,7 @@ export class ProjectService {
   async getProjectView(id: number, branchId: number): Promise<ProjectViewVO[]> {
     let result = [];
     let isMasterBranch = false;
+    let masterBranchId : number = 0;
     // 数据校验
     const project = await this.projectRepository.find({ id, delete: false });
     if (null === project || project.length === 0) {
@@ -176,7 +180,13 @@ export class ProjectService {
       throw new BadRequestException('branch is not exist');
     } else {
       if (branch.master !== null && branch.master) {
+        masterBranchId = branchId;
         isMasterBranch = true;
+      } else {
+        const branchList = await this.branchService.findMasterBranchByProjectId(id);
+        if (branchList !== null && branchList.length > 0){
+          masterBranchId = branchList[0].id;
+        }
       }
     }
 
@@ -197,11 +207,45 @@ export class ProjectService {
       for (let j = 0; j < namespaceList.length; j++) {
         const n = namespaceList[j];
         let namespaceVO = new NamespaceVO();
+
+        let keyList : any[] = [];
+        let masterKeyList = await this.keyService.getKeyWithBranchIdAndNamespaceId(masterBranchId, n.id);
+        if (!isMasterBranch) {
+          // 由于分支不是主分支，可能存在分支上独立的key或者master分支修改过的key，需要对比
+          let branchKeyList = await this.keyService.getKeyWithBranchIdAndNamespaceId(branchId, n.id);
+          if (branchKeyList !== null && branchKeyList.length > 0){
+            for (let k=0;k<masterKeyList.length;k++){
+              const masterKey = masterKeyList[k];
+              let branchKeyExist = false;
+              for (let l=0;l<branchKeyList.length;l++){
+                const branchKey = branchKeyList[l];
+                if (branchKey.actualId === masterKey.actualId){
+                  branchKeyExist = true;
+                  branchKeyList.splice(l,1);
+                  keyList.push(branchKey);
+                  break;
+                }
+              }
+              if (!branchKeyExist){
+                keyList.push(masterKey);
+              }
+            }
+            if (branchKeyList.length > 0){
+              keyList.push(branchKeyList);
+            }
+          } else {
+            keyList = masterKeyList;
+          }
+        } else {
+          keyList = masterKeyList;
+        }
+        const keyIdList = [];
+        keyList.map(key => keyIdList.push(key.id));
+        namespaceVO.translatedKeys = await this.keyValueRepository.count({keyId:In(keyIdList),languageId:p.languageId,latest:true});
+        // 根据获取的keylist 找对应value
         namespaceVO.id = n.id;
         namespaceVO.name = n.name;
-        if (isMasterBranch) {
-          namespaceVO.totalKeys = await this.keyService.countMaster(branchId, n.id);
-        } else {}
+        namespaceVO.totalKeys = keyList.length;
         totalKeys += namespaceVO.totalKeys;
         totalTranferKeys += namespaceVO.translatedKeys;
         namespaceVOList.push(namespaceVO);
