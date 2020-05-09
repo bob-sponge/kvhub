@@ -21,12 +21,13 @@ import { LanguagesModule } from './modules/languages/languages.module';
 import { BranchModule } from './modules/branch/branch.module';
 import { KeyModule } from './modules/key/key.module';
 import { NamespaceModule } from './modules/namespace/namespace.module';
+import { BranchMergeModule } from './modules/branchMerge/branchMerge.module';
 
 @Module({
   imports: [
     ConfigModule.register({ dir: '/packages/server/config' }),
     TypeOrmModule.forRootAsync({
-      imports: [ConfigModule, BranchModule, KeyModule, ProjectModule, LanguagesModule, NamespaceModule],
+      imports: [ConfigModule, BranchModule, KeyModule, ProjectModule, LanguagesModule, NamespaceModule, BranchMergeModule],
       inject: [ConfigService],
       useFactory: async (config: ConfigService) =>
         ({

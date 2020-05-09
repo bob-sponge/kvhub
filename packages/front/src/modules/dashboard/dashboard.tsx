@@ -11,7 +11,7 @@ const Dashboard: React.SFC = () => {
 
   const addProject = () => {
     setVisible(true);
-  }
+  };
   return (
     <Container>
       <div>
@@ -31,7 +31,7 @@ const Dashboard: React.SFC = () => {
             cardListData.length > 0 &&
             cardListData.map(item => {
               const isDone = item.translateKeysNumber === item.keysNumber;
-              const precent = item.translateKeysNumber / item.keysNumber * 100;
+              const precent = (item.translateKeysNumber / item.keysNumber) * 100;
               return (
                 <div className={css.cardWapper}>
                   <div className={css.cardList}>
@@ -41,20 +41,19 @@ const Dashboard: React.SFC = () => {
                         <div className={css.keysCurrent} style={{ color: isDone ? doneColor : processColor }}>
                           {formatNumber(item.translateKeysNumber)}
                         </div>
-                        <div className={css.keysTotal}>
-                          {formatNumber(item.keysNumber)}
-                        </div>
+                        <div className={css.keysTotal}>{formatNumber(item.keysNumber)}</div>
                       </div>
                       <div className={css.precent} style={{ color: isDone ? doneColor : processColor }}>
-                        <span>
-                          {isDone ? 'Done 100' : precent.toFixed(2)}
-                        </span>
+                        <span>{isDone ? 'Done 100' : precent.toFixed(2)}</span>
                       </div>
                     </div>
                     <div className={css.cardBar}>
-                      <Progress percent={precent} size="small" strokeColor={
-                        isDone ? doneColor : processColor
-                      } showInfo={false} />
+                      <Progress
+                        percent={precent}
+                        size="small"
+                        strokeColor={isDone ? doneColor : processColor}
+                        showInfo={false}
+                      />
                     </div>
                     <div className={css.cardUpdate}>
                       <div className={css.language}>

@@ -9,10 +9,11 @@ import { LanguagesModule } from '../languages/languages.module';
 import { ProjectLanguageModule } from '../projectLanguage/projectLanguage.module';
 import { NamespaceModule } from '../namespace/namespace.module';
 import { Namespace } from 'src/entities/Namespace';
+import { Keyvalue } from 'src/entities/Keyvalue';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Project, Namespace]),
+    TypeOrmModule.forFeature([Project, Namespace, Keyvalue]),
     BranchModule,
     KeyModule,
     LanguagesModule,

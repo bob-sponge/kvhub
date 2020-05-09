@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ProjectLanguage } from 'src/entities/ProjectLanguage';
 import { ProjectLanguageDTO } from 'src/dto/ProjectLanguageDTO';
@@ -21,11 +21,22 @@ export class ProjectLanguageService {
 
   async findByProjectId(projectId: number): Promise<ProjectLanguageDTO[]> {
     return await this.projectLanguageRepository.query(
-      'select pl.id id,l.name \"languageName\" from project_language pl ' +
+      'select pl.id id,l.id \"languageId\",l.name \"languageName\" from project_language pl ' +
         'left join language l on pl.language_id = l.id ' +
         'where pl.delete = false and pl.project_id = ' +
         projectId +
         ' order by id',
     );
+  }
+
+  async delete(id:number): Promise<void>{
+    await this.projectLanguageRepository.findOne(id).then(function(data) {
+      if (data !== undefined) {
+        data.delete = true;
+        this.projectLanguageRepository.update(data);
+      } else {
+        throw new BadRequestException('project language is not exist');
+      }
+    });
   }
 }

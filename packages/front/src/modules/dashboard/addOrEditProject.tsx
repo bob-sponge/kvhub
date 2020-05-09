@@ -2,6 +2,7 @@ import React from 'react';
 import { Drawer, Button, Form, Input, Select } from 'antd';
 import * as css from './style/addOrEditProject.modules.less';
 import { CheckOutlined } from '@ant-design/icons';
+import * as api from '../../api';
 
 interface AddOrEditProjectProps {
   visible: boolean;
@@ -22,6 +23,9 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
   const handleAdd = () => {
     form.validateFields().then(values => {
       window.console.log(values);
+      api.addProjectApi(values).then(result =>{
+        window.console.log(result);
+      })
     }).catch(errorInfo => {
       window.console.log('error', errorInfo);
     });

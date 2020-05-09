@@ -6,11 +6,12 @@ import { BranchKey } from 'src/entities/BranchKey';
 import { Project } from 'src/entities/Project';
 import { BranchController } from './branch.controller';
 import { BranchMerge } from 'src/entities/BranchMerge';
+import { MergeDiffChangeKey } from 'src/entities/MergeDiffChangeKey';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Branch, BranchKey, Project, BranchMerge])],
+  imports: [TypeOrmModule.forFeature([Branch, BranchKey, Project, BranchMerge, MergeDiffChangeKey])],
   controllers: [BranchController],
   providers: [BranchService],
   exports: [BranchService],
 })
-export class BranchModule { }
+export class BranchModule {}

@@ -1,8 +1,8 @@
-import { IsInt } from "class-validator";
+import { IsInt } from 'class-validator';
 
 export class CompareVO {
   @IsInt()
-  branchIdOne: number;
+  source: number;
   @IsInt()
-  branchIdTwo: number;
+  destination: number;
 }
