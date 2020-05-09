@@ -7,11 +7,9 @@ import { Project } from 'src/entities/Project';
 import { ConfigService } from '@ofm/nestjs-utils';
 import { Page } from 'src/vo/Page';
 import { PageResult } from 'src/vo/PageResult';
-import { PageSearch } from 'src/vo/PageSearch';
 import { BranchMerge } from 'src/entities/BranchMerge';
 import { BranchBody } from 'src/vo/BranchBody';
 import { BranchVO } from 'src/vo/BranchVO';
-import { ResponseBody } from 'src/vo/ResponseBody';
 import { CompareVO } from 'src/vo/CompareVO';
 
 @Injectable()
@@ -80,23 +78,23 @@ export class BranchService {
    * 分页模糊查询
    * @param pageSearch pageSearch
    */
-  async findByCondition(pageSearch: PageSearch): Promise<PageResult> {
-    const start: number = (pageSearch.page - 1) * pageSearch.size;
+  async findByCondition(page: Page): Promise<PageResult> {
+    const start: number = (page.page - 1) * page.size;
     let result = new PageResult();
     // 查询不区分大小写
     const data: Branch[] = await this.branchRepository
       .createQueryBuilder('branch')
       .where('branch.name Like :name')
       .setParameters({
-        name: '%' + pageSearch.content + '%',
+        name: '%' + page.content + '%',
       })
       .orderBy('branch.modify_time')
-      .limit(pageSearch.size)
+      .limit(page.size)
       .offset(start)
       .getMany();
     result.total = data.length;
-    result.page = pageSearch.page;
-    result.size = pageSearch.size;
+    result.page = page.page;
+    result.size = page.size;
     result.data = await this.calculateMerge(data);
     return result;
   }

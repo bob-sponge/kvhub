@@ -3,7 +3,6 @@ import { Branch } from 'src/entities/Branch';
 import { BranchService } from './branch.service';
 import { ResponseBody } from 'src/vo/ResponseBody';
 import { Page } from 'src/vo/Page';
-import { PageSearch } from 'src/vo/PageSearch';
 import { BranchBody } from 'src/vo/BranchBody';
 import { CompareVO } from 'src/vo/CompareVO';
 
@@ -21,21 +20,15 @@ export class BranchController {
   }
 
   /**
-   * 分页模糊查询
-   * @param pageSearch pageSearch
-   */
-  @Post('/find')
-  async findBranchByCondition(@Body() pageSearch: PageSearch): Promise<ResponseBody> {
-    return ResponseBody.okWithData(await this.branchService.findByCondition(pageSearch));
-  }
-
-  /**
    * 分页查询
    */
   @Post('/all')
   @UsePipes(new ValidationPipe())
   async findBranchList(@Body() page: Page): Promise<ResponseBody> {
-    return ResponseBody.okWithData(await this.branchService.findAllWithPage(page));
+    if (page.content === '') {
+      return ResponseBody.okWithData(await this.branchService.findAllWithPage(page));
+    }
+    return ResponseBody.okWithData(await this.branchService.findByCondition(page));
   }
 
   /**

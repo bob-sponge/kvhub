@@ -1,4 +1,4 @@
-import { IsNotEmpty, Min, IsInt } from "class-validator";
+import { IsNotEmpty, Min, IsInt, IsString } from "class-validator";
 
 /**
  * 接受前端分页参数
@@ -10,4 +10,6 @@ export class Page {
   page: number;
   @IsInt()
   size: number;
+  @IsString()
+  content: string;
 }
