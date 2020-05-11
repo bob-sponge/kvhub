@@ -2,9 +2,9 @@
 
 Key value system.
 
-### First Step
+## First Step
 
-#### If no postgres database
+### If no postgres database
 
 - Create postgres docker
 
@@ -20,7 +20,7 @@ Key value system.
 
 - Create the database manually: i18n
 
-#### If no tables
+### If no tables
 
 ```js
 yarn migration
@@ -28,21 +28,21 @@ yarn migration
 
 ---
 
-### Database
+## Database
 
-#### Create a migration
+### Create a migration
 
 ```js
 yarn typeorm migration:create -n Migration
 ```
 
-#### Generate a migration
+### Generate a migration
 
 ```js
 yarn typeorm migration:generate -n Migration
 ```
 
-#### Run migration
+### Run migration
 
 ```js
 yarn migration
@@ -50,7 +50,7 @@ yarn migration
 
 ---
 
-### yarn workspace
+## yarn workspace
 
 use yarn workspace
 

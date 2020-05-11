@@ -19,9 +19,9 @@ export class KeyService {
     );
   }
 
-  async countMaster(branchId:number,namespaceId:number):Promise<number> {
+  async getKeyWithBranchIdAndNamespaceId(branchId:number,namespaceId:number):Promise<any[]> {
     return await this.keyRepository.query(
-      ' select count(*) from key k left join branch_key bk ' + 
+      ' select k.* from key k left join branch_key bk ' + 
       ' on k.id = bk.key_id where bk.delete = false and k.delete = false ' +
       ' and bk.branch_id = '+branchId+' and k.namespace_id = '+ namespaceId +' '
     );
