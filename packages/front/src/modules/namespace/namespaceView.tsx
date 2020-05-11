@@ -9,16 +9,6 @@ import { DeleteFilled, ArrowLeftOutlined, PlusOutlined } from '@ant-design/icons
 const { Option } = Select;
 const { Search } = Input;
 
-<<<<<<< HEAD
-const NamespaceView: React.FC = () => {
-  const createLanguageBox = () => {
-    const boxes = [];
-    for (let i = 0; i < 10; i++) {
-      boxes.push(<LanguageBox />);
-    }
-    return boxes;
-  };
-=======
 const PREFIX_URL = 'http://localhost:5000';
 
 const NamespaceView: React.FC = () => {
@@ -33,7 +23,6 @@ const NamespaceView: React.FC = () => {
     pageSize: 10,
     condition: '',
   });
->>>>>>> a0344e1add35789224787552c30eaae4b0897238
 
   const onShowSizeChange = useCallback((current, pageSize) => {
     window.console.log(current, pageSize);

@@ -1,13 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import * as css from './style/dashboard.modules.less';
 import { Button, Progress } from 'antd';
 import { UploadOutlined, PlusOutlined } from '@ant-design/icons';
 import Container from '../../container';
 import { cardListData, doneColor, processColor, formatNumber, timeAgo } from './constant';
 import AddOrEditProject from './addOrEditProject';
+import { ajax } from '@ofm/ajax';
 
 const Dashboard: React.SFC = () => {
-  const [visible, setVisible] = useState<boolean>(true);
+  const [visible, setVisible] = useState<boolean>(false);
+
+  useEffect(() => {
+    ajax.get('/project/dashboard/all').then(result => {
+      window.console.log(result);
+    });
+  }, []);
 
   const addProject = () => {
     setVisible(true);

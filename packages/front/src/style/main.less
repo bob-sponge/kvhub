@@ -1,6 +1,7 @@
+@import './util.less';
 // 公共样式
 @primary: #43bde0;
-@grey: #08a678;
+@green: #08a678;
 @black: #192228;
 @white: #ffffff;
 
@@ -10,10 +11,17 @@
 
 body {
   margin: 0;
-  background-color: #f0f2f5;
+  background-color: #F2F4F6;
 }
 
-.main {
-  background-color: #f2f4f6;
+.containe {
   margin-top: 16px;
+}
+
+.container_menu {
+  .wapper {
+    margin-left: 264px;
+    width: calc(100vw - 264px);
+    overflow-y: auto;
+  }
 }
