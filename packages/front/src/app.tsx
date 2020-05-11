@@ -5,11 +5,8 @@ import { history } from '@ofm/history';
 import NamespaceView from './modules/namespace';
 import Languages from './modules/languages';
 import Dashboard from './modules/dashboard';
-<<<<<<< HEAD
 import Branches from './modules/branches';
-=======
 import MargeRequest from './modules/margeRequest';
->>>>>>> 4561a4e0eefbe1d04085a4035da5285862730ef4
 
 export function App() {
   React.useEffect(() => {
@@ -33,11 +30,8 @@ const BasicRoute = () => (
       <Route exact path="/namespace" component={NamespaceView} />
       <Route exact path="/languages" component={Languages} />
       <Route exact path="/dashboard" component={Dashboard} />
-<<<<<<< HEAD
       <Route exact path="/branches" component={Branches} />
-=======
       <Route exact path="/margeRequest" component={MargeRequest} />
->>>>>>> 4561a4e0eefbe1d04085a4035da5285862730ef4
     </Switch>
   </Router>
 );
