@@ -10,7 +10,7 @@ function Container(props: ContainerProps) {
   return (
     <div>
       <Header />
-      <div className="main">
+      <div className="container">
         <Navs />
         {props.children}
       </div>

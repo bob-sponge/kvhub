@@ -1,0 +1,150 @@
+@import '../../../style/main.less';
+
+.compare {
+  &-wapper {
+    margin: 0 24px;
+
+    .common-title {
+      font-size: 24px;
+      margin-bottom: 16px;
+      color: @black;
+    }
+
+    .diff-title {
+      font-size: 16px;
+      font-weight: bold;
+      color: @black;
+      margin: 16px 0;
+    }
+
+    .diff-item {
+      padding: 16px;
+      background-color: @white;
+      display: flex;
+
+      .item-list {
+        width: 50%;
+        padding-right: 16px;
+
+        .title {
+          color: @light-grey;
+          font-size: 14px;
+          margin-bottom: 12px;
+
+          span {
+            padding-left: 4px;
+          }
+        }
+
+        .key-list {
+          display: flex;
+          align-items: center;
+          margin-bottom: 16px;
+
+          &:last-child {
+            margin-bottom: 0;
+          }
+
+          .language {
+            background-color: @language-bg;
+            width: 20px;
+            height: 20px;
+            line-height: 16px;
+            text-align: center;
+            color: @white;
+            font-size: 12px;
+            border-radius: 2px;
+            margin-right: 8px;
+          }
+
+          .name {
+            font-size: 16px;
+            color: @black;
+          }
+        }
+      }
+    }
+  }
+
+  &-panel {
+    padding: 16px;
+    background-color: @white;
+
+    .panel {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+
+      .source {
+        width: 45%;
+      }
+
+      .operation {
+        width: 10%;
+
+        .title {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: @light-grey;
+          margin-bottom: 16px;
+
+          span {
+            font-size: 12px;
+            padding-left: 2px;
+          }
+        }
+
+        .content {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          height: 32px;
+
+          .circle {
+            width: 12px;
+            height: 12px;
+            background-color: @white;
+            border: 3px solid #43BDE0;
+            border-radius: 50%;
+          }
+
+          .square {
+            width: 73px;
+            height: 4px;
+            background-color: #43BDE0;
+          }
+
+          .trangle {
+            width: 0;
+            height: 0;
+            border-top: 10px solid transparent;
+            border-left: 10px solid #43BDE0;
+            border-bottom: 10px solid transparent;
+          }
+        }
+      }
+
+      &-title {
+        font-size: 14px;
+        color: @black;
+        font-weight: bold;
+        margin-bottom: 16px;
+      }
+
+      &-content {
+
+        .content-title {
+          font-size: 16px;
+          color: @black;
+          margin-right: 24px;
+        }
+      }
+    }
+
+    .create-merge {
+      margin-top: 12px;
+      text-align: right;
+    }
+  }
+}

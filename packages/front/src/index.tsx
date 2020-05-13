@@ -9,7 +9,7 @@ import './config';
 import { App } from './app';
 
 initAjax({
-  baseURL: process.conf.ip,
+  baseURL: `http://${process.conf.ip}`,
   withCredentials: true,
 });
 

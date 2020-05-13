@@ -1,0 +1,38 @@
+@import '../../../style/main.less';
+
+.branch {
+  &-wapper {
+    margin: 0 24px;
+
+    .basic-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      .title {
+        color: @black;
+        font-size: 24px;
+      }
+
+      .operation {
+        display: flex;
+      }
+    }
+  }
+
+  &-table {
+    margin-top: 16px;
+
+    .operation {
+      span {
+        padding-right: 12px;
+        color: #3CA9C9;
+        cursor: pointer;
+
+        &:last-child {
+          padding-right: 0;
+        }
+      }
+    }
+  }
+}

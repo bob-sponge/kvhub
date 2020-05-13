@@ -26,11 +26,14 @@ export class KeyService {
   async getKeyWithBranchIdAndNamespaceId(branchId: number, namespaceId: number): Promise<any[]> {
     return await this.keyRepository.query(
       ' select k.* from key k left join branch_key bk ' +
-      ' on k.id = bk.key_id where bk.delete = false and k.delete = false ' +
-      ' and bk.branch_id = ' + branchId + ' and k.namespace_id = ' + namespaceId + ' '
+        ' on k.id = bk.key_id where bk.delete = false and k.delete = false ' +
+        ' and bk.branch_id = ' +
+        branchId +
+        ' and k.namespace_id = ' +
+        namespaceId +
+        ' ',
     );
   }
-
   // key: count(key) 因为只会获取keyvalue的最新值，所以count(key)既是count(language)
   async countKey(): Promise<any[]> {
     return await this.keyRepository.query(

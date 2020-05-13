@@ -5,7 +5,9 @@ import { history } from '@ofm/history';
 import NamespaceView from './modules/namespace';
 import Languages from './modules/languages';
 import Dashboard from './modules/dashboard';
+import Branches from './modules/branches';
 import MargeRequest from './modules/margeRequest';
+import Compare from './modules/branches/compare/compare';
 
 export function App() {
   React.useEffect(() => {
@@ -29,7 +31,9 @@ const BasicRoute = () => (
       <Route exact path="/namespace" component={NamespaceView} />
       <Route exact path="/languages" component={Languages} />
       <Route exact path="/dashboard" component={Dashboard} />
+      <Route exact path="/branch" component={Branches} />
       <Route exact path="/margeRequest" component={MargeRequest} />
+      <Route exact path="/branch/compare/:id" component={Compare} />
     </Switch>
   </Router>
 );
