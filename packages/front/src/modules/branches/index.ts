@@ -1,2 +1,2 @@
-import Branches from './branches';
+import Branches from './branch';
 export default Branches;

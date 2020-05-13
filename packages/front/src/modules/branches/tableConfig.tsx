@@ -1,4 +1,5 @@
 import React from 'react';
+import * as css from './style/index.modules.less';
 
 export const dataSource = [
   {
@@ -39,30 +40,33 @@ export const dataSource = [
   },
 ];
 
-export const columns = [
-  {
-    title: 'Branch Name',
-    dataIndex: 'name',
-    key: 'name',
-  },
-  {
-    title: 'Updated',
-    dataIndex: 'updateTime',
-    key: 'updateTime',
-  },
-  {
-    title: 'Merge Request',
-    dataIndex: 'mergeRequest',
-    key: 'mergeRequest',
-  },
-  {
-    title: 'Opeartion',
-    key: 'operation',
-    render: () => (
-      <>
-        <span>Compare</span>
-        <span>Delete</span>
-      </>
-    ),
-  },
-];
+export const columns = (onCompare: Function, onDelete: Function) => {
+  let tableColumns: any[] = [
+    {
+      title: 'Branch Name',
+      dataIndex: 'name',
+      key: 'name',
+    },
+    {
+      title: 'Updated',
+      dataIndex: 'updateTime',
+      key: 'updateTime',
+    },
+    {
+      title: 'Merge Request',
+      dataIndex: 'mergeRequest',
+      key: 'mergeRequest',
+    },
+    {
+      title: 'Opeartion',
+      key: 'operation',
+      render: (_text: any, record: any) => (
+        <div className={css.operation}>
+          <span onClick={() => onCompare(record)}>Compare</span>
+          <span onClick={() => onDelete(record)}>Delete</span>
+        </div>
+      ),
+    },
+  ];
+  return tableColumns;
+};
