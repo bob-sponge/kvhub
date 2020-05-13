@@ -1,14 +1,20 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Key } from 'src/entities/Key';
 import { Repository } from 'typeorm';
 import { BranchService } from 'src/modules/branch/branch.service';
 import { Branch } from 'src/entities/Branch';
+import { Key } from 'src/entities/Key';
+import { Keyname } from 'src/entities/Keyname';
+import { Keyvalue } from 'src/entities/Keyvalue';
+import { KeyInfoDto} from 'src/modules/key/dto/KeyInfoDTO';
+import { ValueDTO } from './dto/ValueDTO';
 
 @Injectable()
 export class KeyService {
   constructor(
     @InjectRepository(Key) private readonly keyRepository: Repository<Key>,
+    @InjectRepository(Keyname) private readonly keynameRepository: Repository<Keyname>,
+    @InjectRepository(Keyvalue) private readonly keyvalueRepository: Repository<Keyvalue>,
     private readonly branchService: BranchService) { }
 
   async findAll(): Promise<Key[]> {
@@ -68,5 +74,36 @@ export class KeyService {
       }
     }
     return result;
+  }
+
+  async getKeyInfo(id:number,needValue:boolean) : Promise<KeyInfoDto> | undefined {
+    let result = new KeyInfoDto();
+    const key = await this.keyRepository.findOne(id);
+    if (key === undefined || (key.delete !== null && key.delete)){
+      throw new BadRequestException('key is not exist!');
+    } else {
+      result.id = key.id;
+      result.actualId = key.actualId;
+    }
+
+    const keyname = await this.keynameRepository.find({keyId:key.id});
+    if (keyname === null || keyname.length === 0){
+      throw new BadRequestException('key name is not exist!');
+    } else {
+      result.name = keyname[0].name;
+    }
+    if (needValue !== null && needValue){
+      const valueDtoList : ValueDTO[] = await this.keyvalueRepository.query(
+        'select v.id,v.language_id \"languageId\",l.name \"language\",v.latest,v.value ' +
+        ' from keyvalue v left join language l on v.language_id = l.id where v.latest = true and v.key_id = '+result.id);
+      result.value = valueDtoList;
+    }
+    return result;
+  }
+
+  async getValueInfo(id:number) : Promise<ValueDTO>{
+    return await this.keyvalueRepository.query(
+      'select v.id,v.language_id \"languageId\",l.name \"language\",v.latest,v.value ' +
+      ' from keyvalue v left join language l on v.language_id = l.id where v.id = '+id);
   }
 }

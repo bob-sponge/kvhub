@@ -9,10 +9,12 @@ import { BranchMergeSearchVO } from 'src/vo/BranchMergeSearchVO';
 import { BranchMergeVO } from 'src/vo/BranchMergeVO';
 import { BranchMergeDiffVO } from 'src/vo/BranchMergeDiffVO';
 import { MergeDiffShowVO } from 'src/vo/MergeDiffShowVO';
+import { MergeDiffValueShowVO } from 'src/vo/MergeDiffValueShowVo';
 import { BranchService } from 'src/modules/branch/branch.service'
 import { KeyService } from 'src/modules/key/key.service'
 import { CommonConstant } from 'src/constant/constant';
 import { UUIDUtils } from 'src/utils/uuid';
+import { from } from 'rxjs';
 
 @Injectable()
 export class BranchMergeService {
@@ -120,26 +122,48 @@ export class BranchMergeService {
       return result;
     }
     for (let i=0;i<mergeBranchKeyList.length;i++){
-      const mergeDiffKey = mergeBranchKeyList[i];
-      const vo  = new BranchMergeDiffVO();
-      const source = new MergeDiffShowVO();
-      const target = new MergeDiffShowVO();
-      vo.mergeDiffKey = mergeDiffKey;
-      vo.keyActualId = mergeDiffKey.key;
-      const mergeDiffKeyId = mergeDiffKey.id;
-
-      // 获取key
-      let sourceKey = await this.keyService.getKeyByBranchIdAndKeyActualId(sourceBranchId,mergeDiffKey.key);
-      let targetKey = await this.keyService.getKeyByBranchIdAndKeyActualId(targetBranchId,mergeDiffKey.key);
-      // 获取value
-      const mergeDiffValueList = await this.mergeDiffValueRepository.find({mergeDiffKeyId});
-
-      9
+      let vo  = new BranchMergeDiffVO();
+      vo.mergeDiffKey = mergeBranchKeyList[i];
+      vo.keyActualId = vo.mergeDiffKey.key;
+      vo.source = await this.getMergeDiffInfo(vo.mergeDiffKey.id,sourceBranchId,vo.mergeDiffKey.key);  
+      vo.target = await this.getMergeDiffInfo(vo.mergeDiffKey.id,targetBranchId,vo.mergeDiffKey.key);
       result.push(vo);
     }
     return result;
   }
+  private async getMergeDiffInfo(mergeDiffKeyId:number,branchId:number,keyActualId:number) : Promise<MergeDiffShowVO> {
+    let vo = new MergeDiffShowVO();
+    let valueList : MergeDiffValueShowVO[] = []
+    let key = await this.keyService.getKeyByBranchIdAndKeyActualId(branchId,keyActualId);
+    if (key === undefined){
+      throw new BadRequestException("key is not exist!");
+    } else {
+      vo.keyId = key.id;
+    }
+    
+    // key -> keyname
+    const keyName = await this.keyService.getKeyInfo(key.id,false);
+    vo.keyName = keyName.name;
 
+    // 获取value
+    const mergeDiffValueList = await this.mergeDiffValueRepository.find({mergeDiffKeyId});
+    for (let i = 0;i<mergeDiffValueList.length;i++){
+      let valueShowVO = new MergeDiffValueShowVO();
+      const mergeDiffValue = mergeDiffValueList[i];
+      valueShowVO.id = mergeDiffValue.valueId;
+      valueShowVO.keyId = key.id;
+
+      let value = await this.keyService.getValueInfo(valueShowVO.id);
+      valueShowVO.languageId = value.languageId;
+      valueShowVO.languageName = value.langeuage;
+      valueShowVO.value = value.value;
+      valueList.push(valueShowVO);
+    }
+    valueList.sort((v1,v2) => v1.languageId - v2.languageId);
+    vo.valueList = valueList;
+    return vo;
+  }
+  
   async save(vo: BranchMerge): Promise<number> {
     if (vo.sourceBranchId !== null && vo.sourceBranchId !== undefined) {
       const branch = await this.branchService.getBranchById(vo.sourceBranchId);

@@ -1,7 +1,7 @@
 import { Injectable, BadRequestException} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ProjectLanguage } from 'src/entities/ProjectLanguage';
-import { ProjectLanguageDTO } from 'src/dto/ProjectLanguageDTO';
+import { ProjectLanguageDTO } from 'src/modules/projectLanguage/dto/ProjectLanguageDTO';
 import { Repository } from 'typeorm';
 
 @Injectable()

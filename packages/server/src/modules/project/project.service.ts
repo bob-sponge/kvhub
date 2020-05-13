@@ -10,7 +10,7 @@ import { ProjectLanguageService } from '../projectLanguage/projectLanguage.servi
 import { NamespaceService } from '../namespace/namespace.service';
 import { Dashboard } from 'src/vo/Dashboard';
 import { ProjectViewVO } from 'src/vo/ProjectViewVO';
-import { ProjectLanguageDTO } from 'src/dto/ProjectLanguageDTO';
+import { ProjectLanguageDTO } from 'src/modules/projectLanguage/dto/ProjectLanguageDTO';
 import { NamespaceVO } from '../../vo/NamespaceVO';
 import { ProjectVO } from 'src/vo/PorjectVO';
 import { ProjectLanguage } from 'src/entities/ProjectLanguage';
