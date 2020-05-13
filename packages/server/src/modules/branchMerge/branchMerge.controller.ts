@@ -24,14 +24,20 @@ export class BranchMergeController {
     return ResponseBody.ok();
   }
 
-  // @Get('/diff/:id')
-  // async getDiffById(@Param('id') id:number) : Promise<ResponseBody> {
-  //   return ResponseBody.okWithData(await this.branchMergeService.getDiffById(id));
-  // }
+  @Get('/diff/:mergeId')
+  async getDiffById(@Param('mergeId') mergeId:number) : Promise<ResponseBody> {
+    return ResponseBody.okWithData(await this.branchMergeService.getDiffById(mergeId));
+  }
 
-  // @Post('/save')
-  // async save(@Body() vo:BranchMerge) : Promise<ResponseBody> {
-  //   await this.branchMergeService.save(vo);
-  //   return ResponseBody.ok();
-  // }
+  @Post('/save')
+  async save(@Body() vo:BranchMerge) : Promise<ResponseBody> {
+    await this.branchMergeService.save(vo);
+    return ResponseBody.ok();
+  }
+
+  @Get('/diffkey/generate/:mergeId')
+  async generateDiffKey(@Param('mergeId') mergeId:number) : Promise<ResponseBody> {
+    await this.branchMergeService.generateDiffKey(mergeId);
+    return ResponseBody.ok();
+  }
 }

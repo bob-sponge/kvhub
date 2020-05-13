@@ -1,11 +1,15 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Key } from 'src/entities/Key';
 import { Repository } from 'typeorm';
+import { BranchService } from 'src/modules/branch/branch.service';
+import { Branch } from 'src/entities/Branch';
 
 @Injectable()
 export class KeyService {
-  constructor(@InjectRepository(Key) private readonly keyRepository: Repository<Key>) {}
+  constructor(
+    @InjectRepository(Key) private readonly keyRepository: Repository<Key>,
+    private readonly branchService: BranchService) { }
 
   async findAll(): Promise<Key[]> {
     return await this.keyRepository.find({ delete: false });
@@ -15,23 +19,51 @@ export class KeyService {
   async findKeyWithKeyValue(): Promise<any[]> {
     return await this.keyRepository.query(
       'SELECT k.id as key_id, k.actual_id, k.namespace_id, v.language_id, v.value' +
-        ' FROM key k LEFT JOIN keyvalue v ON k.id = v.key_id WHERE v.latest = TRUE AND k.delete = FALSE',
+      ' FROM key k LEFT JOIN keyvalue v ON k.id = v.key_id WHERE v.latest = TRUE AND k.delete = FALSE',
     );
   }
 
-  async getKeyWithBranchIdAndNamespaceId(branchId:number,namespaceId:number):Promise<any[]> {
+  async getKeyWithBranchIdAndNamespaceId(branchId: number, namespaceId: number): Promise<any[]> {
     return await this.keyRepository.query(
-      ' select k.* from key k left join branch_key bk ' + 
+      ' select k.* from key k left join branch_key bk ' +
       ' on k.id = bk.key_id where bk.delete = false and k.delete = false ' +
-      ' and bk.branch_id = '+branchId+' and k.namespace_id = '+ namespaceId +' '
+      ' and bk.branch_id = ' + branchId + ' and k.namespace_id = ' + namespaceId + ' '
     );
   }
-  
+
   // key: count(key) 因为只会获取keyvalue的最新值，所以count(key)既是count(language)
   async countKey(): Promise<any[]> {
     return await this.keyRepository.query(
       'SELECT key.id, count(key.id) from key LEFT JOIN keyvalue ON key.id = keyvalue.key_id' +
-        ' WHERE keyvalue.latest = TRUE GROUP BY key.id ORDER BY key.id',
+      ' WHERE keyvalue.latest = TRUE GROUP BY key.id ORDER BY key.id',
     );
+  }
+
+  async getKeyByBranchIdAndKeyActualId(branchId: number, actualId: number): Promise<Key> | undefined {
+    let result = new Key();
+    let masterBranch = new Branch();
+    const branch = await this.branchService.getBranchById(branchId);
+    if (branch === undefined) {
+      throw new BadRequestException('branch is not exist');
+    } else if (branch.master !== null && !branch.master) {
+      masterBranch = await this.branchService.findMasterBranchByProjectId(branch.projectId);
+    } else {
+      masterBranch = branch;
+    }
+    let keyList: Key[] = [];
+    keyList = await this.keyRepository.find({ join: { alias: "key", leftJoin: { key: 'branch_key' } }, where: { actualId, branchId: branch.id } });
+    if (keyList === null || keyList.length === 0) {
+      if (branch.master !== null && branch.master) {
+        return undefined;
+      } else {
+        keyList = await this.keyRepository.find({ join: { alias: "key", leftJoin: { key: 'branch_key' } }, where: { actualId, branchId: masterBranch.id } });
+        if (keyList === null || keyList.length === 0) {
+          return undefined;
+        } else {
+          result = keyList[0];
+        }
+      }
+    }
+    return result;
   }
 }

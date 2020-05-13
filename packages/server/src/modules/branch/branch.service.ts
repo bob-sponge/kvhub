@@ -372,14 +372,19 @@ export class BranchService {
    * 通过项目id查询master分支
    * @param projectId projectId
    */
-  async findMasterBranchByProjectId(projectId: number): Promise<Branch[]> {
-    return await this.branchRepository.find({ projectId, master: true });
+  async findMasterBranchByProjectId(projectId: number): Promise<Branch> | undefined{
+    const branchList = await this.branchRepository.find({ projectId, master: true });
+    if (branchList === null){
+      return undefined
+    } else {
+      return branchList[0];
+    }
   }
 
   /**
    * 通过分支ID获取分支信息
    */
-  async getBranchById(id: number): Promise<Branch> {
+  async getBranchById(id: number): Promise<Branch> | undefined {
     return await this.branchRepository.findOne(id);
   }
 }

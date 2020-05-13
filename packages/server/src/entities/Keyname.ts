@@ -24,6 +24,6 @@ export class Keyname {
   })
   modifyTime: Date | null;
 
-  @Column('integer', { name: 'commit_id' })
-  commitId: number;
+  @Column('character varying', { name: 'commit_id', length: 255 })
+  commitId: string;
 }

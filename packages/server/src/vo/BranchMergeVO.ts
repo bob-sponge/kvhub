@@ -6,5 +6,5 @@ export class BranchMergeVO {
   targetBranchName : string;
   crosMerge: boolean | null;
   type: string;
-  commitId: number;
+  commitId: string;
 }

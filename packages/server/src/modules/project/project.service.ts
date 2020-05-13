@@ -183,9 +183,9 @@ export class ProjectService {
         masterBranchId = branchId;
         isMasterBranch = true;
       } else {
-        const branchList = await this.branchService.findMasterBranchByProjectId(id);
-        if (branchList !== null && branchList.length > 0){
-          masterBranchId = branchList[0].id;
+        const masterBranch = await this.branchService.findMasterBranchByProjectId(id);
+        if (masterBranch !== undefined){
+          masterBranchId = masterBranch.id;
         }
       }
     }

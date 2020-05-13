@@ -3,11 +3,13 @@ import { BranchMergeController } from './branchMerge.controller';
 import { BranchMergeService } from './branchMerge.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BranchMerge } from 'src/entities/BranchMerge';
+import { MergeDiffKey } from 'src/entities/MergeDiffKey';
+import { MergeDiffValue } from 'src/entities/MergeDiffValue';
 import { Branch } from 'src/entities/Branch';
 import { BranchModule } from '../branch/branch.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([BranchMerge, Branch]),BranchModule],
+  imports: [TypeOrmModule.forFeature([BranchMerge, Branch, MergeDiffKey, MergeDiffValue]),BranchModule],
   controllers: [BranchMergeController],
   providers: [BranchMergeService],
   exports: [BranchMergeService],
