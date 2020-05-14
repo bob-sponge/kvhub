@@ -14,7 +14,6 @@ import { BranchService } from 'src/modules/branch/branch.service'
 import { KeyService } from 'src/modules/key/key.service'
 import { CommonConstant } from 'src/constant/constant';
 import { UUIDUtils } from 'src/utils/uuid';
-import { from } from 'rxjs';
 
 @Injectable()
 export class BranchMergeService {
