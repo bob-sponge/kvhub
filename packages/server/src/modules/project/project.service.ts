@@ -65,11 +65,11 @@ export class ProjectService {
   async saveProject(projectVO: ProjectVO): Promise<void> {
     // language_id是否存在
     if (await this.languageService.findOne(projectVO.referenceId)) {
-      throw new BadRequestException('referenceId is not exist');
+      throw new BadRequestException('ReferenceId is not exist');
     }
     // 判断名称是否重复
     if ((await this.projectRepository.findOne({ name: projectVO.name })) !== undefined) {
-      throw new BadRequestException('project name is exist');
+      throw new BadRequestException('Project name is exist');
     }
     // save project
     let project = new Project();
@@ -178,11 +178,11 @@ export class ProjectService {
     // 数据校验
     const project = await this.projectRepository.find({ id, delete: false });
     if (null === project || project.length === 0) {
-      throw new BadRequestException('project is not exist');
+      throw new BadRequestException('Project is not exist');
     }
     const branch = await this.branchService.getBranchById(branchId);
-    if (null === branch) {
-      throw new BadRequestException('branch is not exist');
+    if (undefined === branch) {
+      throw new BadRequestException('Branch is not exist');
     } else {
       if (branch.master !== null && branch.master) {
         masterBranchId = branchId;

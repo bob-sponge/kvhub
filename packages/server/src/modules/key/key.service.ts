@@ -29,7 +29,7 @@ export class KeyService {
     );
   }
 
-  async getKeyWithBranchIdAndNamespaceId(branchId: number, namespaceId: number): Promise<any[]> {
+  async getKeyWithBranchIdAndNamespaceId(branchId: number, namespaceId: number): Promise<Key[]> {
     return await this.keyRepository.query(
       ' select k.* from key k left join branch_key bk ' +
         ' on k.id = bk.key_id where bk.delete = false and k.delete = false ' +
@@ -105,5 +105,23 @@ export class KeyService {
     return await this.keyvalueRepository.query(
       'select v.id,v.language_id \"languageId\",l.name \"language\",v.latest,v.value ' +
       ' from keyvalue v left join language l on v.language_id = l.id where v.id = '+id);
+  }
+
+  async getKeyListByBranchId(branchId:number) : Promise<Key[]> {
+    let keyList : Key[] = [];
+    const branch = await this.branchService.getBranchById(branchId);
+    let masterBranchId : number = 0;
+    let isMaster : boolean = false;
+    if (branch === undefined) {
+      throw new BadRequestException('Branch is not exist!');
+    } else if (branch.master !== null && branch.master){
+      masterBranchId = branch.id;
+    } else {
+      const masterBranch = await this.branchService.findMasterBranchByProjectId(branch.projectId);
+      if (masterBranch !== undefined){
+        masterBranchId = masterBranch.id;
+      }
+    }
+    return keyList;
   }
 }

@@ -34,7 +34,7 @@ export class BranchMergeService {
     const branchMergeVO = new BranchMergeVO();
     const branchMerge = await this.branchMergeRepository.findOne(id);
     if (branchMerge === null) {
-      throw new BadRequestException('branch merge is not exist');
+      throw new BadRequestException('Branch merge is not exist');
     }
     branchMergeVO.id = branchMerge.id;
     branchMergeVO.sourceBranchId = branchMerge.sourceBranchId;
@@ -58,7 +58,7 @@ export class BranchMergeService {
   async refuse(id: number) {
     const branchMerge = await this.branchMergeRepository.findOne(id);
     if (branchMerge === undefined) {
-      throw new BadRequestException('branch merge is not exist');
+      throw new BadRequestException('Branch merge is not exist');
     }
     branchMerge.type = CommonConstant.MERGE_TYPE_REFUSED;
     branchMerge.modifyTime = new Date();
@@ -76,7 +76,8 @@ export class BranchMergeService {
     branchList.forEach(branch => { branchIdList.push(branch.id) });
 
     // 拼接分支id后，通过sql查找到项目的分支merge记录，source 和 target 都需要进行查找
-    let branchMergeList: BranchMerge[] = await this.branchMergeRepository.find({ where: [{ sourceBranchId: In(branchIdList) }, { targetBranchId: In(branchIdList) }] });
+    let branchMergeList: BranchMerge[] = await this.branchMergeRepository.find({
+       where: [{ sourceBranchId: In(branchIdList) }, { targetBranchId: In(branchIdList) }],order:{id:"ASC"}});
 
     // 得到记录后，按照source和target分支id获取对应的分支名称
     for (let i = 0; i < branchMergeList.length; i++) {
@@ -89,6 +90,8 @@ export class BranchMergeService {
       branchMergeVO.type = branchMerge.type;
       branchMergeVO.crosMerge = branchMerge.crosMerge;
       branchMergeVO.commitId = branchMerge.commitId;
+      branchMergeVO.modifier = branchMerge.modifier;
+      branchMergeVO.modifyTime = branchMerge.modifyTime;
 
       for (let j = 0; j < branchAllList.length; j++) {
         const branch = branchAllList[j];
@@ -111,7 +114,7 @@ export class BranchMergeService {
     const result : BranchMergeDiffVO[] = [];
     const branchMerge = await this.branchMergeRepository.findOne(mergeId);
     if ( branchMerge === undefined ){
-      throw new BadRequestException('branch merge is not exist');
+      throw new BadRequestException('Branch merge is not exist');
     }
     const sourceBranchId = branchMerge.sourceBranchId;
     const targetBranchId = branchMerge.targetBranchId;
@@ -135,7 +138,7 @@ export class BranchMergeService {
     let valueList : MergeDiffValueShowVO[] = []
     let key = await this.keyService.getKeyByBranchIdAndKeyActualId(branchId,keyActualId);
     if (key === undefined){
-      throw new BadRequestException("key is not exist!");
+      throw new BadRequestException("Key is not exist!");
     } else {
       vo.keyId = key.id;
     }
@@ -167,31 +170,35 @@ export class BranchMergeService {
     if (vo.sourceBranchId !== null && vo.sourceBranchId !== undefined) {
       const branch = await this.branchService.getBranchById(vo.sourceBranchId);
       if (branch === undefined) {
-        throw new BadRequestException('source branch does not exist!');
+        throw new BadRequestException('Source branch does not exist!');
       } else {
         const existBranchMerge =
           await this.branchMergeRepository.find({ where: [{ sourceBranchId: vo.sourceBranchId, type: '0' }, { targetBranchId: vo.sourceBranchId, type: '0' }] });
         if (existBranchMerge !== null && existBranchMerge.length > 0) {
-          throw new BadRequestException('source branch is merging !');
+          throw new BadRequestException('Source branch is merging !');
         }
       }
     } else {
-      throw new BadRequestException('source branch does not choose!');
+      throw new BadRequestException('Source branch does not choose!');
     }
 
     if (vo.targetBranchId !== null && vo.targetBranchId !== undefined) {
       const branch = await this.branchService.getBranchById(vo.targetBranchId);
       if (branch === undefined) {
-        throw new BadRequestException('target branch does not exist!');
+        throw new BadRequestException('Target branch does not exist!');
       } else {
         const existBranchMerge =
           await this.branchMergeRepository.find({ where: [{ sourceBranchId: vo.targetBranchId, type: '0' }, { targetBranchId: vo.targetBranchId, type: '0' }] });
         if (existBranchMerge !== null && existBranchMerge.length > 0) {
-          throw new BadRequestException('target branch is merging !');
+          throw new BadRequestException('Target branch is merging !');
         }
       }
     } else {
-      throw new BadRequestException('target branch does not choose!');
+      throw new BadRequestException('Target branch does not choose!');
+    }
+
+    if (vo.targetBranchId === vo.sourceBranchId){
+      throw new BadRequestException('The source branch and the target branch cannot be the same!');
     }
 
     vo.commitId = UUIDUtils.generateUUID();
@@ -203,7 +210,15 @@ export class BranchMergeService {
 
   async generateDiffKey(mergeId : number) {
     const branchMerge = await this.branchMergeRepository.findOne(mergeId);
+    if (branchMerge === undefined){
+      throw new BadRequestException('Branch merge is not exist!');
+    } else if (branchMerge.type !== CommonConstant.MERGE_TYPE_CREATED){
+      throw new BadRequestException('Branch merge has merged or refused!');
+    }
+    const sourceBranchId = branchMerge.sourceBranchId;
+    const targetBranchId = branchMerge.targetBranchId;
+
+
     
   }
-
 }

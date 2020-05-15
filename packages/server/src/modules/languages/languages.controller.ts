@@ -9,6 +9,6 @@ export class LanguagesController {
   // find all languages
   @Get('all')
   async findAll(): Promise<ResponseBody> {
-    return ResponseBody.okWithData(this.languagesService.findAll());
+    return ResponseBody.okWithData(await this.languagesService.findAll());
   }
 }

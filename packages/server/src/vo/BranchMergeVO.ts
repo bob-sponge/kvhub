@@ -7,4 +7,6 @@ export class BranchMergeVO {
   crosMerge: boolean | null;
   type: string;
   commitId: string;
+  modifier: string | null;
+  modifyTime: Date | null;
 }

@@ -31,8 +31,7 @@ export class BranchMergeController {
 
   @Post('/save')
   async save(@Body() vo:BranchMerge) : Promise<ResponseBody> {
-    await this.branchMergeService.save(vo);
-    return ResponseBody.ok();
+    return ResponseBody.okWithData(await this.branchMergeService.save(vo));
   }
 
   @Get('/diffkey/generate/:mergeId')
