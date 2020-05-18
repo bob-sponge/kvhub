@@ -6,7 +6,6 @@ import { Project } from 'src/entities/Project';
 import { ConfigService } from '@ofm/nestjs-utils';
 import { Page } from 'src/vo/Page';
 import { PageResult } from 'src/vo/PageResult';
-import { PageSearch } from 'src/vo/PageSearch';
 import { BranchMerge } from 'src/entities/BranchMerge';
 import { BranchBody } from 'src/vo/BranchBody';
 import { BranchVO } from 'src/vo/BranchVO';
@@ -219,23 +218,23 @@ export class BranchService {
    * 分页模糊查询
    * @param pageSearch pageSearch
    */
-  async findByCondition(pageSearch: PageSearch): Promise<PageResult> {
-    const start: number = (pageSearch.page - 1) * pageSearch.size;
+  async findByCondition(page: Page): Promise<PageResult> {
+    const start: number = (page.page - 1) * page.size;
     let result = new PageResult();
     // 查询不区分大小写
     const data: Branch[] = await this.branchRepository
       .createQueryBuilder('branch')
       .where('branch.name Like :name')
       .setParameters({
-        name: '%' + pageSearch.content + '%',
+        name: '%' + page.content + '%',
       })
       .orderBy('branch.modify_time')
-      .limit(pageSearch.size)
+      .limit(page.size)
       .offset(start)
       .getMany();
     result.total = data.length;
-    result.page = pageSearch.page;
-    result.size = pageSearch.size;
+    result.page = page.page;
+    result.size = page.size;
     result.data = await this.calculateMerge(data);
     return result;
   }
@@ -273,7 +272,7 @@ export class BranchService {
       let branchVO = new BranchVO();
       branchVO.id = d.id;
       branchVO.name = d.name;
-      branchVO.time = d.modifyTime;
+      branchVO.time = d.modifyTime.valueOf();
       // 默认是 0 -> open
       branchVO.merge = this.constant.get('0');
       map.forEach((x, y) => {
@@ -354,7 +353,7 @@ export class BranchService {
       'SELECT k.key_id as id, k.name, a.value, a.language_name FROM keyname k inner join ' +
         '(SELECT keyvalue.id, keyvalue.key_id, keyvalue.value, language.name as language_name, ' +
         'keyvalue.latest from keyvalue LEFT JOIN language on keyvalue.language_id = language.id) ' +
-        'a on k.key_id = a.key_id WHERE a.latest = true AND k.id in ' +
+        'a on k.key_id = a.key_id WHERE a.latest = true AND k.key_id in ' +
         ids,
     );
   }

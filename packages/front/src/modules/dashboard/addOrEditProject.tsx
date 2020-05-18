@@ -20,14 +20,17 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
 
   useEffect(() => {
     ajax.get('/languages/all').then(result => {
-      const { data } = result;
-      setLanguages(data);
+      const {
+        data: { statusCode, data },
+      } = result;
+      if (statusCode === 0) {
+        setLanguages(data);
+      }
     });
   }, []);
 
   const handleAdd = () => {
     form.validateFields().then(values => {
-      window.console.log(values);
       if (!values.outOfDate) {
         ajax
           .post('/project/dashboard/save', values)

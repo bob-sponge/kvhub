@@ -58,8 +58,8 @@ const Dashboard: React.SFC = () => {
             {projectList &&
               projectList.length > 0 &&
               projectList.map((item, index) => {
-                const isDone = item.translateKeysNumber === item.keysNumber;
-                const precent = (item.translateKeysNumber / item.keysNumber) * 100;
+                const isDone = item.translatedKeysNumber === item.KeysNumber;
+                const precent = (item.translatedKeysNumber / item.KeysNumber) * 100;
                 return (
                   <div className={css.cardWapper} key={index}>
                     <div className={css.cardList}>
@@ -67,9 +67,9 @@ const Dashboard: React.SFC = () => {
                       <div className={css.cardTranslate}>
                         <div className={css.keys}>
                           <div className={css.keysCurrent} style={{ color: isDone ? doneColor : processColor }}>
-                            {formatNumber(item.translateKeysNumber)}
+                            {formatNumber(item.translatedKeysNumber)}
                           </div>
-                          <div className={css.keysTotal}>{formatNumber(item.keysNumber)}</div>
+                          <div className={css.keysTotal}>{formatNumber(item.KeysNumber)}</div>
                         </div>
                         <div className={css.precent} style={{ color: isDone ? doneColor : processColor }}>
                           <span>{isDone ? 'Done 100' : precent.toFixed(2)}</span>

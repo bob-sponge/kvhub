@@ -2,20 +2,52 @@ import React, { useState, useEffect } from 'react';
 import * as css from './style/index.modules.less';
 import ContainerMenu from '../../containerMenu';
 import { PlusOutlined } from '@ant-design/icons';
-import { Button, Input, Table, Empty } from 'antd';
-import { columns, dataSource } from './tableConfig';
+import { Button, Input, Table, Spin, message } from 'antd';
+import { columns } from './tableConfig';
 import AddorEditBranch from './addOrEditBranch';
 import { history } from '@ofm/history';
+import { ajax } from '@ofm/ajax';
 const { Search } = Input;
 
 const Branches: React.SFC = () => {
-  const [total] = useState(10);
   const [visible, setVisible] = useState<boolean>(false);
   const [branchList, setBranchList] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [total, setTotal] = useState(0);
+  const [filter, setFilter] = useState({
+    page: 1,
+    size: 10,
+    content: '',
+  });
 
   useEffect(() => {
-    setBranchList(dataSource);
-  }, []);
+    window.console.log(filter);
+    getBranch(filter);
+  }, [filter]);
+
+  const getBranch = (params: any) => {
+    window.console.log('params', params);
+    ajax
+      .post('/branch/all', params)
+      .then(result => {
+        setLoading(false);
+        const {
+          data: {
+            statusCode,
+            data: { total: totalItem, data: source },
+          },
+        } = result;
+        if (statusCode === 0) {
+          setTotal(totalItem);
+          setBranchList(source);
+        }
+      })
+      .catch(error => {
+        if (error) {
+          setLoading(false);
+        }
+      });
+  };
 
   const showTotal = () => {
     return `Total ${total} items`;
@@ -23,11 +55,49 @@ const Branches: React.SFC = () => {
 
   const onCompare = (record: any) => {
     window.console.log(record);
-    history.push(`/branch/compare/${record.key}`);
+    history.push(`/branch/compare/${record.id}`);
   };
 
   const onDelete = (record: any) => {
-    window.console.log(record);
+    ajax
+      .delete(`/branch/delete/${record.id}`)
+      .then(result => {
+        setLoading(false);
+        const {
+          data: { statusCode, message: msg },
+        } = result;
+        if (statusCode === 0) {
+          let currentTotal = total - 1;
+          if (currentTotal !== 0 && currentTotal % filter.size === 0 && filter.page !== 1) {
+            filter.page = filter.page - 1;
+          }
+          setFilter({ ...filter });
+          message.success(msg);
+        }
+      })
+      .catch(error => {
+        if (error) {
+          setLoading(false);
+        }
+      });
+  };
+
+  const onChange = (page: number, _pageSize: number) => {
+    filter.page = page;
+    setFilter({ ...filter });
+  };
+
+  const onPageChange = (_current: number, size: number) => {
+    filter.page = 1;
+    filter.size = size;
+    setFilter({ ...filter });
+  };
+
+  const onSearch = (value: string) => {
+    filter.content = value === '' ? '' : value.trim();
+    filter.page = 1;
+    filter.size = 10;
+    setFilter({ ...filter });
   };
 
   return (
@@ -38,7 +108,7 @@ const Branches: React.SFC = () => {
           <div className={css.operation}>
             <Search
               placeholder="Searchbox"
-              onSearch={value => window.console.log(value)}
+              onSearch={value => onSearch(value)}
               style={{ width: 264, marginRight: 16 }}
             />
             <Button type="primary" icon={<PlusOutlined />} onClick={() => setVisible(true)}>
@@ -46,20 +116,27 @@ const Branches: React.SFC = () => {
             </Button>
           </div>
         </div>
-        <div className={css.branchTable}>
-          <Table
-            columns={columns(onCompare, onDelete)}
-            dataSource={branchList}
-            pagination={{
-              position: 'bottomRight',
-              showSizeChanger: true,
-              showTotal: showTotal,
-            }}
-          />
-          {branchList.length === 0 && <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />}
-        </div>
+        <Spin spinning={loading}>
+          <div className={css.branchTable}>
+            <Table
+              columns={columns(onCompare, onDelete)}
+              dataSource={branchList}
+              pagination={{
+                position: 'bottomRight',
+                showSizeChanger: true,
+                showTotal: showTotal,
+                pageSizeOptions: ['10', '20', '50'],
+                onChange: onChange,
+                total,
+                pageSize: filter.size,
+                current: filter.page,
+                onShowSizeChange: onPageChange,
+              }}
+            />
+          </div>
+        </Spin>
       </div>
-      <AddorEditBranch visible={visible} setVisible={setVisible} />
+      <AddorEditBranch visible={visible} setVisible={setVisible} getBranch={getBranch} filter={filter} />
     </ContainerMenu>
   );
 };

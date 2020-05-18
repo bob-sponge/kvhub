@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Drawer, Button, Form, Input, Select } from 'antd';
+import { Drawer, Button, Form, Input, Select, message } from 'antd';
 import * as css from './style/addorEditBranch.modules.less';
 import { CheckOutlined } from '@ant-design/icons';
 import { ajax } from '@ofm/ajax';
@@ -7,10 +7,12 @@ import { ajax } from '@ofm/ajax';
 interface AddOrEditProjectProps {
   visible: boolean;
   setVisible: Function;
+  getBranch: Function;
+  filter: any;
 }
 
 const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProjectProps) => {
-  const { visible, setVisible } = props;
+  const { visible, setVisible, filter, getBranch } = props;
   const [form] = Form.useForm();
   const [project, setProject] = useState<any[]>([]);
   const onClose = () => {
@@ -18,7 +20,7 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
   };
 
   useEffect(() => {
-    ajax.get('/languages/all').then(result => {
+    ajax.get('/project/all').then(result => {
       const {
         data: { statusCode, data },
       } = result;
@@ -30,25 +32,24 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
 
   const handleAdd = () => {
     form.validateFields().then(values => {
-      window.console.log(values);
       if (!values.outOfDate) {
-        // ajax
-        //   .post('/project/dashboard/save', values)
-        //   .then(result => {
-        //     const {
-        //       data: { statusCode, message: msg },
-        //     } = result;
-        //     if (statusCode === 0) {
-        //       setVisible(false);
-        //       message.success(msg);
-        //       getProjectAll();
-        //       form.resetFields();
-        //     }
-        //   })
-        //   .catch(errorInfo => {
-        //     setVisible(false);
-        //     message.error(errorInfo);
-        //   });
+        ajax
+          .post('/branch/save', values)
+          .then(result => {
+            const {
+              data: { statusCode, message: msg },
+            } = result;
+            if (statusCode === 0) {
+              setVisible(false);
+              message.success(msg);
+              getBranch(filter);
+              form.resetFields();
+            }
+          })
+          .catch(errorInfo => {
+            setVisible(false);
+            message.error(errorInfo);
+          });
       }
     });
   };
@@ -76,7 +77,7 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
       className={css.addProjectDrawer}
       footer={renderFooter()}>
       <Form form={form} name="basic" layout="vertical" initialValues={{ remember: true }}>
-        <Form.Item label="Project" name="project" rules={[{ required: true, message: 'Please select project!' }]}>
+        <Form.Item label="project" name="projectId" rules={[{ required: true, message: 'Please select project!' }]}>
           <Select>
             {project &&
               project.length > 0 &&

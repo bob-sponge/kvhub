@@ -116,7 +116,7 @@ export class ProjectService {
       d.id = p.id;
       d.name = p.name;
       d.modifier = p.modifier;
-      d.time = p.modifyTime;
+      d.time = p.modifyTime.valueOf();
       dashboards.push(d);
     });
 
