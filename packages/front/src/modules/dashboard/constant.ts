@@ -1,56 +1,9 @@
-export const cardListData: Array<any> = [
-  {
-    id: 1,
-    name: 'Pubg-Design',
-    languages: ['EN', 'ZH', 'DE'],
-    modifier: 'bsw',
-    time: 1587826534519,
-    translateKeysNumber: 13543456,
-    translatedKeys: [11, 30],
-    keysNumber: 13543456,
-    key: [11, 12, 14],
-  },
-  {
-    id: 2,
-    name: 'Dpp-global-release-2018-10-22',
-    languages: ['EN', 'ZH'],
-    modifier: 'bsw',
-    time: 1587826534519,
-    translateKeysNumber: 1354,
-    translatedKeys: [11, 30],
-    keysNumber: 2865,
-    key: [11, 12, 14],
-  },
-  {
-    id: 3,
-    name: 'Pubg-Design',
-    languages: ['EN', 'DE'],
-    modifier: 'bsw',
-    time: 1587826534519,
-    translateKeysNumber: 1354,
-    translatedKeys: [11, 30],
-    keysNumber: 2334,
-    key: [11, 12, 14],
-  },
-  {
-    id: 4,
-    name: 'Pubg-Design',
-    languages: ['EN', 'DE'],
-    modifier: 'bsw',
-    time: 1587826534519,
-    translateKeysNumber: 1354,
-    translatedKeys: [11, 30],
-    keysNumber: 2334,
-    key: [11, 12, 14],
-  },
-];
-
 export const doneColor = '#2BAF82';
 
 export const processColor = '#43BDE0';
 
 export const formatNumber = (num: number) => {
-  let str = num.toString();
+  let str = num + '';
   let reg = str.indexOf('.') > -1 ? /(\d)(?=(\d{3})+\.)/g : /(\d)(?=(?:\d{3})+$)/g;
   return str.replace(reg, '$1,');
 };

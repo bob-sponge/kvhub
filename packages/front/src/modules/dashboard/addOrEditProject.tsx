@@ -20,8 +20,12 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
 
   useEffect(() => {
     ajax.get('/languages/all').then(result => {
-      const { data } = result;
-      setLanguages(data);
+      const {
+        data: { statusCode, data },
+      } = result;
+      if (statusCode === 0) {
+        setLanguages(data);
+      }
     });
   }, []);
 
