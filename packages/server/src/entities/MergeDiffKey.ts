@@ -8,8 +8,11 @@ export class MergeDiffKey {
   @Column('integer', { name: 'merge_id' })
   mergeId: number;
 
-  @Column('character varying', { name: 'key', length: 255 })
-  key: string;
+  /**
+   * 关联的是key表中的actualId
+   */
+  @Column('integer', { name: 'key'})
+  key: number;
 
   @Column('integer', { name: 'select_branch_id' })
   selectBranchId: number;

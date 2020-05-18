@@ -10,7 +10,7 @@ import { ProjectLanguageService } from '../projectLanguage/projectLanguage.servi
 import { NamespaceService } from '../namespace/namespace.service';
 import { Dashboard } from 'src/vo/Dashboard';
 import { ProjectViewVO } from 'src/vo/ProjectViewVO';
-import { ProjectLanguageDTO } from 'src/dto/ProjectLanguageDTO';
+import { ProjectLanguageDTO } from 'src/modules/projectLanguage/dto/ProjectLanguageDTO';
 import { NamespaceVO } from '../../vo/NamespaceVO';
 import { ProjectVO } from 'src/vo/PorjectVO';
 import { ProjectLanguage } from 'src/entities/ProjectLanguage';
@@ -65,11 +65,11 @@ export class ProjectService {
   async saveProject(projectVO: ProjectVO): Promise<void> {
     // language_id是否存在
     if (await this.languageService.findOne(projectVO.referenceId)) {
-      throw new BadRequestException('referenceId is not exist');
+      throw new BadRequestException('ReferenceId is not exist');
     }
     // 判断名称是否重复
     if ((await this.projectRepository.findOne({ name: projectVO.name })) !== undefined) {
-      throw new BadRequestException('project name is exist');
+      throw new BadRequestException('Project name is exist');
     }
     // save project
     let project = new Project();
@@ -116,7 +116,7 @@ export class ProjectService {
       d.id = p.id;
       d.name = p.name;
       d.modifier = p.modifier;
-      d.time = p.modifyTime;
+      d.time = p.modifyTime.valueOf();
       dashboards.push(d);
     });
 
@@ -178,19 +178,19 @@ export class ProjectService {
     // 数据校验
     const project = await this.projectRepository.find({ id, delete: false });
     if (null === project || project.length === 0) {
-      throw new BadRequestException('project is not exist');
+      throw new BadRequestException('Project is not exist');
     }
     const branch = await this.branchService.getBranchById(branchId);
-    if (null === branch) {
-      throw new BadRequestException('branch is not exist');
+    if (undefined === branch) {
+      throw new BadRequestException('Branch is not exist');
     } else {
       if (branch.master !== null && branch.master) {
         masterBranchId = branchId;
         isMasterBranch = true;
       } else {
-        const branchList = await this.branchService.findMasterBranchByProjectId(id);
-        if (branchList !== null && branchList.length > 0) {
-          masterBranchId = branchList[0].id;
+        const masterBranch = await this.branchService.findMasterBranchByProjectId(id);
+        if (masterBranch !== undefined){
+          masterBranchId = masterBranch.id;
         }
       }
     }

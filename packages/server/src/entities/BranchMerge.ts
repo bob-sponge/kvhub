@@ -17,6 +17,19 @@ export class BranchMerge {
   @Column('character varying', { name: 'type', length: 255 })
   type: string;
 
-  @Column('integer', { name: 'commit_id' })
-  commitId: number;
+  @Column('character varying', { name: 'commit_id', length: 255 })
+  commitId: string;
+
+  @Column('character varying', {
+    name: 'modifier',
+    nullable: true,
+    length: 255,
+  })
+  modifier: string | null;
+
+  @Column('timestamp without time zone', {
+    name: 'modify_time',
+    nullable: true,
+  })
+  modifyTime: Date | null;
 }
