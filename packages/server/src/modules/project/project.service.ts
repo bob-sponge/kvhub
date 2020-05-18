@@ -10,7 +10,7 @@ import { ProjectLanguageService } from '../projectLanguage/projectLanguage.servi
 import { NamespaceService } from '../namespace/namespace.service';
 import { Dashboard } from 'src/vo/Dashboard';
 import { ProjectViewVO } from 'src/vo/ProjectViewVO';
-import { ProjectLanguageDTO } from 'src/dto/ProjectLanguageDTO';
+import { ProjectLanguageDTO } from 'src/modules/projectLanguage/dto/ProjectLanguageDTO';
 import { NamespaceVO } from '../../vo/NamespaceVO';
 import { ProjectVO } from 'src/vo/PorjectVO';
 import { ProjectLanguage } from 'src/entities/ProjectLanguage';
@@ -28,6 +28,10 @@ export class ProjectService {
     private readonly projectRepository: Repository<Project>,
     @InjectRepository(Keyvalue)
     private readonly keyValueRepository: Repository<Keyvalue>,
+    @InjectRepository(ProjectLanguage)
+    private readonly projectLanguageRepository: Repository<ProjectLanguage>,
+    @InjectRepository(Branch)
+    private readonly branchRepository: Repository<Branch>,
     private readonly branchService: BranchService,
     private readonly keyService: KeyService,
     private readonly projectLanguageService: ProjectLanguageService,
@@ -48,10 +52,10 @@ export class ProjectService {
    * 获取首页相关数据
    */
   async dashboardPorjects(): Promise<Dashboard[]> {
-    const projects: any[] = await this.findProjectWithBranch();
-    const languages: any[] = await this.findProjectWithLanguages();
+    const projectBranchs: any[] = await this.findProjectWithBranch();
+    const projectLanguages: any[] = await this.findProjectWithLanguages();
     const keysMap: any[] = await this.keyService.countKey();
-    return await this.consolidateData(projects, languages, keysMap);
+    return await this.consolidateData(projectBranchs, projectLanguages, keysMap);
   }
 
   /**
@@ -61,11 +65,11 @@ export class ProjectService {
   async saveProject(projectVO: ProjectVO): Promise<void> {
     // language_id是否存在
     if (await this.languageService.findOne(projectVO.referenceId)) {
-      throw new BadRequestException('referenceId is not exist');
+      throw new BadRequestException('ReferenceId is not exist');
     }
     // 判断名称是否重复
     if ((await this.projectRepository.findOne({ name: projectVO.name })) !== undefined) {
-      throw new BadRequestException('project name is exist');
+      throw new BadRequestException('Project name is exist');
     }
     // save project
     let project = new Project();
@@ -85,7 +89,7 @@ export class ProjectService {
     projectLanguage.delete = false;
     projectLanguage.modifier = this.modifier;
     projectLanguage.modifyTime = new Date();
-    await this.projectLanguageService.save(projectLanguage);
+    await this.projectLanguageRepository.save(projectLanguage);
 
     //save branch
     let branch = new Branch();
@@ -94,7 +98,7 @@ export class ProjectService {
     branch.master = true;
     branch.modifier = this.modifier;
     branch.modifyTime = new Date();
-    await this.branchService.save(branch);
+    await this.branchRepository.save(branch);
   }
   /**
    * 整合数据返回Dashborad[]
@@ -102,31 +106,32 @@ export class ProjectService {
    * @param languages
    * @param keysMap
    */
-  async consolidateData(projects: any[], languages: any[], keysMap: any[]): Promise<Dashboard[]> {
+  async consolidateData(projectBranchs: any[], projectLanguages: any[], keysMap: any[]): Promise<Dashboard[]> {
     const dashboards: Dashboard[] = [];
-    // 获取project_ids
-    const ids = new Set();
+
+    // 获取全部的projects转换成dashboards
+    const projects: Project[] = await this.projectRepository.find();
     projects.forEach(p => {
-      if (p.project_id !== null) {
-        ids.add(p.project_id);
-      }
+      let d = new Dashboard();
+      d.id = p.id;
+      d.name = p.name;
+      d.modifier = p.modifier;
+      d.time = p.modifyTime;
+      dashboards.push(d);
     });
 
-    // project -> dashboard
-    ids.forEach(id => {
-      let d = new Dashboard();
+    // 获取key数量填充到dashborads
+    dashboards.forEach(d => {
       let keysArray = [];
       // key是否有效暂定由actual_id决定
       let actualIds = new Set();
-      projects.map(p => {
-        if (id === p.id) {
-          d.id = p.id;
-          d.name = p.project_name;
-          d.time = p.modify_time;
-          d.modifier = p.modifier;
-          // 在key表sql中筛选了actual_id = id的数据
-          actualIds.add(p.actual_id);
-          keysArray.push(p.actual_id);
+      projectBranchs.map(p => {
+        if (d.id === p.id) {
+          if (null !== p.actual_id) {
+            // 在key表sql中筛选了actual_id = id的数据
+            actualIds.add(p.actual_id);
+            keysArray.push(p.actual_id);
+          }
         }
       });
       d.KeysNumber = actualIds.size;
@@ -134,10 +139,10 @@ export class ProjectService {
       dashboards.push(d);
     });
 
-    // dashboard -> languages
+    // 获取languages填充到dashborad
     dashboards.map(d => {
       let languageArray = [];
-      languages.map(l => {
+      projectLanguages.map(l => {
         if (d.id === l.project_id) {
           languageArray.push(l.language_name);
         }
@@ -169,23 +174,23 @@ export class ProjectService {
   async getProjectView(id: number, branchId: number): Promise<ProjectViewVO[]> {
     let result = [];
     let isMasterBranch = false;
-    let masterBranchId : number = 0;
+    let masterBranchId: number = 0;
     // 数据校验
     const project = await this.projectRepository.find({ id, delete: false });
     if (null === project || project.length === 0) {
-      throw new BadRequestException('project is not exist');
+      throw new BadRequestException('Project is not exist');
     }
     const branch = await this.branchService.getBranchById(branchId);
-    if (null === branch) {
-      throw new BadRequestException('branch is not exist');
+    if (undefined === branch) {
+      throw new BadRequestException('Branch is not exist');
     } else {
       if (branch.master !== null && branch.master) {
         masterBranchId = branchId;
         isMasterBranch = true;
       } else {
-        const branchList = await this.branchService.findMasterBranchByProjectId(id);
-        if (branchList !== null && branchList.length > 0){
-          masterBranchId = branchList[0].id;
+        const masterBranch = await this.branchService.findMasterBranchByProjectId(id);
+        if (masterBranch !== undefined){
+          masterBranchId = masterBranch.id;
         }
       }
     }
@@ -208,29 +213,29 @@ export class ProjectService {
         const n = namespaceList[j];
         let namespaceVO = new NamespaceVO();
 
-        let keyList : any[] = [];
+        let keyList: any[] = [];
         let masterKeyList = await this.keyService.getKeyWithBranchIdAndNamespaceId(masterBranchId, n.id);
         if (!isMasterBranch) {
           // 由于分支不是主分支，可能存在分支上独立的key或者master分支修改过的key，需要对比
           let branchKeyList = await this.keyService.getKeyWithBranchIdAndNamespaceId(branchId, n.id);
-          if (branchKeyList !== null && branchKeyList.length > 0){
-            for (let k=0;k<masterKeyList.length;k++){
+          if (branchKeyList !== null && branchKeyList.length > 0) {
+            for (let k = 0; k < masterKeyList.length; k++) {
               const masterKey = masterKeyList[k];
               let branchKeyExist = false;
-              for (let l=0;l<branchKeyList.length;l++){
+              for (let l = 0; l < branchKeyList.length; l++) {
                 const branchKey = branchKeyList[l];
-                if (branchKey.actualId === masterKey.actualId){
+                if (branchKey.actualId === masterKey.actualId) {
                   branchKeyExist = true;
-                  branchKeyList.splice(l,1);
+                  branchKeyList.splice(l, 1);
                   keyList.push(branchKey);
                   break;
                 }
               }
-              if (!branchKeyExist){
+              if (!branchKeyExist) {
                 keyList.push(masterKey);
               }
             }
-            if (branchKeyList.length > 0){
+            if (branchKeyList.length > 0) {
               keyList.push(branchKeyList);
             }
           } else {
@@ -241,7 +246,11 @@ export class ProjectService {
         }
         const keyIdList = [];
         keyList.map(key => keyIdList.push(key.id));
-        namespaceVO.translatedKeys = await this.keyValueRepository.count({keyId:In(keyIdList),languageId:p.languageId,latest:true});
+        namespaceVO.translatedKeys = await this.keyValueRepository.count({
+          keyId: In(keyIdList),
+          languageId: p.languageId,
+          latest: true,
+        });
         // 根据获取的keylist 找对应value
         namespaceVO.id = n.id;
         namespaceVO.name = n.name;

@@ -8,9 +8,9 @@ export class BranchCommit {
   @Column('integer', { name: 'branch_id' })
   branchId: number;
 
-  @Column('integer', { name: 'commit_id' })
-  commitId: number;
-
+  @Column('character varying', { name: 'commit_id', length: 255 ,nullable:true})
+  commitId: string;
+  
   @Column('timestamp without time zone', { name: 'commit_time' })
   commitTime: Date;
 

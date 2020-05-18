@@ -17,8 +17,9 @@ export class Keyvalue {
   @Column('integer', { name: 'merge_id', nullable: true })
   mergeId: number | null;
 
-  @Column('integer', { name: 'commit_id', nullable: true })
-  commitId: number | null;
+
+  @Column('character varying', { name: 'commit_id', length: 255 ,nullable:true})
+  commitId: string;
 
   @Column('character varying', {
     name: 'modifier',

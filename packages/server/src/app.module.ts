@@ -22,6 +22,7 @@ import { BranchModule } from './modules/branch/branch.module';
 import { KeyModule } from './modules/key/key.module';
 import { NamespaceModule } from './modules/namespace/namespace.module';
 import { BranchMergeModule } from './modules/branchMerge/branchMerge.module';
+import { MergeDiffValue } from './entities/MergeDiffValue';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { BranchMergeModule } from './modules/branchMerge/branchMerge.module';
             Language,
             MergeDiffChangeKey,
             MergeDiffKey,
+            MergeDiffValue,
             Namespace,
             Project,
             ProjectLanguage,

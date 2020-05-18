@@ -2,7 +2,6 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Branch } from 'src/entities/Branch';
 import { Repository, DeleteResult } from 'typeorm';
-import { BranchKey } from 'src/entities/BranchKey';
 import { Project } from 'src/entities/Project';
 import { ConfigService } from '@ofm/nestjs-utils';
 import { Page } from 'src/vo/Page';
@@ -21,7 +20,6 @@ export class BranchService {
   private constant: Map<string, string>;
   constructor(
     @InjectRepository(Branch) private readonly branchRepository: Repository<Branch>,
-    @InjectRepository(BranchKey) private readonly branchKeyRepository: Repository<BranchKey>,
     @InjectRepository(Project) private readonly projectRepository: Repository<Project>,
     @InjectRepository(BranchMerge) private readonly branchMergeRepository: Repository<BranchMerge>,
     @InjectRepository(MergeDiffChangeKey) private readonly mergeDiffChangeKeyRepository: Repository<MergeDiffChangeKey>,
@@ -134,52 +132,37 @@ export class BranchService {
     let keyVOs: KeyVO[] = [];
     for (let index = 0; index < branchVOs.length; index++) {
       const b = branchVOs[index];
-      if (b.merge !== this.constant.get('0')) {
-        const keys: MergeDiffChangeKey[] = await this.mergeDiffChangeKeyRepository.find({ branchId: b.id });
-        let values = [];
+      // 通过branchId查询keyIds
+      const keys = await this.findKeyIdsByBranchIds(b.id);
+      if (keys.length === 0) {
+        return keyVOs;
+      }
+      let keyIds = [];
+      keys.forEach(k => {
+        keyIds.push(k.key_id);
+      });
+      // 通过keyIds查询对应的name和value
+      const result: any[] = await this.findKeysByKeyIds('(' + keyIds.join(',') + ')');
+      let ids = new Set<number>();
+      result.map(r => {
+        ids.add(r.id);
+      });
+
+      ids.forEach(i => {
         let keyVO = new KeyVO();
-        keys.forEach(k => {
-          keyVO.name = k.key;
-          let value = new KeyValueVO();
-          value.value = k.value;
-          value.language = k.language;
-          values.push(value);
+        let values = [];
+        result.forEach(r => {
+          if (i === r.id) {
+            keyVO.name = r.name;
+            let keyValue = new KeyValueVO();
+            keyValue.value = r.value;
+            keyValue.language = r.language_name;
+            values.push(keyValue);
+          }
         });
         keyVO.values = values;
         keyVOs.push(keyVO);
-      } else {
-        // 通过branchId查询keyIds
-        const keys = await this.findKeyIdsByBranchIds(b.id);
-        if (keys.length === 0) {
-          return keyVOs;
-        }
-        let keyIds = [];
-        keys.forEach(k => {
-          keyIds.push(k.key_id);
-        });
-        // 通过keyIds查询对应的name和value
-        const result: any[] = await this.findKeysByKeyIds('(' + keyIds.join(',') + ')');
-        let ids = new Set<number>();
-        result.map(r => {
-          ids.add(r.id);
-        });
-
-        ids.forEach(i => {
-          let keyVO = new KeyVO();
-          let values = [];
-          result.forEach(r => {
-            if (i === r.id) {
-              keyVO.name = r.name;
-              let keyValue = new KeyValueVO();
-              keyValue.value = r.value;
-              keyValue.language = r.language_name;
-              values.push(keyValue);
-            }
-          });
-          keyVO.values = values;
-          keyVOs.push(keyVO);
-        });
-      }
+      });
     }
     return keyVOs.sort((a, b) => a.name.localeCompare(b.name));
   }
@@ -388,14 +371,19 @@ export class BranchService {
    * 通过项目id查询master分支
    * @param projectId projectId
    */
-  async findMasterBranchByProjectId(projectId: number): Promise<Branch[]> {
-    return await this.branchRepository.find({ projectId, master: true });
+  async findMasterBranchByProjectId(projectId: number): Promise<Branch> | undefined{
+    const branchList = await this.branchRepository.find({ projectId, master: true });
+    if (branchList === null){
+      return undefined
+    } else {
+      return branchList[0];
+    }
   }
 
   /**
    * 通过分支ID获取分支信息
    */
-  async getBranchById(id: number): Promise<Branch> {
+  async getBranchById(id: number): Promise<Branch> | undefined {
     return await this.branchRepository.findOne(id);
   }
 }

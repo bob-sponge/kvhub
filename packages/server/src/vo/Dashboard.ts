@@ -6,7 +6,7 @@ export class Dashboard {
   // project下所有的语言
   languages: string[];
   modifier: string;
-  time: string;
+  time: Date;
   // 已翻译的key数量
   translatedKeysNumber: number;
   // 已翻译的key

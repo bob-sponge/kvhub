@@ -1,15 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import SideBar from '../siderBar';
 import Header from '../header';
 import * as css from './styles/languages.modules.less';
 import { Button, Select } from 'antd';
 import LanguageItem from './languageItem';
 import AddNewLanguage from './addNewLanguage';
+import { projectViewApi } from '../../api/languages';
 
 const Option = Select.Option;
 
 const Languages = () => {
   const [visible, setVisible] = useState(false);
+  const projectView = useCallback(async () => {
+    const res = await projectViewApi({
+      pid: 7,
+      id: 2,
+    });
+    window.console.log('res', res);
+  }, []);
+
+  useEffect(() => {
+    projectView();
+  }, [projectView]);
 
   const showAdd = () => {
     setVisible(!visible);
