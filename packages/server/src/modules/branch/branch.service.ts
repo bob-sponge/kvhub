@@ -353,7 +353,7 @@ export class BranchService {
       'SELECT k.key_id as id, k.name, a.value, a.language_name FROM keyname k inner join ' +
         '(SELECT keyvalue.id, keyvalue.key_id, keyvalue.value, language.name as language_name, ' +
         'keyvalue.latest from keyvalue LEFT JOIN language on keyvalue.language_id = language.id) ' +
-        'a on k.key_id = a.key_id WHERE a.latest = true AND k.id in ' +
+        'a on k.key_id = a.key_id WHERE a.latest = true AND k.key_id in ' +
         ids,
     );
   }
