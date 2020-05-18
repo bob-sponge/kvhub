@@ -1,5 +1,7 @@
 import React from 'react';
+import moment from 'moment';
 import * as css from './style/index.modules.less';
+import { Popconfirm } from 'antd';
 
 export const dataSource = [
   {
@@ -49,13 +51,16 @@ export const columns = (onCompare: Function, onDelete: Function) => {
     },
     {
       title: 'Updated',
-      dataIndex: 'updateTime',
-      key: 'updateTime',
+      dataIndex: 'time',
+      key: 'time',
+      render: (text: any) => {
+        return moment(text).format('YYYY/MM/DD HH:mm:ss');
+      },
     },
     {
       title: 'Merge Request',
-      dataIndex: 'mergeRequest',
-      key: 'mergeRequest',
+      dataIndex: 'merge',
+      key: 'merge',
     },
     {
       title: 'Opeartion',
@@ -63,7 +68,9 @@ export const columns = (onCompare: Function, onDelete: Function) => {
       render: (_text: any, record: any) => (
         <div className={css.operation}>
           <span onClick={() => onCompare(record)}>Compare</span>
-          <span onClick={() => onDelete(record)}>Delete</span>
+          <Popconfirm title="Are you sure？" okText="Yes" cancelText="No" onConfirm={() => onDelete(record)}>
+            <span>Delete</span>
+          </Popconfirm>
         </div>
       ),
     },

@@ -31,7 +31,6 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
 
   const handleAdd = () => {
     form.validateFields().then(values => {
-      window.console.log(values);
       if (!values.outOfDate) {
         ajax
           .post('/project/dashboard/save', values)
