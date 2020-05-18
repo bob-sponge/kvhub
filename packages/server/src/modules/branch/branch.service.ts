@@ -272,7 +272,7 @@ export class BranchService {
       let branchVO = new BranchVO();
       branchVO.id = d.id;
       branchVO.name = d.name;
-      branchVO.time = d.modifyTime;
+      branchVO.time = d.modifyTime.valueOf();
       // 默认是 0 -> open
       branchVO.merge = this.constant.get('0');
       map.forEach((x, y) => {

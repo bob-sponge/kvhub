@@ -1,5 +1,5 @@
 database:
-  host: 39.108.208.163
+  host: localhost
   port: 5432
   username: postgres
   password: 123456
