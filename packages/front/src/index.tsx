@@ -15,7 +15,7 @@ if (process.env.NODE_ENV === 'development') {
   });
 } else {
   initAjax({
-    baseURL: '',
+    baseURL: '/gateway',
     withCredentials: true,
   });
 }
