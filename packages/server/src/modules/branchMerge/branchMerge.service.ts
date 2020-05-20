@@ -10,10 +10,12 @@ import { BranchMergeVO } from 'src/vo/BranchMergeVO';
 import { BranchMergeDiffVO } from 'src/vo/BranchMergeDiffVO';
 import { MergeDiffShowVO } from 'src/vo/MergeDiffShowVO';
 import { MergeDiffValueShowVO } from 'src/vo/MergeDiffValueShowVo';
-import { BranchService } from 'src/modules/branch/branch.service'
-import { KeyService } from 'src/modules/key/key.service'
-import { CommonConstant } from 'src/constant/constant';
+import { BranchService } from 'src/modules/branch/branch.service';
+import { KeyService } from 'src/modules/key/key.service';
+import { CommonConstant, ErrorMessage } from 'src/constant/constant';
 import { UUIDUtils } from 'src/utils/uuid';
+import { ValueVO } from 'src/vo/ValueVO';
+import { KeyValueDetailVO } from 'src/vo/KeyValueDetailVO';
 
 @Injectable()
 export class BranchMergeService {
@@ -27,14 +29,14 @@ export class BranchMergeService {
     @InjectRepository(MergeDiffValue)
     private readonly mergeDiffValueRepository: Repository<MergeDiffValue>,
     private readonly branchService: BranchService,
-    private readonly keyService: KeyService
-  ) { }
+    private readonly keyService: KeyService,
+  ) {}
 
   async getInfoById(id: number): Promise<BranchMergeVO> {
     const branchMergeVO = new BranchMergeVO();
     const branchMerge = await this.branchMergeRepository.findOne(id);
     if (branchMerge === null) {
-      throw new BadRequestException('Branch merge is not exist');
+      throw new BadRequestException(ErrorMessage.BRANCH_MERGE_NOT_EXIST);
     }
     branchMergeVO.id = branchMerge.id;
     branchMergeVO.sourceBranchId = branchMerge.sourceBranchId;
@@ -43,7 +45,9 @@ export class BranchMergeService {
     branchMergeVO.crosMerge = branchMerge.crosMerge;
     branchMergeVO.commitId = branchMerge.commitId;
 
-    const branchList = await this.branchRepository.find({ where: [{ id: branchMerge.sourceBranchId }, { id: branchMerge.targetBranchId }] });
+    const branchList = await this.branchRepository.find({
+      where: [{ id: branchMerge.sourceBranchId }, { id: branchMerge.targetBranchId }],
+    });
     branchList.forEach(branch => {
       if (branch.id === branchMergeVO.sourceBranchId) {
         branchMergeVO.sourceBranchName = branch.name;
@@ -58,7 +62,7 @@ export class BranchMergeService {
   async refuse(id: number) {
     const branchMerge = await this.branchMergeRepository.findOne(id);
     if (branchMerge === undefined) {
-      throw new BadRequestException('Branch merge is not exist');
+      throw new BadRequestException(ErrorMessage.BRANCH_MERGE_NOT_EXIST);
     }
     branchMerge.type = CommonConstant.MERGE_TYPE_REFUSED;
     branchMerge.modifyTime = new Date();
@@ -73,11 +77,15 @@ export class BranchMergeService {
 
     // 得到分支集合后，获取分支的id并进行拼接
     const branchIdList: number[] = [];
-    branchList.forEach(branch => { branchIdList.push(branch.id) });
+    branchList.forEach(branch => {
+      branchIdList.push(branch.id);
+    });
 
     // 拼接分支id后，通过sql查找到项目的分支merge记录，source 和 target 都需要进行查找
     let branchMergeList: BranchMerge[] = await this.branchMergeRepository.find({
-       where: [{ sourceBranchId: In(branchIdList) }, { targetBranchId: In(branchIdList) }],order:{id:"ASC"}});
+      where: [{ sourceBranchId: In(branchIdList) }, { targetBranchId: In(branchIdList) }],
+      order: { id: 'ASC' },
+    });
 
     // 得到记录后，按照source和target分支id获取对应的分支名称
     for (let i = 0; i < branchMergeList.length; i++) {
@@ -110,46 +118,50 @@ export class BranchMergeService {
     return result;
   }
 
-  async getDiffById(mergeId:number) : Promise<BranchMergeDiffVO[]> {
-    const result : BranchMergeDiffVO[] = [];
+  async getDiffById(mergeId: number): Promise<BranchMergeDiffVO[]> {
+    const result: BranchMergeDiffVO[] = [];
     const branchMerge = await this.branchMergeRepository.findOne(mergeId);
-    if ( branchMerge === undefined ){
-      throw new BadRequestException('Branch merge is not exist');
+    if (branchMerge === undefined) {
+      throw new BadRequestException(ErrorMessage.BRANCH_MERGE_NOT_EXIST);
     }
     const sourceBranchId = branchMerge.sourceBranchId;
     const targetBranchId = branchMerge.targetBranchId;
 
-    const mergeBranchKeyList = await this.mergeDiffKeyRepository.find({mergeId});
-    if (mergeBranchKeyList === null || mergeBranchKeyList.length === 0){
+    const mergeBranchKeyList = await this.mergeDiffKeyRepository.find({ mergeId });
+    if (mergeBranchKeyList === null || mergeBranchKeyList.length === 0) {
       return result;
     }
-    for (let i=0;i<mergeBranchKeyList.length;i++){
-      let vo  = new BranchMergeDiffVO();
+    for (let i = 0; i < mergeBranchKeyList.length; i++) {
+      let vo = new BranchMergeDiffVO();
       vo.mergeDiffKey = mergeBranchKeyList[i];
       vo.keyActualId = vo.mergeDiffKey.key;
-      vo.source = await this.getMergeDiffInfo(vo.mergeDiffKey.id,sourceBranchId,vo.mergeDiffKey.key);  
-      vo.target = await this.getMergeDiffInfo(vo.mergeDiffKey.id,targetBranchId,vo.mergeDiffKey.key);
+      vo.source = await this.getMergeDiffInfo(vo.mergeDiffKey.id, sourceBranchId, vo.mergeDiffKey.key);
+      vo.target = await this.getMergeDiffInfo(vo.mergeDiffKey.id, targetBranchId, vo.mergeDiffKey.key);
       result.push(vo);
     }
     return result;
   }
-  private async getMergeDiffInfo(mergeDiffKeyId:number,branchId:number,keyActualId:number) : Promise<MergeDiffShowVO> {
+  private async getMergeDiffInfo(
+    mergeDiffKeyId: number,
+    branchId: number,
+    keyActualId: number,
+  ): Promise<MergeDiffShowVO> {
     let vo = new MergeDiffShowVO();
-    let valueList : MergeDiffValueShowVO[] = []
-    let key = await this.keyService.getKeyByBranchIdAndKeyActualId(branchId,keyActualId);
-    if (key === undefined){
-      throw new BadRequestException("Key is not exist!");
+    let valueList: MergeDiffValueShowVO[] = [];
+    let key = await this.keyService.getKeyByBranchIdAndKeyActualId(branchId, keyActualId);
+    if (key === undefined) {
+      throw new BadRequestException('Key is not exist!');
     } else {
       vo.keyId = key.id;
     }
-    
+
     // key -> keyname
-    const keyName = await this.keyService.getKeyInfo(key.id,false);
+    const keyName = await this.keyService.getKeyInfo(key.id, false);
     vo.keyName = keyName.name;
 
     // 获取value
-    const mergeDiffValueList = await this.mergeDiffValueRepository.find({mergeDiffKeyId});
-    for (let i = 0;i<mergeDiffValueList.length;i++){
+    const mergeDiffValueList = await this.mergeDiffValueRepository.find({ mergeDiffKeyId });
+    for (let i = 0; i < mergeDiffValueList.length; i++) {
       let valueShowVO = new MergeDiffValueShowVO();
       const mergeDiffValue = mergeDiffValueList[i];
       valueShowVO.id = mergeDiffValue.valueId;
@@ -161,44 +173,56 @@ export class BranchMergeService {
       valueShowVO.value = value.value;
       valueList.push(valueShowVO);
     }
-    valueList.sort((v1,v2) => v1.languageId - v2.languageId);
+    valueList.sort((v1, v2) => v1.languageId - v2.languageId);
     vo.valueList = valueList;
     return vo;
   }
-  
+
+  /**
+   * save merge branch data
+   * @param vo
+   */
   async save(vo: BranchMerge): Promise<number> {
     if (vo.sourceBranchId !== null && vo.sourceBranchId !== undefined) {
       const branch = await this.branchService.getBranchById(vo.sourceBranchId);
       if (branch === undefined) {
-        throw new BadRequestException('Source branch does not exist!');
+        throw new BadRequestException(ErrorMessage.BRANCH_NOT_EXIST);
       } else {
-        const existBranchMerge =
-          await this.branchMergeRepository.find({ where: [{ sourceBranchId: vo.sourceBranchId, type: '0' }, { targetBranchId: vo.sourceBranchId, type: '0' }] });
+        const existBranchMerge = await this.branchMergeRepository.find({
+          where: [
+            { sourceBranchId: vo.sourceBranchId, type: CommonConstant.MERGE_TYPE_CREATED },
+            { targetBranchId: vo.sourceBranchId, type: CommonConstant.MERGE_TYPE_CREATED },
+          ],
+        });
         if (existBranchMerge !== null && existBranchMerge.length > 0) {
-          throw new BadRequestException('Source branch is merging !');
+          throw new BadRequestException(ErrorMessage.BRANCH_IS_MERGING);
         }
       }
     } else {
-      throw new BadRequestException('Source branch does not choose!');
+      throw new BadRequestException(ErrorMessage.BRANCH_NOT_CHOOSE);
     }
 
     if (vo.targetBranchId !== null && vo.targetBranchId !== undefined) {
       const branch = await this.branchService.getBranchById(vo.targetBranchId);
       if (branch === undefined) {
-        throw new BadRequestException('Target branch does not exist!');
+        throw new BadRequestException(ErrorMessage.BRANCH_NOT_EXIST);
       } else {
-        const existBranchMerge =
-          await this.branchMergeRepository.find({ where: [{ sourceBranchId: vo.targetBranchId, type: '0' }, { targetBranchId: vo.targetBranchId, type: '0' }] });
+        const existBranchMerge = await this.branchMergeRepository.find({
+          where: [
+            { sourceBranchId: vo.targetBranchId, type: CommonConstant.MERGE_TYPE_CREATED },
+            { targetBranchId: vo.targetBranchId, type: CommonConstant.MERGE_TYPE_CREATED },
+          ],
+        });
         if (existBranchMerge !== null && existBranchMerge.length > 0) {
-          throw new BadRequestException('Target branch is merging !');
+          throw new BadRequestException(ErrorMessage.BRANCH_IS_MERGING);
         }
       }
     } else {
-      throw new BadRequestException('Target branch does not choose!');
+      throw new BadRequestException(ErrorMessage.BRANCH_NOT_CHOOSE);
     }
 
-    if (vo.targetBranchId === vo.sourceBranchId){
-      throw new BadRequestException('The source branch and the target branch cannot be the same!');
+    if (vo.targetBranchId === vo.sourceBranchId) {
+      throw new BadRequestException(ErrorMessage.BRANCH_NOT_SAME);
     }
 
     vo.commitId = UUIDUtils.generateUUID();
@@ -208,17 +232,136 @@ export class BranchMergeService {
     return branchMerge.id;
   }
 
-  async generateDiffKey(mergeId : number) {
+  /**
+   * Obtain branch data through mergeId, and then generate diff data
+   * @param mergeId
+   * @throws BadRequestException
+   */
+  async generateDiffKey(mergeId: number) {
+    // check branchmerge is exist and type is created
     const branchMerge = await this.branchMergeRepository.findOne(mergeId);
-    if (branchMerge === undefined){
-      throw new BadRequestException('Branch merge is not exist!');
-    } else if (branchMerge.type !== CommonConstant.MERGE_TYPE_CREATED){
-      throw new BadRequestException('Branch merge has merged or refused!');
+    if (branchMerge === undefined) {
+      throw new BadRequestException(ErrorMessage.BRANCH_MERGE_NOT_EXIST);
+    } else if (branchMerge.type !== CommonConstant.MERGE_TYPE_CREATED) {
+      throw new BadRequestException(ErrorMessage.BRANCH_MERGE_IS_NOT_CREATED);
     }
+
+    // get source and target branch id
     const sourceBranchId = branchMerge.sourceBranchId;
     const targetBranchId = branchMerge.targetBranchId;
 
+    // By branch id, get the key corresponding to the branch and the name and value corresponding to the key
+    let sourceKeyList = await this.keyService.getKeyListByBranchId(sourceBranchId);
+    let targetKeyList = await this.keyService.getKeyListByBranchId(targetBranchId);
 
     
+    await this.diffKey(sourceKeyList,targetKeyList,mergeId);
+
+    // When crosmerge is true, the branches need to be compared with each other
+    if (branchMerge.crosMerge !== null && branchMerge.crosMerge) {
+      await this.diffKey(targetKeyList,sourceKeyList,mergeId);
+    }
+  }
+
+  /**
+   * When the actualId of the key is equal, compare the name and values of the key
+   * @param source 
+   * @param target 
+   * @param mergeId 
+   */
+  private async diffKey(source:KeyValueDetailVO[],target:KeyValueDetailVO[],mergeId:number){
+    for (let i = 0; i < source.length; i++) {
+      const sourceKey = source[i];
+      let targetKey = new KeyValueDetailVO();
+      let isExist = false;
+      let isDifferent = false;
+      let targetIndex = 0;
+      for (let j = 0; j < target.length; j++) {
+        targetIndex = j;
+        targetKey = target[j];
+        if (sourceKey.keyActualId === targetKey.keyActualId) {
+          isExist = true;
+          if (sourceKey.keyName !== targetKey.keyName) {
+            isDifferent = true;
+          } else if (this.checkValueVO(sourceKey.valueLit, targetKey.valueLit)) {
+            isDifferent = true;
+          }
+          break;
+        }
+      }
+      /* When the name of the key is inconsistent or
+         when the same translation value of the key is different or
+         when only a certain branch is translated,
+         need to add diffkey data */
+      if (isDifferent || !isExist) {
+        let mergeDiffKey = new MergeDiffKey();
+        mergeDiffKey.mergeId = mergeId;
+        mergeDiffKey.key = sourceKey.keyActualId;
+        mergeDiffKey = await this.mergeDiffKeyRepository.save(mergeDiffKey);
+        let diffValueList: MergeDiffValue[] = [];
+        if (sourceKey.valueLit !== null && sourceKey.valueLit.length > 0) {
+          sourceKey.valueLit.forEach(v => {
+            let diffValue = new MergeDiffValue();
+            diffValue.languageId = v.languageId;
+            diffValue.mergeDiffKeyId = mergeDiffKey.id;
+            diffValue.valueId = v.valueId;
+            diffValue.keyId = sourceKey.keyId;
+            diffValueList.push(diffValue);
+          });
+        }
+        if (targetKey.valueLit !== null && targetKey.valueLit.length > 0) {
+          targetKey.valueLit.forEach(v => {
+            let diffValue = new MergeDiffValue();
+            diffValue.languageId = v.languageId;
+            diffValue.mergeDiffKeyId = mergeDiffKey.id;
+            diffValue.valueId = v.valueId;
+            diffValue.keyId = targetKey.keyId;
+            diffValueList.push(diffValue);
+          });
+        }
+        await this.mergeDiffValueRepository.save(diffValueList);
+      }
+
+      // When source and target have the same key, delete both sides to reduce the number of cycles
+      if (isExist) {
+        source.splice(i);
+        target.splice(targetIndex);
+        i--;
+      }
+    }
+  }
+
+  /**
+   * return true --> source === target / false source !== target
+   * @param source
+   * @param target
+   */
+  private checkValueVO(source: ValueVO[], target: ValueVO[]): boolean {
+    const sourceEmtpy = (source === null || source.length === 0) && target !== null && target.length > 0;
+    const targetEmpty = (target === null || target.length === 0) && source !== null && source.length > 0;
+    if (sourceEmtpy || targetEmpty) {
+      return false;
+    } else {
+      for (let i = 0; i < source.length; i++) {
+        const s = source[i];
+        let isExist = false;
+        let isDifferent = false;
+        for (let j = 0; j < target.length; j++) {
+          const t = target[j];
+          if (s.languageId === t.languageId) {
+            isExist = true;
+            if (s.value !== t.value) {
+              isDifferent = true;
+            }
+            break;
+          }
+        }
+        if (isDifferent || !isExist) {
+          return false;
+        } else {
+          return true;
+        }
+      }
+    }
   }
 }

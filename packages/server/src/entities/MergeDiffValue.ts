@@ -8,12 +8,15 @@ export class MergeDiffValue {
   @Column('integer', { name: 'merge_diff_key_id' })
   mergeDiffKeyId: number;
 
-  @Column('integer', { name: 'value_id'})
+  @Column('integer', { name: 'key_id' })
+  keyId: number;
+
+  @Column('integer', { name: 'value_id' })
   valueId: number;
 
   @Column('integer', { name: 'branch_id' })
   branchId: number;
 
   @Column('integer', { name: 'language_id' })
-  languageId:number;
+  languageId: number;
 }
