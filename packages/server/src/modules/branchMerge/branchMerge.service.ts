@@ -167,11 +167,13 @@ export class BranchMergeService {
       valueShowVO.id = mergeDiffValue.valueId;
       valueShowVO.keyId = key.id;
 
-      let value = await this.keyService.getValueInfo(valueShowVO.id);
-      valueShowVO.languageId = value.languageId;
-      valueShowVO.languageName = value.langeuage;
-      valueShowVO.value = value.value;
-      valueList.push(valueShowVO);
+      const value = await this.keyService.getValueInfo(valueShowVO.id);
+      if(value !== undefined){
+        valueShowVO.languageId = value.languageId;
+        valueShowVO.languageName = value.langeuage;
+        valueShowVO.value = value.value;
+        valueList.push(valueShowVO);
+      }
     }
     valueList.sort((v1, v2) => v1.languageId - v2.languageId);
     vo.valueList = valueList;
@@ -179,8 +181,9 @@ export class BranchMergeService {
   }
 
   /**
-   * save merge branch data
-   * @param vo
+   * save branch merge data
+   * @param vo  \{\"sourceBranchId\":3,\"targetBranchId\":4,\"crosMerge\":true\}
+   * @returns branch merge id
    */
   async save(vo: BranchMerge): Promise<number> {
     if (vo.sourceBranchId !== null && vo.sourceBranchId !== undefined) {
@@ -254,22 +257,16 @@ export class BranchMergeService {
     let sourceKeyList = await this.keyService.getKeyListByBranchId(sourceBranchId);
     let targetKeyList = await this.keyService.getKeyListByBranchId(targetBranchId);
 
-    
-    await this.diffKey(sourceKeyList,targetKeyList,mergeId);
-
-    // When crosmerge is true, the branches need to be compared with each other
-    if (branchMerge.crosMerge !== null && branchMerge.crosMerge) {
-      await this.diffKey(targetKeyList,sourceKeyList,mergeId);
-    }
+    await this.diffKey(sourceKeyList, targetKeyList, mergeId, branchMerge.crosMerge);
   }
 
   /**
    * When the actualId of the key is equal, compare the name and values of the key
-   * @param source 
-   * @param target 
-   * @param mergeId 
+   * @param source Source branches all keys, key names and their translations in different languages
+   * @param target Target branches all keys, key names and their translations in different languages 
+   * @param mergeId branch merge id
    */
-  private async diffKey(source:KeyValueDetailVO[],target:KeyValueDetailVO[],mergeId:number){
+  private async diffKey(source: KeyValueDetailVO[], target: KeyValueDetailVO[], mergeId: number, crosmerge: boolean) {
     for (let i = 0; i < source.length; i++) {
       const sourceKey = source[i];
       let targetKey = new KeyValueDetailVO();
@@ -283,7 +280,7 @@ export class BranchMergeService {
           isExist = true;
           if (sourceKey.keyName !== targetKey.keyName) {
             isDifferent = true;
-          } else if (this.checkValueVO(sourceKey.valueLit, targetKey.valueLit)) {
+          } else if (!this.checkValueVO(sourceKey.valueList, targetKey.valueList)) {
             isDifferent = true;
           }
           break;
@@ -299,8 +296,8 @@ export class BranchMergeService {
         mergeDiffKey.key = sourceKey.keyActualId;
         mergeDiffKey = await this.mergeDiffKeyRepository.save(mergeDiffKey);
         let diffValueList: MergeDiffValue[] = [];
-        if (sourceKey.valueLit !== null && sourceKey.valueLit.length > 0) {
-          sourceKey.valueLit.forEach(v => {
+        if (sourceKey.valueList !== null && sourceKey.valueList.length > 0) {
+          sourceKey.valueList.forEach(v => {
             let diffValue = new MergeDiffValue();
             diffValue.languageId = v.languageId;
             diffValue.mergeDiffKeyId = mergeDiffKey.id;
@@ -309,8 +306,8 @@ export class BranchMergeService {
             diffValueList.push(diffValue);
           });
         }
-        if (targetKey.valueLit !== null && targetKey.valueLit.length > 0) {
-          targetKey.valueLit.forEach(v => {
+        if (targetKey.valueList !== null && targetKey.valueList.length > 0) {
+          targetKey.valueList.forEach(v => {
             let diffValue = new MergeDiffValue();
             diffValue.languageId = v.languageId;
             diffValue.mergeDiffKeyId = mergeDiffKey.id;
@@ -324,10 +321,15 @@ export class BranchMergeService {
 
       // When source and target have the same key, delete both sides to reduce the number of cycles
       if (isExist) {
-        source.splice(i);
-        target.splice(targetIndex);
+        source.splice(i,1);
+        target.splice(targetIndex,1);
         i--;
       }
+    }
+
+    // When crosmerge is true, the branches need to be compared with each other
+    if (crosmerge != null && crosmerge) {
+      await this.diffKey(target, source, mergeId, false);
     }
   }
 

@@ -3,5 +3,5 @@ export class KeyValueDetailVO {
   keyId: number;
   keyActualId: number;
   keyName: string;
-  valueLit: ValueVO[];
+  valueList: ValueVO[];
 }

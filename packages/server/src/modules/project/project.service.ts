@@ -136,7 +136,6 @@ export class ProjectService {
       });
       d.KeysNumber = actualIds.size;
       d.keys = keysArray;
-      dashboards.push(d);
     });
 
     // 获取languages填充到dashborad

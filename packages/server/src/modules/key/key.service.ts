@@ -6,7 +6,7 @@ import { Keyname } from 'src/entities/Keyname';
 import { Keyvalue } from 'src/entities/Keyvalue';
 import { BranchService } from 'src/modules/branch/branch.service';
 import { KeyInfoDto } from 'src/modules/key/dto/KeyInfoDTO';
-import { Repository } from 'typeorm';
+import { Repository, createQueryBuilder, getRepository } from 'typeorm';
 import { ValueDTO } from './dto/ValueDTO';
 import { KeyValueDetailVO } from 'src/vo/KeyValueDetailVO';
 import { ValueVO } from 'src/vo/ValueVO';
@@ -46,7 +46,8 @@ export class KeyService {
 
   async getKeyWithBranchId(branchId: number): Promise<Key[]> {
     return await this.keyRepository.query(
-      ' select k.* from key k left join branch_key bk ' +
+      ' select k.id,k.actual_id "actualId",k.namespace_id "namespaceId",k.modifier,k.modify_time "modifyTime",k.delete' +
+        ' from key k left join branch_key bk ' +
         ' on k.id = bk.key_id where bk.delete = false and k.delete = false ' +
         ' and bk.branch_id = ' +
         branchId,
@@ -73,25 +74,31 @@ export class KeyService {
       masterBranch = branch;
     }
     let keyList: Key[] = [];
-    keyList = await this.keyRepository.find({
-      join: { alias: 'key', leftJoin: { key: 'branch_key' } },
-      where: { actualId, branchId: branch.id },
-    });
+    // keyList = await this.keyRepository.find({
+    //   join: { alias: 'key', leftJoin: { key: 'branch_key' } },
+    //   where: { actualId, branchId: branch.id },
+    // });
+
+    keyList = await getRepository(Key).createQueryBuilder("key")
+    .leftJoinAndSelect("branch_key","bk","bk.key_id = key.id")
+    .where("key.actual_id = :actualId and bk.branch_id = :branchId",{actualId,branchId:branch.id})
+    .printSql()
+    .getMany();
     if (keyList === null || keyList.length === 0) {
       if (branch.master !== null && branch.master) {
         return undefined;
       } else {
-        keyList = await this.keyRepository.find({
-          join: { alias: 'key', leftJoin: { key: 'branch_key' } },
-          where: { actualId, branchId: masterBranch.id },
-        });
+        keyList = await getRepository(Key).createQueryBuilder("key")
+        .leftJoinAndSelect("branch_key","bk","bk.key_id = key.id")
+        .where("key.actual_id = :actualId and bk.branch_id = :branchId",{actualId,branchId:masterBranch.id})
+        .printSql()
+        .getMany();
         if (keyList === null || keyList.length === 0) {
           return undefined;
-        } else {
-          result = keyList[0];
         }
       }
     }
+    result = keyList[0];
     return result;
   }
 
@@ -122,12 +129,17 @@ export class KeyService {
     return result;
   }
 
-  async getValueInfo(id: number): Promise<ValueDTO> {
-    return await this.keyvalueRepository.query(
+  async getValueInfo(id: number): Promise<ValueDTO> | undefined {
+    const valueDTO = await this.keyvalueRepository.query(
       'select v.id,v.language_id "languageId",l.name "language",v.latest,v.value ' +
         ' from keyvalue v left join language l on v.language_id = l.id where v.id = ' +
         id,
     );
+    if(valueDTO !== null && valueDTO.length > 0){
+      return valueDTO[0];
+    } else {
+      return undefined;
+    }
   }
 
   async getKeyListByBranchId(branchId: number): Promise<KeyValueDetailVO[]> {
@@ -196,7 +208,7 @@ export class KeyService {
           value.forEach(v => {
             valueList.push({ valueId: v.id, value: v.value, languageId: v.languageId });
           });
-          detail.valueLit = valueList;
+          detail.valueList = valueList;
         }
         result.push(detail);
       }
