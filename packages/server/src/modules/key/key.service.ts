@@ -74,11 +74,6 @@ export class KeyService {
       masterBranch = branch;
     }
     let keyList: Key[] = [];
-    // keyList = await this.keyRepository.find({
-    //   join: { alias: 'key', leftJoin: { key: 'branch_key' } },
-    //   where: { actualId, branchId: branch.id },
-    // });
-
     keyList = await getRepository(Key).createQueryBuilder("key")
     .leftJoinAndSelect("branch_key","bk","bk.key_id = key.id")
     .where("key.actual_id = :actualId and bk.branch_id = :branchId",{actualId,branchId:branch.id})
@@ -209,6 +204,8 @@ export class KeyService {
             valueList.push({ valueId: v.id, value: v.value, languageId: v.languageId });
           });
           detail.valueList = valueList;
+        } else {
+          detail.valueList = [];
         }
         result.push(detail);
       }

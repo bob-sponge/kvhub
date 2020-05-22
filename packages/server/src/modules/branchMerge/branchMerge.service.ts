@@ -150,7 +150,7 @@ export class BranchMergeService {
     let valueList: MergeDiffValueShowVO[] = [];
     let key = await this.keyService.getKeyByBranchIdAndKeyActualId(branchId, keyActualId);
     if (key === undefined) {
-      throw new BadRequestException('Key is not exist!');
+      return vo;
     } else {
       vo.keyId = key.id;
     }
@@ -269,28 +269,35 @@ export class BranchMergeService {
   private async diffKey(source: KeyValueDetailVO[], target: KeyValueDetailVO[], mergeId: number, crosmerge: boolean) {
     for (let i = 0; i < source.length; i++) {
       const sourceKey = source[i];
+
       let targetKey = new KeyValueDetailVO();
       let isExist = false;
       let isDifferent = false;
+      let hasTarget = false;
       let targetIndex = 0;
-      for (let j = 0; j < target.length; j++) {
-        targetIndex = j;
-        targetKey = target[j];
-        if (sourceKey.keyActualId === targetKey.keyActualId) {
-          isExist = true;
-          if (sourceKey.keyName !== targetKey.keyName) {
-            isDifferent = true;
-          } else if (!this.checkValueVO(sourceKey.valueList, targetKey.valueList)) {
-            isDifferent = true;
+
+      if (target !== null && target.length > 0){
+        hasTarget = true;
+        for (let j = 0; j < target.length; j++) {
+          targetIndex = j;
+          targetKey = target[j];
+          if (sourceKey.keyActualId === targetKey.keyActualId) {
+            isExist = true;
+            if (sourceKey.keyName !== targetKey.keyName) {
+              isDifferent = true;
+            } else if ( !await this.checkValueVO(sourceKey.valueList, targetKey.valueList)) {
+              isDifferent = true;
+            }
+            break;
           }
-          break;
         }
       }
+
       /* When the name of the key is inconsistent or
          when the same translation value of the key is different or
          when only a certain branch is translated,
          need to add diffkey data */
-      if (isDifferent || !isExist) {
+      if (isDifferent || !isExist || !hasTarget) {
         let mergeDiffKey = new MergeDiffKey();
         mergeDiffKey.mergeId = mergeId;
         mergeDiffKey.key = sourceKey.keyActualId;
@@ -306,7 +313,7 @@ export class BranchMergeService {
             diffValueList.push(diffValue);
           });
         }
-        if (targetKey.valueList !== null && targetKey.valueList.length > 0) {
+        if (hasTarget && targetKey.valueList !== null && targetKey.valueList.length > 0) {
           targetKey.valueList.forEach(v => {
             let diffValue = new MergeDiffValue();
             diffValue.languageId = v.languageId;
@@ -316,13 +323,17 @@ export class BranchMergeService {
             diffValueList.push(diffValue);
           });
         }
-        await this.mergeDiffValueRepository.save(diffValueList);
+        if (diffValueList.length > 0){
+          await this.mergeDiffValueRepository.save(diffValueList);
+        }
       }
 
       // When source and target have the same key, delete both sides to reduce the number of cycles
       if (isExist) {
         source.splice(i,1);
-        target.splice(targetIndex,1);
+        if(target.length > 0){
+          target.splice(targetIndex,1);
+        }
         i--;
       }
     }
@@ -338,7 +349,7 @@ export class BranchMergeService {
    * @param source
    * @param target
    */
-  private checkValueVO(source: ValueVO[], target: ValueVO[]): boolean {
+  private async checkValueVO(source: ValueVO[], target: ValueVO[]): Promise<boolean> {
     const sourceEmtpy = (source === null || source.length === 0) && target !== null && target.length > 0;
     const targetEmpty = (target === null || target.length === 0) && source !== null && source.length > 0;
     if (sourceEmtpy || targetEmpty) {
