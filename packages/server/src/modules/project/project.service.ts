@@ -136,7 +136,6 @@ export class ProjectService {
       });
       d.KeysNumber = actualIds.size;
       d.keys = keysArray;
-      dashboards.push(d);
     });
 
     // 获取languages填充到dashborad
@@ -189,7 +188,7 @@ export class ProjectService {
         isMasterBranch = true;
       } else {
         const masterBranch = await this.branchService.findMasterBranchByProjectId(id);
-        if (masterBranch !== undefined){
+        if (masterBranch !== undefined) {
           masterBranchId = masterBranch.id;
         }
       }

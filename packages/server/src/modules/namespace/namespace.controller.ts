@@ -1,8 +1,9 @@
-import { Controller, Post, Body, Get, Param } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Delete } from '@nestjs/common';
 import { NamespaceService } from './namespace.service';
 import { ResponseBody } from 'src/vo/ResponseBody';
 import { Namespace } from 'src/entities/Namespace';
 import { NamespaceViewDetail } from 'src/vo/NamespaceViewDetail';
+import * as Log4js from 'log4js';
 
 @Controller('namespace')
 export class NamespaceController {
@@ -137,5 +138,152 @@ export class NamespaceController {
     const value = keyvalue.keyvalue;
     const data = await (await this.namespaceService.editKeyValueOnlanguage(languageId, keyId, value)).raw;
     return ResponseBody.okWithData(data);
+  }
+
+  /**
+   * @description
+   *  增加或者编辑 key value
+   *  如果是增加，keyId 传 "", 编辑的话，传入对应的 key id.
+   *  对于编辑来说，每次传入所有有值的语言的value,尽管此语言的value 可能和上一个值一致。
+   *  对于新增来说，传入有值的语言的 value,这样可以减少存储。
+   * @request
+   *  url: http://localhost:5000/namespace/view/keyvalue
+   *  method: post
+   *  body:
+   *    example:
+   *
+        {
+          "branchId": 1,
+          "namespaceId": 1,
+          "keyId": 1233,
+          "keyName": "hao",
+          "kv": [{
+            "languageId":1,
+            "value": "hao"
+          },{
+            "languageId":2,
+            "value": "好"
+          }]
+        }
+      @returns
+       sucess:
+         {
+            "statusCode": 0,
+            "data": true,
+            "message": "success"
+         }
+       fail:
+         {
+            "statusCode": -1,
+            "data": false,
+            "message": "Key name already exist on branch dev ."
+         }
+   */
+  @Post('/view/keyvalue')
+  async addKeyValue(@Body() keyvalue: any) {
+    const logger = Log4js.getLogger();
+    logger.level = 'INFO';
+    const branchId = keyvalue.branchId;
+    const namespaceId = keyvalue.namespaceId;
+    const keyId = keyvalue.keyId;
+    const keyName = keyvalue.keyName;
+    const data: [] = keyvalue.kv;
+    logger.info(`view keyvalue: key id: ${keyId}, key name: ${keyName}`);
+    // 如果key id 有值，则为修改，否则为增加
+    let msg = '';
+    try {
+      await this.namespaceService.editKeyValue(branchId, namespaceId, keyId, keyName, data);
+    } catch (error) {
+      msg = error.message;
+      return ResponseBody.errorWithMsg(msg);
+    }
+    return ResponseBody.okWithMsg('success');
+  }
+
+  /**
+   * @description
+   * 修改 key 的name
+   * @request
+   *  url: http://localhost:5000/namespace/view/keyname
+   *  method: post
+   *  body:
+   *    example:
+   *
+        {
+          "keyId": 1233,
+          "keyName": "hao"
+        }
+   * @returns
+      success
+      {
+          "statusCode": 0,
+          "data": true,
+          "message": "success"
+      }
+   */
+  @Post('/view/keyname')
+  async editKeyname(@Body() data: any) {
+    const keyId = data.keyId;
+    const keyName = data.keyName;
+    let msg = '';
+    try {
+      await this.namespaceService.editKeyname(keyId, keyName);
+    } catch (error) {
+      msg = error.message;
+      return ResponseBody.errorWithMsg(msg);
+    }
+    return ResponseBody.okWithMsg('success');
+  }
+
+  /**
+   * @description
+   * 删除 key
+   * @request
+   *  url: http://localhost:5000/namespace/view/key/26
+   *  method: Delete
+   * @returns
+      success
+      {
+          "statusCode": 0,
+          "data": true,
+          "message": "success"
+      }
+   */
+  @Delete('/view/key/:keyId')
+  async deleteKey(@Param('keyId') keyId: number) {
+    let msg = '';
+    try {
+      await this.namespaceService.deleteKey(keyId);
+    } catch (error) {
+      msg = error.message;
+      return ResponseBody.errorWithMsg(msg);
+    }
+    return ResponseBody.okWithMsg('success');
+  }
+
+  /**
+   * @description
+   * 删除 namespace
+   * @request
+   *  url: http://localhost:5000/namespace/view/26
+   *  method: Delete
+   * @returns
+      success
+      {
+          "statusCode": 0,
+          "data": true,
+          "message": "success"
+      }
+   */
+  @Delete('/view/:namespaceId')
+  async deleteNamespace(@Param('namespaceId') namespaceId: number) {
+    let msg = '';
+    try {
+      await this.namespaceService.deleteNamespace(namespaceId);
+    } catch (error) {
+      msg = error.message;
+      return ResponseBody.errorWithMsg(msg);
+    }
+    return ResponseBody.okWithMsg('success');
   }
 }

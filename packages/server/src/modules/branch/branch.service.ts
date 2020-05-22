@@ -31,6 +31,13 @@ export class BranchService {
       ['2', 'Refused'],
     ]);
   }
+  
+  /**
+   * 查询全部branch
+   */
+  async findAllBranch(): Promise<Branch[]> {
+    return await this.branchRepository.find();
+  }
 
   /**
    * 不同branch间key的value比较

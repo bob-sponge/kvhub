@@ -8,10 +8,17 @@ import './config';
 
 import { App } from './app';
 
-initAjax({
-  baseURL: `http://${process.conf.ip}`,
-  withCredentials: true,
-});
+if (process.env.NODE_ENV === 'development') {
+  initAjax({
+    baseURL: `http://${process.conf.ip}`,
+    withCredentials: true,
+  });
+} else {
+  initAjax({
+    baseURL: '/gateway',
+    withCredentials: true,
+  });
+}
 
 const store = createStore();
 
