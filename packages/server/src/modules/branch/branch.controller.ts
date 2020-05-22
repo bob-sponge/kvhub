@@ -19,6 +19,10 @@ export class BranchController {
     return this.branchService.findBranchByProjectId(projectId);
   }
 
+  @Get('/list')
+  async findAllBranch(): Promise<ResponseBody>{
+    return ResponseBody.okWithData(await this.branchService.findAllBranch());
+  }
   /**
    * 分页查询
    */
