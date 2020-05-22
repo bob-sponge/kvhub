@@ -21,12 +21,10 @@ const Branches: React.SFC = () => {
   });
 
   useEffect(() => {
-    window.console.log(filter);
     getBranch(filter);
   }, [filter]);
 
   const getBranch = (params: any) => {
-    window.console.log('params', params);
     ajax
       .post('/branch/all', params)
       .then(result => {
@@ -54,7 +52,6 @@ const Branches: React.SFC = () => {
   };
 
   const onCompare = (record: any) => {
-    window.console.log(record);
     history.push(`/branch/compare/${record.id}`);
   };
 
