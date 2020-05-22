@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { Drawer, Button, Form, Input, Select, message } from 'antd';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Drawer, Button, Form, Input, Select, message, Modal } from 'antd';
 import * as css from './style/addOrEditProject.modules.less';
-import { CheckOutlined } from '@ant-design/icons';
+import { CheckOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { ajax } from '@ofm/ajax';
+import { defaultDetail, compareObject } from './constant';
+const { confirm } = Modal;
 
 interface AddOrEditProjectProps {
   visible: boolean;
@@ -14,9 +16,7 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
   const { visible, setVisible, getProjectAll } = props;
   const [form] = Form.useForm();
   const [languages, setLanguages] = useState<any[]>([]);
-  const onClose = () => {
-    setVisible(false);
-  };
+  const [detail, setDetail] = useState<any>(defaultDetail);
 
   useEffect(() => {
     ajax.get('/languages/all').then(result => {
@@ -29,11 +29,24 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
     });
   }, []);
 
+  const onContentChange = (label: string) => {
+    form.validateFields().then(values => {
+      if (!values.outOfDate) {
+        detail[label] = label === 'name' ? values[label].trim() : values[label];
+        setDetail({ ...detail });
+      }
+    });
+  };
+
   const handleAdd = () => {
     form.validateFields().then(values => {
       if (!values.outOfDate) {
+        let params = {
+          name: values.name.trim(),
+          referenceId: values.referenceId,
+        };
         ajax
-          .post('/project/dashboard/save', values)
+          .post('/project/dashboard/save', params)
           .then(result => {
             const {
               data: { statusCode, message: msg },
@@ -56,12 +69,44 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
   const renderFooter = () => {
     return (
       <div className={css.drawerFooter}>
-        <Button onClick={() => setVisible(false)}>Cancel</Button>
+        <Button onClick={onClose}>Cancel</Button>
         <Button icon={<CheckOutlined />} type="primary" onClick={handleAdd}>
           Submit
         </Button>
       </div>
     );
+  };
+
+  const onClose = useCallback(() => {
+    let formDetail = {
+      name: form.getFieldValue('name'),
+      referenceId: form.getFieldValue('referenceId'),
+    };
+    if (!compareObject(defaultDetail, formDetail)) {
+      showPopConfirm(() => {
+        setVisible(false);
+        form.resetFields();
+      });
+    } else {
+      setVisible(false);
+    }
+  }, [detail, form]);
+
+  const showPopConfirm = (onPopOk: Function) => {
+    confirm({
+      icon: <ExclamationCircleOutlined />,
+      content: 'Changes have been made. Exit?',
+      onOk() {
+        onPopOk();
+      },
+    });
+  };
+
+  const checkProjectName = (_rule: any, value: any) => {
+    if (value.length <= 100) {
+      return Promise.resolve();
+    }
+    return Promise.reject('Project name can contain at most 100 characters');
   };
 
   return (
@@ -79,14 +124,14 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
         <Form.Item
           label="Project Name"
           name="name"
-          rules={[{ required: true, message: 'Please input your project name!' }]}>
-          <Input />
+          rules={[{ required: true, message: 'Please input your project name!' }, { validator: checkProjectName }]}>
+          <Input onChange={() => onContentChange('name')} />
         </Form.Item>
         <Form.Item
           label="Reference Language"
           name="referenceId"
           rules={[{ required: true, message: 'Please select reference language!' }]}>
-          <Select>
+          <Select onChange={() => onContentChange('referenceId')}>
             {languages &&
               languages.length > 0 &&
               languages.map(item => {

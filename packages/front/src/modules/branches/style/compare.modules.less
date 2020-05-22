@@ -70,74 +70,58 @@
     padding: 16px;
     background-color: @white;
 
-    .panel {
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-
-      .source {
-        width: 45%;
+    :global {
+      .ant-form-item {
+        margin-bottom: 0 !important;
       }
+    }
 
-      .operation {
-        width: 10%;
+    .branch-title {
+      height: 32px;
+      line-height: 32px;
+    }
 
-        .title {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: @light-grey;
-          margin-bottom: 16px;
+    .operation {
+      .title {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: @light-grey;
+        height: 32px;
+        margin-bottom: 8px;
 
-          span {
-            font-size: 12px;
-            padding-left: 2px;
-          }
-        }
-
-        .content {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          height: 32px;
-
-          .circle {
-            width: 12px;
-            height: 12px;
-            background-color: @white;
-            border: 3px solid #43BDE0;
-            border-radius: 50%;
-          }
-
-          .square {
-            width: 73px;
-            height: 4px;
-            background-color: #43BDE0;
-          }
-
-          .trangle {
-            width: 0;
-            height: 0;
-            border-top: 10px solid transparent;
-            border-left: 10px solid #43BDE0;
-            border-bottom: 10px solid transparent;
-          }
+        span {
+          font-size: 12px;
+          padding-left: 2px;
         }
       }
 
-      &-title {
-        font-size: 14px;
-        color: @black;
-        font-weight: bold;
-        margin-bottom: 16px;
-      }
+      .content {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 32px;
 
-      &-content {
+        .circle {
+          width: 12px;
+          height: 12px;
+          background-color: @white;
+          border: 3px solid #43BDE0;
+          border-radius: 50%;
+        }
 
-        .content-title {
-          font-size: 16px;
-          color: @black;
-          margin-right: 24px;
+        .square {
+          width: 73px;
+          height: 4px;
+          background-color: #43BDE0;
+        }
+
+        .trangle {
+          width: 0;
+          height: 0;
+          border-top: 10px solid transparent;
+          border-left: 10px solid #43BDE0;
+          border-bottom: 10px solid transparent;
         }
       }
     }

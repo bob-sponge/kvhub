@@ -51,3 +51,15 @@ export const timeAgo = (dateTimeStamp: number) => {
   }
   return result;
 };
+
+export const defaultDetail = {
+  name: undefined,
+  referenceId: undefined,
+};
+
+/**
+ * 判断对象是否一致
+ */
+export const compareObject = (a: any, b: any) => {
+  return JSON.stringify(a) === JSON.stringify(b);
+};
