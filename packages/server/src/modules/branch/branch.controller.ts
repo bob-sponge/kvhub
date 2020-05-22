@@ -23,6 +23,15 @@ export class BranchController {
   async findAllBranch(): Promise<ResponseBody>{
     return ResponseBody.okWithData(await this.branchService.findAllBranch());
   }
+
+  @Get('/:id')
+  async getBranchById(@Param('id') id: number): Promise<ResponseBody> {
+    const branch: Branch = await this.branchService.getBranchById(id);
+    if (undefined === branch) {
+      return ResponseBody.errorWithMsg("branch is not exist!");
+    }
+    return ResponseBody.okWithData(branch);
+  }
   /**
    * 分页查询
    */
@@ -58,6 +67,9 @@ export class BranchController {
 
   @Post('/compare')
   async branchCompare(@Body() compareVO: CompareVO): Promise<ResponseBody> {
+    if (compareVO.source === compareVO.destination) {
+      return ResponseBody.errorWithMsg('Can not compare the same branch!')
+    }
     return ResponseBody.okWithData(await this.branchService.compare(compareVO));
   }
 }
