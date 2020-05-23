@@ -21,8 +21,8 @@ export class ResponseBody {
     return new ResponseBody(0, true, message);
   }
 
-  static error() {
-    return new ResponseBody(-1, false, 'failure');
+  static error(message: string, statusCode: number) {
+    return new ResponseBody(statusCode, false, message);
   }
 
   static errorWithMsg(message: string) {

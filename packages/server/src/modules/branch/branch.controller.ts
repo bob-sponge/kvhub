@@ -28,7 +28,7 @@ export class BranchController {
   async getBranchById(@Param('id') id: number): Promise<ResponseBody> {
     const branch: Branch = await this.branchService.getBranchById(id);
     if (undefined === branch) {
-      return ResponseBody.errorWithMsg("branch is not exist!");
+      return ResponseBody.error("branch is not exist!", 500);
     }
     return ResponseBody.okWithData(branch);
   }
@@ -68,7 +68,7 @@ export class BranchController {
   @Post('/compare')
   async branchCompare(@Body() compareVO: CompareVO): Promise<ResponseBody> {
     if (compareVO.source === compareVO.destination) {
-      return ResponseBody.errorWithMsg('Can not compare the same branch!')
+      return ResponseBody.error('Can not compare the same branch!', 500)
     }
     return ResponseBody.okWithData(await this.branchService.compare(compareVO));
   }
