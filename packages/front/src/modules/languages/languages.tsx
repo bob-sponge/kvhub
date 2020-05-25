@@ -5,18 +5,24 @@ import * as css from './styles/languages.modules.less';
 import { Button, Select } from 'antd';
 import LanguageItem from './languageItem';
 import AddNewLanguage from './addNewLanguage';
+import { mockLanguageList } from './mock';
 import { projectViewApi } from '../../api/languages';
 
 const Option = Select.Option;
 
 const Languages = () => {
   const [visible, setVisible] = useState(false);
+  const [languageList, setLanguageList] = useState(mockLanguageList);
+
   const projectView = useCallback(async () => {
+    window.console.log(languageList);
     const res = await projectViewApi({
       pid: 7,
       id: 2,
     });
-    window.console.log('res', res);
+    if (res.data && res.data.isSuccess) {
+      setLanguageList(res.data);
+    }
   }, []);
 
   useEffect(() => {
@@ -46,9 +52,9 @@ const Languages = () => {
             </div>
           </div>
           <div className={css.languagesContent}>
-            <LanguageItem />
-            <LanguageItem />
-            <LanguageItem />
+            {languageList.map((item, index) => {
+              return <LanguageItem item={item} index={index} key={item.id} />;
+            })}
           </div>
         </div>
       </div>
