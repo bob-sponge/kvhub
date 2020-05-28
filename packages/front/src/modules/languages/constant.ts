@@ -16,7 +16,7 @@ export const toThousands = (nums: number) => {
 };
 
 export const getPercent = (num: number, total: number) => {
-  const percent = Math.floor((num / total) * 100);
+  const percent = total === 0 ? 0 : Math.floor((num / total) * 100);
   if (percent === 0 && num !== 0) {
     return {
       text: '1%',

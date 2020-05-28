@@ -5,29 +5,38 @@ import * as css from './styles/languages.modules.less';
 import { Button, Select } from 'antd';
 import LanguageItem from './languageItem';
 import AddNewLanguage from './addNewLanguage';
-import { mockLanguageList } from './mock';
-import { projectViewApi } from '../../api/languages';
+import { projectViewApi, branchListApi } from '../../api/languages';
 
 const Option = Select.Option;
 
 const Languages = () => {
   const [visible, setVisible] = useState(false);
-  const [languageList, setLanguageList] = useState(mockLanguageList);
+  const [languageList, setLanguageList] = useState([]);
+  const [branchList, setBranchList] = useState([]);
+  const [branchId, setBranchId] = useState('');
 
-  const projectView = useCallback(async () => {
-    window.console.log(languageList);
+  const getBranchList = useCallback(async () => {
+    const res = await branchListApi('7');
+    if (res.data) {
+      setBranchList(res.data);
+      setBranchId(res.data[0] && res.data[0].id);
+      projectView(res.data[0] && res.data[0].id);
+    }
+  }, []);
+
+  const projectView = useCallback(async (id: string) => {
     const res = await projectViewApi({
       pid: 7,
-      id: 2,
+      id,
     });
-    if (res.data && res.data.isSuccess) {
-      setLanguageList(res.data);
+    if (res.data) {
+      setLanguageList(res.data.data);
     }
   }, []);
 
   useEffect(() => {
-    projectView();
-  }, [projectView]);
+    getBranchList();
+  }, [getBranchList]);
 
   const showAdd = () => {
     setVisible(!visible);
@@ -42,9 +51,21 @@ const Languages = () => {
           <div className={css.languagesTitle}>
             <p className={css.titleText}>{'Languages'}</p>
             <div className={css.titleLeft}>
-              <Select className={css.languageSelect} defaultValue={1}>
-                <Option value={1}>{'分支1'}</Option>
-                <Option value={1}>{'分支2'}</Option>
+              <Select
+                className={css.languageSelect}
+                value={branchId}
+                onChange={value => {
+                  setBranchId(value);
+                  projectView(value);
+                }}>
+                {branchList &&
+                  branchList.map((item: any) => {
+                    return (
+                      <Option value={item.id} key={item.id}>
+                        {item.name}
+                      </Option>
+                    );
+                  })}
               </Select>
               <Button type="primary" onClick={showAdd}>
                 {'Add Language'}
@@ -52,9 +73,10 @@ const Languages = () => {
             </div>
           </div>
           <div className={css.languagesContent}>
-            {languageList.map((item, index) => {
-              return <LanguageItem item={item} index={index} key={item.id} />;
-            })}
+            {languageList &&
+              languageList.map((item: any, index) => {
+                return <LanguageItem item={item} index={index} key={item.id} />;
+              })}
           </div>
         </div>
       </div>

@@ -1,10 +1,25 @@
-import React from 'react';
+import React, { useState } from 'react';
 import * as css from './styles/languageItem.modules.less';
 import { Button, Progress, Popover, Input } from 'antd';
 import { doneColor, processColor, toThousands, getPercent } from './constant';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
+import { namespaceSaveApi } from '../../api/languages';
 
 const LanguageItem = ({ item, index }: any) => {
+  const [visible, setVisible] = useState(false);
+  const [addNamespaceName, setAddNamespaceName] = useState('');
+
+  const handleVisibleChange = (isShow: boolean) => {
+    setVisible(isShow);
+  };
+
+  const namespaceSave = async () => {
+    const detail = { name: addNamespaceName, projectId: item.id, type: 'private' };
+    const res = await namespaceSaveApi(detail);
+    setVisible(false);
+    window.console.log(res);
+  };
+
   const progressRender = (size: string, translatedKeys: number, totalKeys: number) => {
     return (
       <div className={css.languageProgress}>
@@ -37,10 +52,18 @@ const LanguageItem = ({ item, index }: any) => {
   const AddNamespace = (
     <div className={css.addNamespace}>
       <p className={css.title}>{'Add New Namespace'}</p>
-      <Input placeholder={'Namespace Name'} />
+      <Input
+        placeholder={'Namespace Name'}
+        value={addNamespaceName}
+        onChange={e => {
+          setAddNamespaceName(e.target.value);
+        }}
+      />
       <div className={css.buttonList}>
-        <Button>{'Discard'}</Button>
-        <Button type="primary">{'Save'}</Button>
+        <Button onClick={() => handleVisibleChange(false)}>{'Discard'}</Button>
+        <Button type="primary" onClick={namespaceSave}>
+          {'Save'}
+        </Button>
       </div>
     </div>
   );
@@ -59,7 +82,12 @@ const LanguageItem = ({ item, index }: any) => {
               <DeleteOutlined />
             </Button>
             {/* </Popover> */}
-            <Popover content={AddNamespace} trigger="click" placement="bottomRight">
+            <Popover
+              content={AddNamespace}
+              trigger="click"
+              placement="bottomRight"
+              visible={visible}
+              onVisibleChange={handleVisibleChange}>
               <Button>
                 <PlusOutlined />
               </Button>

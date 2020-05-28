@@ -13,7 +13,7 @@ ajax.interceptors.request.use(
 // 添加响应拦截器
 ajax.interceptors.response.use(
   function(response) {
-    return response.data;
+    return response;
   },
   function(error) {
     // 对响应错误做点什么
