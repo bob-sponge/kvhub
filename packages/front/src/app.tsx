@@ -6,7 +6,8 @@ import NamespaceView from './modules/namespace';
 import Languages from './modules/languages';
 import Dashboard from './modules/dashboard';
 import Branches from './modules/branches';
-import MargeRequest from './modules/margeRequest';
+import MergeRequest from './modules/mergeRequest';
+import MergeDetail from './modules/mergeRequest/mergeDetail/main';
 import Compare from './modules/branches/compare/compare';
 
 export function App() {
@@ -32,7 +33,8 @@ const BasicRoute = () => (
       <Route exact path="/languages" component={Languages} />
       <Route exact path="/dashboard" component={Dashboard} />
       <Route exact path="/branch" component={Branches} />
-      <Route exact path="/margeRequest" component={MargeRequest} />
+      <Route exact path="/mergeRequest" component={MergeRequest} />
+      <Route exact path="/mergeRequest/detail/:id" component={MergeDetail} />
       <Route exact path="/branch/compare/:id" component={Compare} />
     </Switch>
   </Router>

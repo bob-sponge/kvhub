@@ -1,0 +1,162 @@
+@import '../../../style/main.less';
+
+.merge {
+  &-wapper {
+    margin: 0 24px;
+
+    .common-title {
+      display: flex;
+      justify-content: space-between;
+
+      .title {
+        font-size: 24px;
+        margin-bottom: 16px;
+        color: @black;
+      }
+
+      .button-list {
+        display: flex;
+        justify-content: space-around;
+
+        button {
+          margin-left: 14px;
+        }
+      }
+    }
+
+    .diff-title {
+      font-size: 16px;
+      font-weight: bold;
+      color: @black;
+      margin: 16px 0;
+
+      span {
+        font-size: 14px;
+        color: @light-grey;
+      }
+    }
+
+    .diff-item {
+      padding: 16px;
+      background-color: @white;
+      display: flex;
+
+      .item-list {
+        width: 50%;
+        padding-right: 16px;
+
+        .title {
+          display: flex;
+          justify-content: space-between;
+          
+          .title-content {
+            color: @light-grey;
+            font-size: 14px;
+            margin-bottom: 12px;
+  
+            span {
+              padding-left: 4px;
+            }
+          }
+
+          // .title-edit {
+          //   // border: 1px solid @light-grey;
+          // }
+        }
+
+        .key-list {
+          display: flex;
+          align-items: center;
+          margin-bottom: 16px;
+
+          &:last-child {
+            margin-bottom: 0;
+          }
+
+          .language {
+            background-color: @language-bg;
+            width: 20px;
+            height: 20px;
+            line-height: 16px;
+            text-align: center;
+            color: @white;
+            font-size: 12px;
+            border-radius: 2px;
+            margin-right: 8px;
+          }
+
+          .name {
+            font-size: 16px;
+            color: @black;
+          }
+        }
+      }
+    }
+  }
+
+  &-panel {
+    padding: 16px;
+    background-color: @white;
+
+    :global {
+      .ant-form-item {
+        margin-bottom: 0 !important;
+      }
+    }
+
+    .branch-title {
+      height: 32px;
+      line-height: 32px;
+    }
+
+    .operation {
+      .title {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: @light-grey;
+        height: 32px;
+        margin-bottom: 8px;
+
+        span {
+          font-size: 12px;
+          padding-left: 2px;
+        }
+      }
+
+      .content {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 32px;
+
+        .circle {
+          width: 12px;
+          height: 12px;
+          background-color: @white;
+          border: 3px solid #43BDE0;
+          border-radius: 50%;
+        }
+
+        .square {
+          width: 73px;
+          height: 4px;
+          background-color: #43BDE0;
+        }
+
+        .trangle {
+          width: 0;
+          height: 0;
+          border-top: 10px solid transparent;
+          border-left: 10px solid #43BDE0;
+          border-bottom: 10px solid transparent;
+        }
+      }
+    }
+
+    .create-merge {
+      margin-top: 12px;
+      text-align: right;
+    }
+  }
+}
