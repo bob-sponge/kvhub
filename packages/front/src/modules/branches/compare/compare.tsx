@@ -3,12 +3,21 @@ import * as css from '../style/compare.modules.less';
 import Container from '../../../container';
 import CompareObject from './compareProject';
 
-const Compare: React.SFC = () => {
+interface CompareProps {
+  match: any;
+}
+
+const Compare: React.SFC<CompareProps> = (props: CompareProps) => {
+  const {
+    match: {
+      params: { id },
+    },
+  } = props;
   return (
     <Container>
       <div className={css.compareWapper}>
         <div className={css.commonTitle}>Compare</div>
-        <CompareObject />
+        <CompareObject id={id} />
       </div>
     </Container>
   );

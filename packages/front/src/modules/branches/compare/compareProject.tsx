@@ -1,43 +1,69 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import * as css from '../style/compare.modules.less';
 import { Select, Col, Row, Button, Form } from 'antd';
 import { SwapOutlined, PlusOutlined } from '@ant-design/icons';
-import { ajax } from '@ofm/ajax';
 import DiffItem from './diffItem';
+import * as Api from '../../../api/branch';
 
-const CompareProject = () => {
+interface CompareProjectProps {
+  id: any;
+  match?: any;
+}
+
+const CompareProject: React.SFC<CompareProjectProps> = (props: CompareProjectProps) => {
+  const { id } = props;
   const [form] = Form.useForm();
+  const [detail, setDetail] = useState<any>(null);
   const [branchList, setBranchList] = useState<any>([]);
   const [diffData, setDiffData] = useState<any>([]);
+
+  const getBranchDetail = useCallback(async () => {
+    if (id) {
+      let result = await Api.branchDetailApi(id);
+      const { success, data } = result;
+      if (success) {
+        setDetail(data);
+      }
+    }
+  }, [id]);
 
   useEffect(() => {
     getBranchList();
   }, []);
 
-  const getBranchList = () => {
-    ajax.get('/branch/list').then(result => {
-      const {
-        data: { statusCode, data },
-      } = result;
-      if (statusCode === 0) {
-        setBranchList(data);
+  useEffect(() => {
+    getBranchDetail();
+  }, [getBranchDetail]);
+
+  const getBranchList = async () => {
+    let result = await Api.branchListApi();
+    const { success, data } = result;
+    if (success && data) {
+      setBranchList(data);
+    }
+  };
+
+  useEffect(() => {
+    if (detail && detail.id) {
+      form.setFieldsValue({ source: 45 });
+      form.setFieldsValue({ destination: 46 });
+    }
+  }, [detail]);
+
+  const onCreateMerge = () => {
+    form.validateFields().then(values => {
+      if (values && !values.outOfDate) {
+        getDiffData(values);
       }
     });
   };
 
-  const onCreateMerge = () => {
-    form.validateFields().then(values => {
-      if (!values.outOfDate) {
-        ajax.post('/branch/compare', values).then(result => {
-          const {
-            data: { statusCode, data },
-          } = result;
-          if (statusCode === 0) {
-            setDiffData(data);
-          }
-        });
-      }
-    });
+  const getDiffData = async (params: any) => {
+    let result = await Api.branchCompareApi(params);
+    const { success, data } = result;
+    if (success && data) {
+      setDiffData(data);
+    }
   };
 
   return (
@@ -102,8 +128,12 @@ const CompareProject = () => {
           </Button>
         </div>
       </div>
-      <div className={css.diffTitle}>Diff ({diffData.length})</div>
-      <DiffItem />
+      {diffData && diffData.length !== 0 && (
+        <>
+          <div className={css.diffTitle}>Diff ({diffData.length})</div>
+          <DiffItem diffData={diffData} />
+        </>
+      )}
     </>
   );
 };

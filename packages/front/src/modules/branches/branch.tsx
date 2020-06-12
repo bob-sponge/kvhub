@@ -6,7 +6,7 @@ import { Button, Input, Table, Spin, message } from 'antd';
 import { columns } from './tableConfig';
 import AddorEditBranch from './addOrEditBranch';
 import { history } from '@ofm/history';
-import { ajax } from '@ofm/ajax';
+import * as Api from '../../api/branch';
 const { Search } = Input;
 
 const Branches: React.SFC = () => {
@@ -24,27 +24,16 @@ const Branches: React.SFC = () => {
     getBranch(filter);
   }, [filter]);
 
-  const getBranch = (params: any) => {
-    ajax
-      .post('/branch/all', params)
-      .then(result => {
-        setLoading(false);
-        const {
-          data: {
-            statusCode,
-            data: { total: totalItem, data: source },
-          },
-        } = result;
-        if (statusCode === 0) {
-          setTotal(totalItem);
-          setBranchList(source);
-        }
-      })
-      .catch(error => {
-        if (error) {
-          setLoading(false);
-        }
-      });
+  const getBranch = async (params: any) => {
+    setLoading(true);
+    let result = await Api.branchAllApi(params);
+    setLoading(false);
+    const { success, data } = result;
+    if (success && data) {
+      const { total: totalItem, data: source } = data;
+      setTotal(totalItem);
+      setBranchList(source);
+    }
   };
 
   const showTotal = () => {
@@ -55,28 +44,17 @@ const Branches: React.SFC = () => {
     history.push(`/branch/compare/${record.id}`);
   };
 
-  const onDelete = (record: any) => {
-    ajax
-      .delete(`/branch/delete/${record.id}`)
-      .then(result => {
-        setLoading(false);
-        const {
-          data: { statusCode, message: msg },
-        } = result;
-        if (statusCode === 0) {
-          let currentTotal = total - 1;
-          if (currentTotal !== 0 && currentTotal % filter.size === 0 && filter.page !== 1) {
-            filter.page = filter.page - 1;
-          }
-          setFilter({ ...filter });
-          message.success(msg);
-        }
-      })
-      .catch(error => {
-        if (error) {
-          setLoading(false);
-        }
-      });
+  const onDelete = async (record: any) => {
+    let result = await Api.deleteBranchApi(record.id);
+    const { success, data } = result;
+    if (success) {
+      let currentTotal = total - 1;
+      if (currentTotal !== 0 && currentTotal % filter.size === 0 && filter.page !== 1) {
+        filter.page = filter.page - 1;
+      }
+      setFilter({ ...filter });
+      message.success(data);
+    }
   };
 
   const onChange = (page: number, _pageSize: number) => {

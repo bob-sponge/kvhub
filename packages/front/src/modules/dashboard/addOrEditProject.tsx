@@ -103,7 +103,7 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
   };
 
   const checkProjectName = (_rule: any, value: any) => {
-    if (value.length <= 100) {
+    if (value && value.length <= 100) {
       return Promise.resolve();
     }
     return Promise.reject('Project name can contain at most 100 characters');
@@ -135,7 +135,11 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
             {languages &&
               languages.length > 0 &&
               languages.map(item => {
-                return <Select.Option value={item.id}>{item.name}</Select.Option>;
+                return (
+                  <Select.Option key={item.id} value={item.id}>
+                    {item.name}
+                  </Select.Option>
+                );
               })}
           </Select>
         </Form.Item>
