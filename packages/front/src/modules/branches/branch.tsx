@@ -9,7 +9,12 @@ import { history } from '@ofm/history';
 import * as Api from '../../api/branch';
 const { Search } = Input;
 
-const Branches: React.SFC = () => {
+interface BranchProps {
+  match: any;
+}
+
+const Branches: React.SFC<BranchProps> = (props: BranchProps) => {
+  const { match } = props;
   const [visible, setVisible] = useState<boolean>(false);
   const [branchList, setBranchList] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -18,10 +23,19 @@ const Branches: React.SFC = () => {
     page: 1,
     size: 10,
     content: '',
+    projectId: '',
   });
 
   useEffect(() => {
-    getBranch(filter);
+    const projectid = match.params.projectId;
+    filter.projectId = projectid;
+    setFilter({ ...filter });
+  }, [match]);
+
+  useEffect(() => {
+    if (filter.projectId) {
+      getBranch(filter);
+    }
   }, [filter]);
 
   const getBranch = async (params: any) => {
