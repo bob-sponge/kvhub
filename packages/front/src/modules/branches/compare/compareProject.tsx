@@ -28,6 +28,9 @@ const CompareProject: React.SFC<CompareProjectProps> = (props: CompareProjectPro
   }, [id]);
 
   useEffect(() => {
+    // if (detail && detail.projectId) {
+    //   getBranchList(detail.projectId);
+    // }
     getBranchList();
   }, []);
 
@@ -45,8 +48,8 @@ const CompareProject: React.SFC<CompareProjectProps> = (props: CompareProjectPro
 
   useEffect(() => {
     if (detail && detail.id) {
-      form.setFieldsValue({ source: 45 });
-      form.setFieldsValue({ destination: 46 });
+      form.setFieldsValue({ source: 21 });
+      form.setFieldsValue({ destination: 7 });
     }
   }, [detail]);
 
