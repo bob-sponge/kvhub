@@ -391,6 +391,6 @@ export class BranchService {
    * 通过分支ID获取分支信息
    */
   async getBranchById(id: number): Promise<Branch> | undefined {
-    return await this.branchRepository.findOne(id);
+    return await this.branchRepository.findOne({id: id});
   }
 }

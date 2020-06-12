@@ -195,7 +195,7 @@ export class NamespaceController {
       await this.namespaceService.editKeyValue(branchId, namespaceId, keyId, keyName, data);
     } catch (error) {
       msg = error.message;
-      return ResponseBody.errorWithMsg(msg);
+      return ResponseBody.error(msg, 500);
     }
     return ResponseBody.okWithMsg('success');
   }
@@ -230,7 +230,7 @@ export class NamespaceController {
       await this.namespaceService.editKeyname(keyId, keyName);
     } catch (error) {
       msg = error.message;
-      return ResponseBody.errorWithMsg(msg);
+      return ResponseBody.error(msg, 500);
     }
     return ResponseBody.okWithMsg('success');
   }
@@ -256,7 +256,7 @@ export class NamespaceController {
       await this.namespaceService.deleteKey(keyId);
     } catch (error) {
       msg = error.message;
-      return ResponseBody.errorWithMsg(msg);
+      return ResponseBody.error(msg, 500);
     }
     return ResponseBody.okWithMsg('success');
   }
@@ -282,7 +282,7 @@ export class NamespaceController {
       await this.namespaceService.deleteNamespace(namespaceId);
     } catch (error) {
       msg = error.message;
-      return ResponseBody.errorWithMsg(msg);
+      return ResponseBody.error(msg, 500);
     }
     return ResponseBody.okWithMsg('success');
   }

@@ -2,6 +2,7 @@ import { Controller,  Post, Body, Get, Param } from '@nestjs/common';
 import { BranchMergeService } from './branchMerge.service';
 import { BranchMerge } from 'src/entities/BranchMerge';
 import { BranchMergeSearchVO } from 'src/vo/BranchMergeSearchVO';
+import { BranchMergeSubmitVO } from 'src/vo/BranchMergeSubmitVO';
 import { ResponseBody } from 'src/vo/ResponseBody';
 
 @Controller('branchMerge')
@@ -37,6 +38,12 @@ export class BranchMergeController {
   @Get('/diffkey/generate/:mergeId')
   async generateDiffKey(@Param('mergeId') mergeId:number) : Promise<ResponseBody> {
     await this.branchMergeService.generateDiffKey(mergeId);
+    return ResponseBody.ok();
+  }
+
+  @Post('/merge')
+  async merge(@Body() vo:BranchMergeSubmitVO): Promise<ResponseBody> {
+    await this.branchMergeService.merge(vo);
     return ResponseBody.ok();
   }
 }

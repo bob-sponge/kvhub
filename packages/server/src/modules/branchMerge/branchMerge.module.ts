@@ -8,9 +8,16 @@ import { MergeDiffValue } from 'src/entities/MergeDiffValue';
 import { Branch } from 'src/entities/Branch';
 import { BranchModule } from '../branch/branch.module';
 import { KeyModule } from 'src/modules/key/key.module';
+import { BranchCommit } from 'src/entities/BranchCommit';
+import { Keyname } from 'src/entities/Keyname';
+import { Keyvalue } from 'src/entities/Keyvalue';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([BranchMerge, Branch, MergeDiffKey, MergeDiffValue]),BranchModule,KeyModule],
+  imports: [
+    TypeOrmModule.forFeature([Branch, BranchCommit, BranchMerge, Keyname, Keyvalue, MergeDiffKey, MergeDiffValue]),
+    BranchModule,
+    KeyModule,
+  ],
   controllers: [BranchMergeController],
   providers: [BranchMergeService],
   exports: [BranchMergeService],

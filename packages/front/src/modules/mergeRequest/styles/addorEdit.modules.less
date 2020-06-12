@@ -1,0 +1,34 @@
+.add-project-drawer {
+  :global {
+    .ant-drawer-footer {
+      padding: 0;
+    }
+
+    .ant-form-item-label>label.ant-form-item-required::before {
+      content: '';
+      margin-right: 0;
+    }
+
+    .ant-form-item-label>label.ant-form-item-required::after {
+      display: inline-block;
+      margin-left: 4px;
+      color: #ff4d4f;
+      font-size: 14px;
+      font-family: SimSun, sans-serif;
+      line-height: 1;
+      content: '*';
+    }
+  }
+
+  .drawer-footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    height: 64px;
+    background-color: #F2F4F6;
+
+    button {
+      margin-right: 16px;
+    }
+  }
+}

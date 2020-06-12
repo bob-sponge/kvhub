@@ -20,8 +20,17 @@ export class BranchController {
   }
 
   @Get('/list')
-  async findAllBranch(): Promise<ResponseBody>{
+  async findAllBranch(): Promise<ResponseBody> {
     return ResponseBody.okWithData(await this.branchService.findAllBranch());
+  }
+
+  @Get('/:id')
+  async getBranchById(@Param('id') id: number): Promise<ResponseBody> {
+    const branch: Branch = await this.branchService.getBranchById(id);
+    if (undefined === branch) {
+      return ResponseBody.error('branch is not exist!', 500);
+    }
+    return ResponseBody.okWithData(branch);
   }
   /**
    * 分页查询
@@ -42,7 +51,7 @@ export class BranchController {
   @Delete('/delete/:id')
   async deleteBranch(@Param('id') id: number): Promise<ResponseBody> {
     await this.branchService.deleteBranch(id);
-    return ResponseBody.okWithMsg('delete success');
+    return ResponseBody.okWithData('delete success');
   }
 
   /**
@@ -53,11 +62,15 @@ export class BranchController {
   @UsePipes(new ValidationPipe())
   async addBranch(@Body() branchBody: BranchBody): Promise<ResponseBody> {
     await this.branchService.save(branchBody);
-    return ResponseBody.okWithMsg('save branch success');
+    return ResponseBody.okWithData('save branch success');
   }
 
   @Post('/compare')
+  @UsePipes(new ValidationPipe())
   async branchCompare(@Body() compareVO: CompareVO): Promise<ResponseBody> {
+    if (compareVO.source === compareVO.destination) {
+      return ResponseBody.error('Can not compare the same branch!', 500);
+    }
     return ResponseBody.okWithData(await this.branchService.compare(compareVO));
   }
 }

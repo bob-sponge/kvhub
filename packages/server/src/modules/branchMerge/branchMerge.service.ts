@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { Branch } from 'src/entities/Branch';
 import { BranchMerge } from 'src/entities/BranchMerge';
+import { BranchCommit } from 'src/entities/BranchCommit';
 import { MergeDiffKey } from 'src/entities/MergeDiffKey';
 import { MergeDiffValue } from 'src/entities/MergeDiffValue';
 import { BranchMergeSearchVO } from 'src/vo/BranchMergeSearchVO';
@@ -10,12 +11,16 @@ import { BranchMergeVO } from 'src/vo/BranchMergeVO';
 import { BranchMergeDiffVO } from 'src/vo/BranchMergeDiffVO';
 import { MergeDiffShowVO } from 'src/vo/MergeDiffShowVO';
 import { MergeDiffValueShowVO } from 'src/vo/MergeDiffValueShowVo';
+import { BranchMergeSubmitVO } from 'src/vo/BranchMergeSubmitVO';
 import { BranchService } from 'src/modules/branch/branch.service';
 import { KeyService } from 'src/modules/key/key.service';
 import { CommonConstant, ErrorMessage } from 'src/constant/constant';
 import { UUIDUtils } from 'src/utils/uuid';
 import { ValueVO } from 'src/vo/ValueVO';
 import { KeyValueDetailVO } from 'src/vo/KeyValueDetailVO';
+import { SelectedKeyDTO, SelectedValueDTO } from './dto/SelectMergeDTO';
+import { Keyname } from 'src/entities/Keyname';
+import { Keyvalue } from 'src/entities/Keyvalue';
 
 @Injectable()
 export class BranchMergeService {
@@ -28,6 +33,12 @@ export class BranchMergeService {
     private readonly mergeDiffKeyRepository: Repository<MergeDiffKey>,
     @InjectRepository(MergeDiffValue)
     private readonly mergeDiffValueRepository: Repository<MergeDiffValue>,
+    @InjectRepository(BranchCommit)
+    private readonly branchCommitRepository: Repository<BranchCommit>,
+    @InjectRepository(Keyname)
+    private readonly keynameRepository: Repository<Keyname>,
+    @InjectRepository(Keyvalue)
+    private readonly keyvalueRepository: Repository<Keyvalue>,
     private readonly branchService: BranchService,
     private readonly keyService: KeyService,
   ) {}
@@ -84,7 +95,7 @@ export class BranchMergeService {
     // 拼接分支id后，通过sql查找到项目的分支merge记录，source 和 target 都需要进行查找
     let branchMergeList: BranchMerge[] = await this.branchMergeRepository.find({
       where: [{ sourceBranchId: In(branchIdList) }, { targetBranchId: In(branchIdList) }],
-      order: { id: 'ASC' },
+      order: { id: 'DESC' },
     });
 
     // 得到记录后，按照source和target分支id获取对应的分支名称
@@ -118,6 +129,10 @@ export class BranchMergeService {
     return result;
   }
 
+  /**
+   * get diff key and value through merge branch id
+   * @param mergeId merge branch id
+   */
   async getDiffById(mergeId: number): Promise<BranchMergeDiffVO[]> {
     const result: BranchMergeDiffVO[] = [];
     const branchMerge = await this.branchMergeRepository.findOne(mergeId);
@@ -153,11 +168,13 @@ export class BranchMergeService {
       return vo;
     } else {
       vo.keyId = key.id;
+      vo.branchId = branchId;
     }
 
     // key -> keyname
     const keyName = await this.keyService.getKeyInfo(key.id, false);
     vo.keyName = keyName.name;
+    vo.keyNameId = keyName.id;
 
     // 获取value
     const mergeDiffValueList = await this.mergeDiffValueRepository.find({ mergeDiffKeyId });
@@ -168,7 +185,7 @@ export class BranchMergeService {
       valueShowVO.keyId = key.id;
 
       const value = await this.keyService.getValueInfo(valueShowVO.id);
-      if(value !== undefined){
+      if (value !== undefined) {
         valueShowVO.languageId = value.languageId;
         valueShowVO.languageName = value.langeuage;
         valueShowVO.value = value.value;
@@ -263,7 +280,7 @@ export class BranchMergeService {
   /**
    * When the actualId of the key is equal, compare the name and values of the key
    * @param source Source branches all keys, key names and their translations in different languages
-   * @param target Target branches all keys, key names and their translations in different languages 
+   * @param target Target branches all keys, key names and their translations in different languages
    * @param mergeId branch merge id
    */
   private async diffKey(source: KeyValueDetailVO[], target: KeyValueDetailVO[], mergeId: number, crosmerge: boolean) {
@@ -276,7 +293,7 @@ export class BranchMergeService {
       let hasTarget = false;
       let targetIndex = 0;
 
-      if (target !== null && target.length > 0){
+      if (target !== null && target.length > 0) {
         hasTarget = true;
         for (let j = 0; j < target.length; j++) {
           targetIndex = j;
@@ -285,7 +302,7 @@ export class BranchMergeService {
             isExist = true;
             if (sourceKey.keyName !== targetKey.keyName) {
               isDifferent = true;
-            } else if ( !await this.checkValueVO(sourceKey.valueList, targetKey.valueList)) {
+            } else if (!(await this.checkValueVO(sourceKey.valueList, targetKey.valueList))) {
               isDifferent = true;
             }
             break;
@@ -323,16 +340,16 @@ export class BranchMergeService {
             diffValueList.push(diffValue);
           });
         }
-        if (diffValueList.length > 0){
+        if (diffValueList.length > 0) {
           await this.mergeDiffValueRepository.save(diffValueList);
         }
       }
 
       // When source and target have the same key, delete both sides to reduce the number of cycles
       if (isExist) {
-        source.splice(i,1);
-        if(target.length > 0){
-          target.splice(targetIndex,1);
+        source.splice(i, 1);
+        if (target.length > 0) {
+          target.splice(targetIndex, 1);
         }
         i--;
       }
@@ -376,5 +393,137 @@ export class BranchMergeService {
         }
       }
     }
+  }
+
+  /**
+   * merge
+   * @param vo
+   */
+  async merge(vo: BranchMergeSubmitVO) {
+    // check merge branch is exist or is created status!
+    const mergeId = vo.mergeId;
+    let branchMerge = await this.branchMergeRepository.findOne(mergeId);
+    if (null === branchMerge || undefined === branchMerge) {
+      throw new BadRequestException(ErrorMessage.BRANCH_MERGE_NOT_EXIST);
+    } else if (
+      CommonConstant.MERGE_TYPE_REFUSED === branchMerge.type ||
+      CommonConstant.MERGE_TYPE_MERGED === branchMerge.type
+    ) {
+      throw new BadRequestException(ErrorMessage.BRANCH_MERGE_IS_NOT_CREATED);
+    }
+    const crosMerge = branchMerge.crosMerge === null || !branchMerge.crosMerge ? false : true;
+
+    // check all the merge diff key are selected!
+    const mergeDiffList = await this.getDiffById(vo.mergeId);
+    if (null === mergeDiffList || mergeDiffList.length === 0) {
+      return;
+    }
+
+    branchMerge.type = CommonConstant.MERGE_TYPE_MERGING;
+    await this.branchMergeRepository.save(branchMerge);
+
+    const paramMergeList = vo.branchMergeDiffList;
+    if (null === paramMergeList || paramMergeList.length === 0) {
+      throw new BadRequestException(ErrorMessage.BRANCH_MERGE_DIFF_KEY_NOT_CHOOSE);
+    } else if (paramMergeList.length < mergeDiffList.length) {
+      throw new BadRequestException(ErrorMessage.BRANCH_MERGE_DIFF_KEY_NOT_SELECT_ALL);
+    }
+
+    /**
+     * According to the incoming key and value, compare with the key and value found in the system,
+     * the selected and modified ones will be submitted
+     */
+
+    for (let i = 0; i < paramMergeList.length; i++) {
+      const paramMergeDiff = paramMergeList[i];
+      if (paramMergeDiff.mergeDiffKey.selectBranchId !== null && paramMergeDiff.mergeDiffKey.selectBranchId > 0) {
+        await this.mergeKey(paramMergeDiff, branchMerge);
+      } else {
+        throw new BadRequestException(ErrorMessage.BRANCH_MERGE_DIFF_KEY_NOT_SELECT_ALL);
+      }
+    }
+  }
+
+  /**
+   *
+   * @param diffVO
+   * @param crosMerge
+   */
+  private async mergeKey(diffVO: BranchMergeDiffVO, branchMerge: BranchMerge) {
+    const source = diffVO.source;
+    const target = diffVO.target;
+    const masterBranch = await this.branchService.findMasterBranchByProjectId(source.branchId);
+    let masterBranchId = 0;
+    if (masterBranch === null) {
+      throw new BadRequestException(ErrorMessage.BRANCH_NOT_EXIST);
+    } else {
+      masterBranchId = masterBranch.id;
+    }
+
+    let selectedKey = new SelectedKeyDTO();
+    const selectBranchId = diffVO.mergeDiffKey.selectBranchId;
+
+    let sourceMaster = false;
+    let tragetMaster = false;
+
+    if (masterBranchId === source.branchId) {
+      sourceMaster = true;
+    } else if (masterBranchId === target.branchId) {
+      tragetMaster = true;
+    }
+
+    if (selectBranchId === source.branchId) {
+      selectedKey = await this.getSelectedMergeInfo(source);
+    } else {
+      selectedKey = await this.getSelectedMergeInfo(target);
+    }
+
+    // save keyname
+    let keyName = await this.keynameRepository.findOne(target.keyNameId);
+    keyName.name = selectedKey.keyName;
+    keyName.commitId = branchMerge.commitId;
+    keyName.modifyTime = new Date();
+    await this.keynameRepository.save(keyName);
+
+    // save value
+    let valueList: Keyvalue[] = [];
+    for (let i = 0; i < selectedKey.valueList.length; i++) {
+      const value = selectedKey.valueList[i];
+      let keyvalue = await this.keyvalueRepository.findOne(value.valueId);
+      keyvalue.latest = false;
+      await this.keyvalueRepository.save(keyvalue);
+
+      let newValue = JSON.parse(JSON.stringify(keyvalue));
+      newValue.id = null;
+      newValue.value = value.value;
+      newValue.commitId = branchMerge.commitId;
+      newValue.latest = true;
+      newValue.modifyTime = new Date();
+      newValue.mergeId = branchMerge.id;
+      valueList.push(newValue);
+    }
+    await this.keyvalueRepository.save(valueList);
+  }
+
+  /**
+   * According to MergeDiffShowVO, the values corresponding to the selected key and value are obtained
+   * @param dto The key and value data selected for the page
+   * @returns SelectedKeyDTO
+   */
+  private async getSelectedMergeInfo(dto: MergeDiffShowVO): Promise<SelectedKeyDTO> {
+    let result = new SelectedKeyDTO();
+    result.keyId = dto.keyId;
+    result.keyName = dto.keyName;
+
+    let valueList: SelectedValueDTO[] = [];
+    dto.valueList.forEach(v => {
+      let value = new SelectedValueDTO();
+      value.valueId = v.id;
+      value.value = v.value;
+      value.languageId = v.languageId;
+      valueList.push(value);
+    });
+    result.valueList = valueList;
+    return result;
   }
 }

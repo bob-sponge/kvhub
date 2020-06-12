@@ -17,7 +17,7 @@ const SideBar = () => {
       <Menu.ItemGroup key="g1" title="Navigation">
         <Menu.Item key="1">Languages</Menu.Item>
         <Menu.Item key="2">Branches</Menu.Item>
-        <Menu.Item key="3">Marge Request</Menu.Item>
+        <Menu.Item key="3">Merge Request</Menu.Item>
       </Menu.ItemGroup>
       <Menu.ItemGroup key="g2" title="Action">
         <Menu.Item key="4">Download</Menu.Item>
