@@ -243,13 +243,18 @@ export class ProjectService {
         } else {
           keyList = masterKeyList;
         }
-        const keyIdList = [];
-        keyList.map(key => keyIdList.push(key.id));
-        namespaceVO.translatedKeys = await this.keyValueRepository.count({
-          keyId: In(keyIdList),
-          languageId: p.languageId,
-          latest: true,
-        });
+        if(keyList !== null && keyList.length > 0){
+          const keyIdList = [];
+          keyList.map(key => keyIdList.push(key.id));
+          namespaceVO.translatedKeys = await this.keyValueRepository.count({
+            keyId: In(keyIdList),
+            languageId: p.languageId,
+            latest: true,
+          });
+        } else {
+          namespaceVO.translatedKeys = 0;
+        }
+
         // 根据获取的keylist 找对应value
         namespaceVO.id = n.id;
         namespaceVO.name = n.name;

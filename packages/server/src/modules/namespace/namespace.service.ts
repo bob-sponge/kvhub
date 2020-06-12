@@ -211,7 +211,7 @@ export class NamespaceService {
         });
         await queryRunner.manager.insert<Keyvalue>(Keyvalue, keyValueEntitys);
       }
-      await await queryRunner.commitTransaction();
+     await queryRunner.commitTransaction();
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw new Error(error.message);

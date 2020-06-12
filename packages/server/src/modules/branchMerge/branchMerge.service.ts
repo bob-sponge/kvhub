@@ -393,6 +393,7 @@ export class BranchMergeService {
         }
       }
     }
+    return true;
   }
 
   /**
@@ -407,7 +408,8 @@ export class BranchMergeService {
       throw new BadRequestException(ErrorMessage.BRANCH_MERGE_NOT_EXIST);
     } else if (
       CommonConstant.MERGE_TYPE_REFUSED === branchMerge.type ||
-      CommonConstant.MERGE_TYPE_MERGED === branchMerge.type
+      CommonConstant.MERGE_TYPE_MERGED === branchMerge.type ||
+      CommonConstant.MERGE_TYPE_MERGING === branchMerge.type
     ) {
       throw new BadRequestException(ErrorMessage.BRANCH_MERGE_IS_NOT_CREATED);
     }
@@ -442,6 +444,9 @@ export class BranchMergeService {
         throw new BadRequestException(ErrorMessage.BRANCH_MERGE_DIFF_KEY_NOT_SELECT_ALL);
       }
     }
+
+    branchMerge.type = CommonConstant.MERGE_TYPE_MERGED;
+    await this.branchMergeRepository.save(branchMerge);
   }
 
   /**
@@ -450,6 +455,7 @@ export class BranchMergeService {
    * @param crosMerge
    */
   private async mergeKey(diffVO: BranchMergeDiffVO, branchMerge: BranchMerge) {
+    const time = new Date();
     const source = diffVO.source;
     const target = diffVO.target;
     const masterBranch = await this.branchService.findMasterBranchByProjectId(source.branchId);
@@ -478,11 +484,38 @@ export class BranchMergeService {
       selectedKey = await this.getSelectedMergeInfo(target);
     }
 
+    // save branch commit data
+    let branchCommit = new BranchCommit();
+    branchCommit.branchId = target.branchId;
+    branchCommit.commitId = branchMerge.commitId;
+    branchCommit.commitTime = new Date();
+    branchCommit.type = CommonConstant.COMMIT_TYPE_MERGE;
+    await this.branchCommitRepository.save(branchCommit);
+
+    if(branchMerge.crosMerge !== null && branchMerge.crosMerge){
+      branchCommit.branchId = source.branchId;
+      branchCommit.commitId = branchMerge.commitId;
+      branchCommit.commitTime = time;
+      branchCommit.type = CommonConstant.COMMIT_TYPE_MERGE;
+      await this.branchCommitRepository.save(branchCommit);
+    }
+
+    // master -> branch1
+    if(sourceMaster && !tragetMaster){
+
+    } else if (!sourceMaster && tragetMaster){
+      // branch1 -> master
+
+    } else {
+      // branch1 -> branch2
+
+    }
+
     // save keyname
     let keyName = await this.keynameRepository.findOne(target.keyNameId);
     keyName.name = selectedKey.keyName;
     keyName.commitId = branchMerge.commitId;
-    keyName.modifyTime = new Date();
+    keyName.modifyTime = time;
     await this.keynameRepository.save(keyName);
 
     // save value
@@ -498,7 +531,7 @@ export class BranchMergeService {
       newValue.value = value.value;
       newValue.commitId = branchMerge.commitId;
       newValue.latest = true;
-      newValue.modifyTime = new Date();
+      newValue.modifyTime = time;
       newValue.mergeId = branchMerge.id;
       valueList.push(newValue);
     }
@@ -514,6 +547,7 @@ export class BranchMergeService {
     let result = new SelectedKeyDTO();
     result.keyId = dto.keyId;
     result.keyName = dto.keyName;
+    result.keyNameId = dto.keyNameId;
 
     let valueList: SelectedValueDTO[] = [];
     dto.valueList.forEach(v => {
