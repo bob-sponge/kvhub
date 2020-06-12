@@ -470,12 +470,12 @@ export class BranchMergeService {
     const selectBranchId = diffVO.mergeDiffKey.selectBranchId;
 
     let sourceMaster = false;
-    let tragetMaster = false;
+    let targetMaster = false;
 
     if (masterBranchId === source.branchId) {
       sourceMaster = true;
     } else if (masterBranchId === target.branchId) {
-      tragetMaster = true;
+      targetMaster = true;
     }
 
     if (selectBranchId === source.branchId) {
@@ -501,9 +501,10 @@ export class BranchMergeService {
     }
 
     // master -> branch1
-    if(sourceMaster && !tragetMaster){
-
-    } else if (!sourceMaster && tragetMaster){
+    if(sourceMaster && !targetMaster){
+      await this.keynameRepository.delete(target.keyNameId);
+      
+    } else if (!sourceMaster && targetMaster){
       // branch1 -> master
 
     } else {
