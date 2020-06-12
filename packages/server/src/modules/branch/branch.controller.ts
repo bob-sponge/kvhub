@@ -15,8 +15,8 @@ export class BranchController {
    * @param projectId projectId
    */
   @Get('/list/:projectId')
-  async findListByProjectId(@Param('projectId') projectId: number): Promise<Branch[]> {
-    return this.branchService.findBranchByProjectId(projectId);
+  async findListByProjectId(@Param('projectId') projectId: number): Promise<ResponseBody> {
+    return ResponseBody.okWithData(await this.branchService.findBranchByProjectId(projectId));
   }
 
   @Get('/list')
