@@ -253,6 +253,7 @@ export class NamespaceController {
   async deleteKey(@Param('keyId') keyId: number) {
     let msg = '';
     try {
+      // todo before delete key record,will verify the relationship between Branch and key
       await this.namespaceService.deleteKey(keyId);
     } catch (error) {
       msg = error.message;

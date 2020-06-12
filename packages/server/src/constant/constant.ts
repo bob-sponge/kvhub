@@ -25,4 +25,5 @@ export class ErrorMessage {
   static BRANCH_MERGE_IS_NOT_CREATED = 'Branch merge has been merged or refused!';
   static BRANCH_MERGE_DIFF_KEY_NOT_CHOOSE = 'Branch merge diff key can not be empty!';
   static BRANCH_MERGE_DIFF_KEY_NOT_SELECT_ALL = 'Please confirm all ths branch merge diff keys are selected!';
+  static KEY_NOT_EXIST = 'Key is not exist!';
 }

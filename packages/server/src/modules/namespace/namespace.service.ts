@@ -65,10 +65,11 @@ export class NamespaceService {
         throw new Error(`Key id get name is equals key name ${keyName}`);
       }
       // key 表不动，key name 增加，key value 增加
+      // todo branch commit record
       const commitId = UUIDUtils.generateUUID();
       const keyNameEntity = new Keyname();
       keyNameEntity.keyId = keyId;
-      keyNameEntity.modifier = 'lw';
+      keyNameEntity.modifier = 'lw';// todo modifier ??
       keyNameEntity.modifyTime = new Date();
       keyNameEntity.name = keyName;
       keyNameEntity.commitId = commitId;
@@ -178,7 +179,7 @@ export class NamespaceService {
           keyValueEntity.commitId = commitId;
           keyValueEntity.languageId = languageId;
           keyValueEntity.latest = true;
-          keyValueEntity.modifier = 'lw';
+          keyValueEntity.modifier = 'lw';// todo modifier ??
           keyValueEntity.midifyTime = new Date();
           keyValueEntitys.push(keyValueEntity);
         });
@@ -205,7 +206,7 @@ export class NamespaceService {
           keyValueEntity.commitId = commitId;
           keyValueEntity.languageId = languageId;
           keyValueEntity.latest = true;
-          keyValueEntity.modifier = 'lw';
+          keyValueEntity.modifier = 'lw'; // todo modifier ??
           keyValueEntity.midifyTime = new Date();
           keyValueEntitys.push(keyValueEntity);
         });
@@ -222,6 +223,10 @@ export class NamespaceService {
     const logger = Log4js.getLogger();
     logger.level = 'INFO';
     logger.info(languageId, keyId, keyvalue);
+
+    /* todo Add the check that the branch is in the merge state
+        Every time change keyvalue, you need to set the latest for the previous version of keyvalue to false,
+        and the newest keyvalue is true, and commit the branch-commit record*/
     const value = new Keyvalue();
     value.keyId = keyId;
     value.languageId = languageId;
