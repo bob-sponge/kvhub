@@ -7,7 +7,6 @@ import './util/request';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { createStore, Provider } from 'hookux';
-import './api/request';
 import './style/main.less';
 
 import { App } from './app';

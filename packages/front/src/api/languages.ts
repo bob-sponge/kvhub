@@ -19,3 +19,8 @@ export const namespaceSaveApi = (detail: any) => ajax.post('/namespace/save', de
  * 删除 language
  * */
 export const projectLanguageDeleteApi = (id: string) => ajax.get(`/projectLanguage/delete/${id}`);
+
+/**
+ * 新增 language
+ * */
+export const projectLanguageSaveApi = (detail: any) => ajax.post('/projectLanguage/save', detail);

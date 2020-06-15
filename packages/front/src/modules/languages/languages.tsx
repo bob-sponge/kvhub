@@ -30,7 +30,7 @@ const Languages = () => {
       id,
     });
     if (res.data) {
-      setLanguageList(res.data.data);
+      setLanguageList(res.data);
     }
   }, []);
 
@@ -75,7 +75,7 @@ const Languages = () => {
           <div className={css.languagesContent}>
             {languageList &&
               languageList.map((item: any, index) => {
-                return <LanguageItem item={item} index={index} key={item.id} />;
+                return <LanguageItem item={item} index={index} key={item.id} projectView={projectView} />;
               })}
           </div>
         </div>

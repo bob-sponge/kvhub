@@ -5,7 +5,7 @@ import { doneColor, processColor, toThousands, getPercent } from './constant';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { namespaceSaveApi } from '../../api/languages';
 
-const LanguageItem = ({ item, index }: any) => {
+const LanguageItem = ({ item, index, projectView }: any) => {
   const [visible, setVisible] = useState(false);
   const [addNamespaceName, setAddNamespaceName] = useState('');
 
@@ -15,9 +15,10 @@ const LanguageItem = ({ item, index }: any) => {
 
   const namespaceSave = async () => {
     const detail = { name: addNamespaceName, projectId: item.id, type: 'private' };
-    const res = await namespaceSaveApi(detail);
+    await namespaceSaveApi(detail);
+    projectView(item.id);
     setVisible(false);
-    window.console.log(res);
+    setAddNamespaceName('');
   };
 
   const progressRender = (size: string, translatedKeys: number, totalKeys: number) => {
