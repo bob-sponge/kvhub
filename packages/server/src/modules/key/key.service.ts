@@ -222,4 +222,13 @@ export class KeyService {
     key.delete = true;
     await this.keyRepository.save(key);
   }
+
+  async getKeynameByKeyId(keyId:number):Promise<Keyname> | undefined{
+    const keyNameList = await this.keynameRepository.find({where:{keyId}});
+    if (keyNameList === null || keyNameList.length === 0){
+      return undefined;
+    } else {
+      return keyNameList[0];
+    }
+  }
 }

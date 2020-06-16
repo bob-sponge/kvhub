@@ -73,6 +73,7 @@ export class NamespaceController {
    */
   @Post('/view/keys')
   async view(@Body() namespaceViewDetail: NamespaceViewDetail): Promise<ResponseBody> {
+    // todo namespaceViewDetail中应该增加param branchid
     const namespaceKey = await this.namespaceService.getKeysByCondition(namespaceViewDetail);
     return ResponseBody.okWithData(namespaceKey);
   }

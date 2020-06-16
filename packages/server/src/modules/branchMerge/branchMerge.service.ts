@@ -613,6 +613,53 @@ export class BranchMergeService {
       await this.keyService.delete(source.keyId);
     } else {
       // branch1 -> branch2
+      // save keyname
+      const keyName = await this.keynameRepository.findOne(target.keyNameId);
+      keyName.name = selectedKey.keyName;
+      keyName.commitId = branchMerge.commitId;
+      keyName.modifyTime = time;
+      await this.keynameRepository.save(keyName);
+
+      // save value
+      let valueList: Keyvalue[] = [];
+      if (target.valueList !== null && target.valueList.length > 0) {
+        for (let i = 0; i < target.valueList.length; i++) {
+          const sv = target.valueList[i];
+          for (let j = 0; j < selectedKey.valueList.length; j++) {
+            const skv = selectedKey.valueList[j];
+            if (sv.languageId === skv.languageId) {
+              const value = await this.keyvalueRepository.findOne(sv.id);
+              value.latest = false;
+              value.midifyTime = time;
+              await this.keyvalueRepository.save(value);
+              const newValue = new Keyvalue();
+              newValue.keyId = target.keyId;
+              newValue.languageId = sv.languageId;
+              newValue.value = skv.value;
+              newValue.latest = true;
+              newValue.mergeId = branchMerge.id;
+              newValue.commitId = branchMerge.commitId;
+              valueList.push(newValue);
+
+              selectedKey.valueList.splice(j, 1);
+              break;
+            }
+          }
+        }
+      }
+      if (selectedKey.valueList !== null && selectedKey.valueList.length > 0) {
+        selectedKey.valueList.forEach(v => {
+          const value = new Keyvalue();
+          value.keyId = target.keyId;
+          value.languageId = v.languageId;
+          value.value = v.value;
+          value.latest = true;
+          value.mergeId = branchMerge.id;
+          value.commitId = branchMerge.commitId;
+          valueList.push(value);
+        });
+      }
+      await this.keyvalueRepository.save(valueList);
     }
   }
 
