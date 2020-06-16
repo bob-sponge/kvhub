@@ -24,3 +24,8 @@ export const projectLanguageDeleteApi = (id: string) => ajax.get(`/projectLangua
  * 新增 language
  * */
 export const projectLanguageSaveApi = (detail: any) => ajax.post('/projectLanguage/save', detail);
+
+/**
+ * 获取默认语言列表
+ * */
+export const languagesAllApi = () => ajax.get('/languages/all');

@@ -1,22 +1,27 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import SideBar from '../siderBar';
-import Header from '../header';
+import ContainerMenu from '../../containerMenu';
 import * as css from './styles/languages.modules.less';
 import { Button, Select } from 'antd';
 import LanguageItem from './languageItem';
 import AddNewLanguage from './addNewLanguage';
-import { projectViewApi, branchListApi } from '../../api/languages';
+import { projectViewApi, branchListApi, projectLanguageSaveApi } from '../../api/languages';
 
 const Option = Select.Option;
 
-const Languages = () => {
+interface LanguagesProps {
+  match: any;
+}
+
+const Languages = (props: LanguagesProps) => {
+  const { match } = props;
   const [visible, setVisible] = useState(false);
   const [languageList, setLanguageList] = useState([]);
   const [branchList, setBranchList] = useState([]);
   const [branchId, setBranchId] = useState('');
 
   const getBranchList = useCallback(async () => {
-    const res = await branchListApi('7');
+    const projectId = match.params.projectId;
+    const res = await branchListApi(projectId);
     if (res.data) {
       setBranchList(res.data);
       setBranchId(res.data[0] && res.data[0].id);
@@ -25,8 +30,9 @@ const Languages = () => {
   }, []);
 
   const projectView = useCallback(async (id: string) => {
+    const projectId = match.params.projectId;
     const res = await projectViewApi({
-      pid: 7,
+      pid: projectId,
       id,
     });
     if (res.data) {
@@ -38,15 +44,23 @@ const Languages = () => {
     getBranchList();
   }, [getBranchList]);
 
-  const showAdd = () => {
+  const changeModal = async (detail?: any) => {
+    window.console.log(detail);
     setVisible(!visible);
+    if (detail) {
+      const projectId = match.params.projectId;
+      const content = Object.assign({}, detail, {
+        id: branchId,
+        projectId,
+      });
+      await projectLanguageSaveApi(content);
+      projectView(branchId);
+    }
   };
 
   return (
-    <div>
-      <Header />
+    <ContainerMenu>
       <div className={css.main}>
-        <SideBar />
         <div className={css.languages}>
           <div className={css.languagesTitle}>
             <p className={css.titleText}>{'Languages'}</p>
@@ -67,7 +81,7 @@ const Languages = () => {
                     );
                   })}
               </Select>
-              <Button type="primary" onClick={showAdd}>
+              <Button type="primary" onClick={changeModal}>
                 {'Add Language'}
               </Button>
             </div>
@@ -80,8 +94,8 @@ const Languages = () => {
           </div>
         </div>
       </div>
-      {visible && <AddNewLanguage visible={visible} showAdd={showAdd} />}
-    </div>
+      {visible && <AddNewLanguage visible={visible} changeModal={changeModal} />}
+    </ContainerMenu>
   );
 };
 
