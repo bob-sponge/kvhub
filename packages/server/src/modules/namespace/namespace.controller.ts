@@ -117,7 +117,8 @@ export class NamespaceController {
    *  body: keyvalue # key value
    *  request body example:
    *  {
-	      "keyvalue": "ssdsdsd11"
+        "keyvalue": "ssdsdsd11",
+        "valueId":1
       }
    * @returns
     {
@@ -130,14 +131,16 @@ export class NamespaceController {
       "message": "success"
     }
    */
-  @Post('/view/language/:languageId/key/:keyId')
+  @Post('/view/branch/:branchId/language/:languageId/key/:keyId')
   async editKeyValue(
+    @Param('branchId') branchId: number,
     @Param('languageId') languageId: number,
     @Param('keyId') keyId: number,
     @Body() keyvalue: any,
   ): Promise<ResponseBody> {
     const value = keyvalue.keyvalue;
-    const data = await (await this.namespaceService.editKeyValueOnlanguage(languageId, keyId, value)).raw;
+    const valueId = keyvalue.valueId;
+    const data = await (await this.namespaceService.editKeyValueOnlanguage(branchId,languageId, keyId, value, valueId)).raw;
     return ResponseBody.okWithData(data);
   }
 

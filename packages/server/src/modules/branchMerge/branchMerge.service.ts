@@ -96,7 +96,7 @@ export class BranchMergeService {
     });
 
     // 拼接分支id后，通过sql查找到项目的分支merge记录，source 和 target 都需要进行查找
-    let branchMergeList: BranchMerge[] = await this.branchMergeRepository.find({
+    const branchMergeList: BranchMerge[] = await this.branchMergeRepository.find({
       where: [{ sourceBranchId: In(branchIdList) }, { targetBranchId: In(branchIdList) }],
       order: { id: 'DESC' },
     });
@@ -504,7 +504,6 @@ export class BranchMergeService {
     }
 
     // todo crosmerge && transaction
-    // todo when targe dose not has the source key,then how to process quickly
     // master -> branch1
     if (sourceMaster && !targetMaster) {
       // save keyname

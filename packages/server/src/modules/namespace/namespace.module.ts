@@ -8,9 +8,11 @@ import { Key } from 'src/entities/Key';
 import { BranchKey } from 'src/entities/BranchKey';
 import { Keyname } from 'src/entities/Keyname';
 import { Branch } from 'src/entities/Branch';
+import { BranchCommit } from 'src/entities/BranchCommit';
+import { BranchMerge } from 'src/entities/BranchMerge';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Namespace, Keyvalue, Key, BranchKey, Keyname, Branch])],
+  imports: [TypeOrmModule.forFeature([Namespace, Keyvalue, Key, BranchKey, Keyname, Branch, BranchCommit, BranchMerge])],
   controllers: [NamespaceController],
   providers: [NamespaceService],
   exports: [NamespaceService],
