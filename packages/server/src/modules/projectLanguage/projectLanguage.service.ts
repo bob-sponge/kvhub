@@ -34,6 +34,7 @@ export class ProjectLanguageService {
         }
       }
     }
+    projectLanguage.delete = false;
     await this.projectLanguageRepository.save(projectLanguage);
   }
 

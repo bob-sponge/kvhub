@@ -20,7 +20,6 @@ import { Key } from 'src/entities/Key';
 import { Keyname } from 'src/entities/Keyname';
 import { Keyvalue } from 'src/entities/Keyvalue';
 import { UUIDUtils } from 'src/utils/uuid';
-import { KeyService } from '../key/key.service';
 
 @Injectable()
 export class BranchService {
@@ -35,7 +34,6 @@ export class BranchService {
     @InjectRepository(BranchMerge) private readonly branchMergeRepository: Repository<BranchMerge>,
     @InjectRepository(MergeDiffChangeKey) private readonly mergeDiffChangeKeyRepository: Repository<MergeDiffChangeKey>,
     private readonly config: ConfigService,
-    private readonly keyService: KeyService,
   ) {
     this.constant = new Map([
       ['0', 'Open'],
@@ -398,18 +396,22 @@ export class BranchService {
             newKey = await this.keyRepository.save(newKey);
 
             const commitId = UUIDUtils.generateUUID();
-            const keyname = await this.keyService.getKeynameByKeyId(key.id);
-            if (keyname !== undefined) {
-              let newKeyname = new Keyname();
-              newKeyname.keyId = newKey.id;
-              newKeyname.name = keyname.name;
-              newKeyname.commitId = commitId;
-              await this.keynameRepository.save(newKeyname);
+            const keyNameList = await this.keynameRepository.find({ where: { keyId } });
+            if (keyNameList !== null && keyNameList.length > 0) {
+            } else {
+              const keyname = keyNameList[0];
+              if (keyname !== undefined) {
+                let newKeyname = new Keyname();
+                newKeyname.keyId = newKey.id;
+                newKeyname.name = keyname.name;
+                newKeyname.commitId = commitId;
+                await this.keynameRepository.save(newKeyname);
+              }
             }
 
-            const keyvalueList = await this.keyvalueRepository.find({where:{keyId:key.id,latest:true}});
-            if (keyvalueList !== null && keyvalueList.length > 0){
-              const newKeyvalueList : Keyvalue[] = [];
+            const keyvalueList = await this.keyvalueRepository.find({ where: { keyId: key.id, latest: true } });
+            if (keyvalueList !== null && keyvalueList.length > 0) {
+              const newKeyvalueList: Keyvalue[] = [];
               keyvalueList.forEach(kv => {
                 const newKv = new Keyvalue();
                 newKv.keyId = newKey.id;
@@ -418,7 +420,7 @@ export class BranchService {
                 newKv.latest = true;
                 newKv.commitId = commitId;
                 newKeyvalueList.push(newKv);
-              })
+              });
               await this.keyvalueRepository.save(newKeyvalueList);
             }
           }
