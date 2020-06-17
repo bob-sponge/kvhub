@@ -50,8 +50,8 @@ const Languages = (props: LanguagesProps) => {
     if (detail) {
       const projectId = match.params.projectId;
       const content = Object.assign({}, detail, {
-        id: branchId,
-        projectId,
+        // id: branchId,
+        projectId: parseInt(projectId),
       });
       await projectLanguageSaveApi(content);
       projectView(branchId);

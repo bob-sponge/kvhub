@@ -1,18 +1,30 @@
 import React from 'react';
+import moment from 'moment';
 import * as css from './styles/mergeRequest.modules.less';
 import { Popconfirm } from 'antd';
 
 export const columns = (onMerge: Function, onDelete: Function) => {
   let tableColumns: any[] = [
     {
-      key: 'Title',
+      key: 'sourceBranchName',
       title: 'Title',
       dataIndex: 'Title',
+      render: (_text: any, record: any) => {
+        return (
+          <span>
+            {record.sourceBranchName}
+            {record.targetBranchName}
+          </span>
+        );
+      },
     },
     {
-      key: 'Updated',
+      key: 'modifyTime',
       title: 'Updated',
-      dataIndex: 'Updated',
+      dataIndex: 'modifyTime',
+      render: (text: any) => {
+        return moment(text).format('YYYY/MM/DD HH:mm:ss');
+      },
     },
     {
       key: 'Author',

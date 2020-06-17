@@ -1,15 +1,17 @@
+@import '../../../style/main.less';
+
 .add-project-drawer {
   :global {
     .ant-drawer-footer {
       padding: 0;
     }
 
-    .ant-form-item-label>label.ant-form-item-required::before {
+    .ant-form-item-label > label.ant-form-item-required::before {
       content: '';
       margin-right: 0;
     }
 
-    .ant-form-item-label>label.ant-form-item-required::after {
+    .ant-form-item-label > label.ant-form-item-required::after {
       display: inline-block;
       margin-left: 4px;
       color: #ff4d4f;
@@ -20,12 +22,65 @@
     }
   }
 
+  .operation {
+    .title {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: @light-grey;
+      height: 32px;
+      margin-bottom: 8px;
+
+      span {
+        font-size: 12px;
+        padding-left: 2px;
+      }
+    }
+
+    .content {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 32px;
+
+      .trangle-left {
+        width: 0;
+        height: 0;
+        border-top: 10px solid transparent;
+        border-right: 10px solid #43bde0;
+        border-bottom: 10px solid transparent;
+      }
+
+      .circle {
+        width: 12px;
+        height: 12px;
+        background-color: @white;
+        border: 3px solid #43bde0;
+        border-radius: 50%;
+      }
+
+      .square {
+        width: 73px;
+        height: 4px;
+        background-color: #43bde0;
+      }
+
+      .trangle {
+        width: 0;
+        height: 0;
+        border-top: 10px solid transparent;
+        border-left: 10px solid #43bde0;
+        border-bottom: 10px solid transparent;
+      }
+    }
+  }
+
   .drawer-footer {
     display: flex;
     justify-content: flex-end;
     align-items: center;
     height: 64px;
-    background-color: #F2F4F6;
+    background-color: #f2f4f6;
 
     button {
       margin-right: 16px;
