@@ -14,6 +14,7 @@ import { Namespace } from 'src/entities/Namespace';
 import { Key } from 'src/entities/Key';
 import { Keyname } from 'src/entities/Keyname';
 import { Keyvalue } from 'src/entities/Keyvalue';
+import { Project } from 'src/entities/Project';
 
 @Module({
   imports: [
@@ -27,7 +28,8 @@ import { Keyvalue } from 'src/entities/Keyvalue';
       Keyvalue,
       MergeDiffKey,
       MergeDiffValue,
-      Namespace
+      Namespace,
+      Project
     ]),
     BranchModule,
     KeyModule,

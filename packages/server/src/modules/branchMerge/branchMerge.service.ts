@@ -24,6 +24,7 @@ import { Keyname } from 'src/entities/Keyname';
 import { Keyvalue } from 'src/entities/Keyvalue';
 import { BranchKey } from 'src/entities/BranchKey';
 import { Namespace } from 'src/entities/Namespace';
+import { Project } from 'src/entities/Project';
 
 @Injectable()
 export class BranchMergeService {
@@ -48,6 +49,8 @@ export class BranchMergeService {
     private readonly keyvalueRepository: Repository<Keyvalue>,
     @InjectRepository(Namespace)
     private readonly namespaceRepository: Repository<Namespace>,
+    @InjectRepository(Project)
+    private readonly projectRepository: Repository<Project>,
     private readonly branchService: BranchService,
     private readonly keyService: KeyService,
   ) {}
@@ -230,6 +233,12 @@ export class BranchMergeService {
    * @returns branch merge id
    */
   async save(vo: BranchMerge): Promise<number> {
+
+    const project = await this.projectRepository.findOne(vo.projectId);
+    if (project === undefined || project.delete){
+      throw new BadRequestException(ErrorMessage.PROJECT_NOT_EXIST);
+    }
+
     // check branch id
     await this.checkBranch(vo.sourceBranchId);
     await this.checkBranch(vo.targetBranchId);

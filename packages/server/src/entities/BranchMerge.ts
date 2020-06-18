@@ -32,4 +32,7 @@ export class BranchMerge {
     nullable: true,
   })
   modifyTime: Date | null;
+
+  @Column('integer', { name: 'project_id' })
+  projectId:number;
 }
