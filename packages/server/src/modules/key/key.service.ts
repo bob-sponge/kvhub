@@ -6,7 +6,7 @@ import { Keyname } from 'src/entities/Keyname';
 import { Keyvalue } from 'src/entities/Keyvalue';
 import { BranchService } from 'src/modules/branch/branch.service';
 import { KeyInfoDto } from 'src/modules/key/dto/KeyInfoDTO';
-import { Repository, createQueryBuilder, getRepository } from 'typeorm';
+import { Repository, getRepository } from 'typeorm';
 import { ValueDTO } from './dto/ValueDTO';
 import { KeyValueDetailVO } from 'src/vo/KeyValueDetailVO';
 import { ValueVO } from 'src/vo/ValueVO';
@@ -68,7 +68,7 @@ export class KeyService {
     let masterBranch = new Branch();
     const branch = await this.branchService.getBranchById(branchId);
     if (branch === undefined) {
-      throw new BadRequestException('branch is not exist');
+      throw new BadRequestException(ErrorMessage.BRANCH_NOT_EXIST);
     } else if (branch.master !== null && !branch.master) {
       masterBranch = await this.branchService.findMasterBranchByProjectId(branch.projectId);
     } else {
@@ -102,7 +102,7 @@ export class KeyService {
     let result = new KeyInfoDto();
     const key = await this.keyRepository.findOne(id);
     if (key === undefined || (key.delete !== null && key.delete)) {
-      throw new BadRequestException('key is not exist!');
+      throw new BadRequestException(ErrorMessage.KEY_NOT_EXIST);
     } else {
       result.id = key.id;
       result.actualId = key.actualId;
@@ -145,7 +145,7 @@ export class KeyService {
     let masterBranchId: number = 0;
     let isMaster: boolean = false;
     if (branch === undefined) {
-      throw new BadRequestException('Branch is not exist!');
+      throw new BadRequestException(ErrorMessage.BRANCH_NOT_EXIST);
     } else if (branch.master !== null && branch.master) {
       masterBranchId = branch.id;
       isMaster = true;

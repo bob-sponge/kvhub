@@ -241,7 +241,7 @@ export class BranchService {
     let result = new PageResult();
     // 查询不区分大小写
     const data = await this.branchRepository.findAndCount({
-      where: { projectId: page.projectId,name: Like('%' + page.content + '%') },
+      where: { projectId: page.projectId, name: Like('%' + page.content + '%') },
       order: { name: 'ASC' },
       skip: start,
       take: page.size,
@@ -312,7 +312,7 @@ export class BranchService {
    * @param projectId
    */
   async findBranchByProjectIdAndKeyword(projectId: number, keyword: string): Promise<Branch[]> {
-    return await this.branchRepository.find({where:{name:Like('%' + keyword + '%'),projectId}});
+    return await this.branchRepository.find({ where: { name: Like('%' + keyword + '%'), projectId } });
   }
 
   /**
@@ -322,8 +322,9 @@ export class BranchService {
   async save(branchBody: BranchBody): Promise<void> {
     // 判断project_id 是否存在
     if ((await this.projectRepository.findOne({ id: branchBody.projectId })) === undefined) {
-      throw new BadRequestException('project_id is not exist');
+      throw new BadRequestException(ErrorMessage.PROJECT_NOT_EXIST);
     }
+    // 是否从其他branch复制，是否是master分支
     let inheritBranch = false;
     let isMaster = false;
     // check branch exist?
@@ -332,10 +333,12 @@ export class BranchService {
       if (branch === undefined) {
         throw new BadRequestException(ErrorMessage.BRANCH_NOT_EXIST);
       } else {
+        // 从其他分支复制
         inheritBranch = true;
         const masterBranch = await this.findMasterBranchByProjectId(branchBody.projectId);
         if (masterBranch !== undefined) {
           if (masterBranch.id === branchBody.branchId) {
+            // 复制的分支是主分支
             isMaster = true;
           }
         }
@@ -344,13 +347,13 @@ export class BranchService {
 
     // check branch name duplicate
     const dupBranch = await this.branchRepository.find({
-      where: { name: branchBody.name, projectId: branchBody.projectId },
+      where: { name: branchBody.name.trim(), projectId: branchBody.projectId },
     });
     if (dupBranch !== null && dupBranch.length > 0) {
       throw new BadRequestException(ErrorMessage.BRANCH_DUPLICATE);
     }
     const branch = await this.branchRepository.save({
-      name: branchBody.name,
+      name: branchBody.name.trim(),
       projectId: branchBody.projectId,
       master: false,
       modifier: this.config.get('constants', 'modifier'),
@@ -428,6 +431,10 @@ export class BranchService {
    * @param id id
    */
   async deleteBranch(id: number): Promise<void> {
+    const branch = await this.branchRepository.findOne(id);
+    if (branch === undefined) {
+      throw new BadRequestException(ErrorMessage.BRANCH_NOT_EXIST);
+    }
     const result: DeleteResult = await this.branchRepository.delete({ id: id });
     if (result.affected.toString() !== '1') {
       throw new BadRequestException('delete branch error');
