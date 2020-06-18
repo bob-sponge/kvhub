@@ -49,13 +49,13 @@ export class ProjectLanguageService {
   }
 
   async delete(id: number): Promise<void> {
-    await this.projectLanguageRepository.findOne(id).then(function(data) {
-      if (data !== undefined) {
-        data.delete = true;
-        this.projectLanguageRepository.update(data);
-      } else {
-        throw new BadRequestException('project language is not exist');
-      }
-    });
+
+    const projectLanguage = await this.projectLanguageRepository.findOne(id);
+    if (projectLanguage === undefined){
+      throw new BadRequestException('project language is not exist');
+    } else {
+      projectLanguage.delete = true;
+      await this.projectLanguageRepository.save(projectLanguage);
+    }
   }
 }
