@@ -4,6 +4,7 @@ import { Button, Progress, Popover, Input } from 'antd';
 import { doneColor, processColor, toThousands, getPercent } from './constant';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { namespaceSaveApi, projectLanguageDeleteApi } from '../../api/languages';
+import { history } from '@ofm/history';
 
 const LanguageItem = ({ item, index, projectView }: any) => {
   const [visible, setVisible] = useState(false);
@@ -74,6 +75,10 @@ const LanguageItem = ({ item, index, projectView }: any) => {
     </div>
   );
 
+  const handleJump = (id: number, languageId: number) => {
+    history.push(`/namespace/${id}/${languageId}`);
+  };
+
   return (
     <>
       <div className={css.languageItem}>
@@ -105,7 +110,10 @@ const LanguageItem = ({ item, index, projectView }: any) => {
           {item.namespaceList &&
             item.namespaceList.map((detail: any) => {
               return (
-                <div className={css.languageNamespacesProgressItem}>
+                <div
+                  className={css.languageNamespacesProgressItem}
+                  key={item.id}
+                  onClick={() => handleJump(detail.id, item.languageId)}>
                   <p className={css.languageNamespacesProgressTitle}>{detail.name}</p>
                   {progressRender('small', detail.translatedKeys, detail.totalKeys)}
                 </div>

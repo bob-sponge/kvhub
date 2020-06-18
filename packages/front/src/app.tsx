@@ -29,7 +29,7 @@ export function App() {
 const BasicRoute = () => (
   <Router history={history}>
     <Switch>
-      <Route exact path="/namespace" component={NamespaceView} />
+      <Route exact path="/namespace/:namespaceId/:languageId" component={NamespaceView} />
       <Route exact path="/languages/:projectId" component={Languages} />
       <Route exact path="/dashboard" component={Dashboard} />
       <Route exact path="/branch/:projectId" component={Branches} />

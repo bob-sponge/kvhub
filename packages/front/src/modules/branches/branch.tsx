@@ -108,6 +108,7 @@ const Branches: React.SFC<BranchProps> = (props: BranchProps) => {
         <Spin spinning={loading}>
           <div className={css.branchTable}>
             <Table
+              rowKey={record => record.id}
               columns={columns(onCompare, onDelete)}
               dataSource={branchList}
               pagination={{

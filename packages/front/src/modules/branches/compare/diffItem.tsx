@@ -18,19 +18,23 @@ const DiffItem: React.SFC<DiffProps> = (props: DiffProps) => {
   const renderCompare = (orignal: string, diff: string) => {
     let newSource = orignal;
     let newDiff = diff;
-    let diffIndex = [];
+
     if (orignal.length < diff.length) {
       newDiff = diff.substring(0, orignal.length);
     }
     if (orignal.length > diff.length) {
       newSource = orignal.substring(0, diff.length);
     }
+    return addHighLight(newSource, newDiff, diff);
+  };
+
+  const addHighLight = (newSource: string, newDiff: string, diff: string) => {
+    let diffIndex = [];
     for (let i = 0; i < newDiff.length; i++) {
       if (newSource[i] !== newDiff[i]) {
         diffIndex.push(i);
       }
     }
-
     const diffs =
       diffIndex.length >= 0 &&
       diffIndex.map((item: any) => {

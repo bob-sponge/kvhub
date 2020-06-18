@@ -28,18 +28,18 @@ const CompareProject: React.SFC<CompareProjectProps> = (props: CompareProjectPro
   }, [id]);
 
   useEffect(() => {
-    // if (detail && detail.projectId) {
-    //   getBranchList(detail.projectId);
-    // }
-    getBranchList();
-  }, []);
+    if (detail && detail.projectId) {
+      getBranchList(detail.projectId);
+    }
+    // getBranchList();
+  }, [detail]);
 
   useEffect(() => {
     getBranchDetail();
   }, [getBranchDetail]);
 
-  const getBranchList = async () => {
-    let result = await Api.branchListApi();
+  const getBranchList = async (projectId: number) => {
+    let result = await Api.branchListApi(projectId);
     const { success, data } = result;
     if (success && data) {
       setBranchList(data);
@@ -48,8 +48,7 @@ const CompareProject: React.SFC<CompareProjectProps> = (props: CompareProjectPro
 
   useEffect(() => {
     if (detail && detail.id) {
-      form.setFieldsValue({ source: 21 });
-      form.setFieldsValue({ destination: 7 });
+      form.setFieldsValue({ source: detail.id });
     }
   }, [detail]);
 
@@ -67,6 +66,13 @@ const CompareProject: React.SFC<CompareProjectProps> = (props: CompareProjectPro
     if (success && data) {
       setDiffData(data);
     }
+  };
+
+  const handleChange = () => {
+    const oldSource = form.getFieldValue('source');
+    const targetSource = form.getFieldValue('destination');
+    form.setFieldsValue({ source: targetSource });
+    form.setFieldsValue({ destination: oldSource });
   };
 
   return (
@@ -93,7 +99,7 @@ const CompareProject: React.SFC<CompareProjectProps> = (props: CompareProjectPro
               </Form.Item>
             </Col>
             <Col span={2}>
-              <div className={css.operation}>
+              <div className={css.operation} onClick={handleChange}>
                 <div className={css.title}>
                   <SwapOutlined />
                   <span>Exchange</span>
