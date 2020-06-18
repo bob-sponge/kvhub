@@ -208,6 +208,7 @@ export class ProjectService {
       let totalTranferKeys: number = 0;
       vo.id = p.id;
       vo.languageName = p.languageName;
+      vo.languageId = p.id;
       for (let j = 0; j < namespaceList.length; j++) {
         const n = namespaceList[j];
         let namespaceVO = new NamespaceVO();
