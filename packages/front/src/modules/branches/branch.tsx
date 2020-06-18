@@ -23,12 +23,12 @@ const Branches: React.SFC<BranchProps> = (props: BranchProps) => {
     page: 1,
     size: 10,
     content: '',
-    projectId: '',
+    projectId: NaN,
   });
 
   useEffect(() => {
     const projectid = match.params.projectId;
-    filter.projectId = projectid;
+    filter.projectId = Number(projectid);
     setFilter({ ...filter });
   }, [match]);
 
@@ -90,7 +90,7 @@ const Branches: React.SFC<BranchProps> = (props: BranchProps) => {
   };
 
   return (
-    <ContainerMenu>
+    <ContainerMenu match={match}>
       <div className={css.branchWapper}>
         <div className={css.basicTitle}>
           <div className={css.title}>Branches</div>
