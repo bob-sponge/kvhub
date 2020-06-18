@@ -166,6 +166,10 @@ export class BranchMergeService {
       result.push(vo);
     }
     result.sort((a, b) => {
+      let keyName = CommonConstant.STRING_BLANK;
+      if (a.source !== null && a.source !== undefined) {
+        keyName = a.source.keyName;
+      }
       if (a.source.namespaceName !== b.source.namespaceName) {
         return a.source.keyName.localeCompare(b.source.keyName);
       } else {
@@ -226,43 +230,9 @@ export class BranchMergeService {
    * @returns branch merge id
    */
   async save(vo: BranchMerge): Promise<number> {
-    if (vo.sourceBranchId !== null && vo.sourceBranchId !== undefined) {
-      const branch = await this.branchService.getBranchById(vo.sourceBranchId);
-      if (branch === undefined) {
-        throw new BadRequestException(ErrorMessage.BRANCH_NOT_EXIST);
-      } else {
-        const existBranchMerge = await this.branchMergeRepository.find({
-          where: [
-            { sourceBranchId: vo.sourceBranchId, type: CommonConstant.MERGE_TYPE_CREATED },
-            { targetBranchId: vo.sourceBranchId, type: CommonConstant.MERGE_TYPE_CREATED },
-          ],
-        });
-        if (existBranchMerge !== null && existBranchMerge.length > 0) {
-          throw new BadRequestException(ErrorMessage.BRANCH_IS_MERGING);
-        }
-      }
-    } else {
-      throw new BadRequestException(ErrorMessage.BRANCH_NOT_CHOOSE);
-    }
-
-    if (vo.targetBranchId !== null && vo.targetBranchId !== undefined) {
-      const branch = await this.branchService.getBranchById(vo.targetBranchId);
-      if (branch === undefined) {
-        throw new BadRequestException(ErrorMessage.BRANCH_NOT_EXIST);
-      } else {
-        const existBranchMerge = await this.branchMergeRepository.find({
-          where: [
-            { sourceBranchId: vo.targetBranchId, type: CommonConstant.MERGE_TYPE_CREATED },
-            { targetBranchId: vo.targetBranchId, type: CommonConstant.MERGE_TYPE_CREATED },
-          ],
-        });
-        if (existBranchMerge !== null && existBranchMerge.length > 0) {
-          throw new BadRequestException(ErrorMessage.BRANCH_IS_MERGING);
-        }
-      }
-    } else {
-      throw new BadRequestException(ErrorMessage.BRANCH_NOT_CHOOSE);
-    }
+    // check branch id
+    await this.checkBranch(vo.sourceBranchId);
+    await this.checkBranch(vo.targetBranchId);
 
     if (vo.targetBranchId === vo.sourceBranchId) {
       throw new BadRequestException(ErrorMessage.BRANCH_NOT_SAME);
@@ -273,6 +243,33 @@ export class BranchMergeService {
     vo.modifyTime = new Date();
     const branchMerge = await this.branchMergeRepository.save(vo);
     return branchMerge.id;
+  }
+
+  private async checkBranch(id:number){
+    if (id !== null && id !== undefined) {
+      const branch = await this.branchService.getBranchById(id);
+      if (branch === undefined) {
+        throw new BadRequestException(ErrorMessage.BRANCH_NOT_EXIST);
+      } else {
+        const existBranchMerge = await this.branchMergeRepository.find({
+          where: [
+            {
+              sourceBranchId: id,
+              type: In([CommonConstant.MERGE_TYPE_CREATED, CommonConstant.MERGE_TYPE_MERGING]),
+            },
+            {
+              targetBranchId: id,
+              type: In([CommonConstant.MERGE_TYPE_CREATED, CommonConstant.MERGE_TYPE_MERGING]),
+            },
+          ],
+        });
+        if (existBranchMerge !== null && existBranchMerge.length > 0) {
+          throw new BadRequestException(ErrorMessage.BRANCH_IS_MERGING);
+        }
+      }
+    } else {
+      throw new BadRequestException(ErrorMessage.BRANCH_NOT_CHOOSE);
+    }
   }
 
   /**
