@@ -13,11 +13,11 @@ export const branchDetailApi = (id: any) => ajax.get(`${prefix}/${id}`);
 // 分支比较
 export const branchCompareApi = (params: any) => ajax.post(compareAddress, params);
 
-// // 分支列表
-// export const branchListApi = (id: any) => ajax.get(`${branchListAddress}/${id}`);
-
 // 分支列表
-export const branchListApi = () => ajax.get(branchListAddress);
+export const branchListApi = (id: any) => ajax.get(`${branchListAddress}/${id}`);
+
+// // 分支列表
+// export const branchListApi = () => ajax.get(branchListAddress);
 
 // 分支列表分页
 export const branchAllApi = (params: any) => ajax.post(branchAllAddress, params);

@@ -92,7 +92,7 @@ const MergeRequest = (props: MergeRequestProps) => {
   };
 
   return (
-    <ContainerMenu>
+    <ContainerMenu match={match}>
       <div className={css.mergeWapper}>
         <div className={css.basicTitle}>
           <div className={css.title}>Merge Request</div>
