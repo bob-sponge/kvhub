@@ -15,11 +15,12 @@ import { KeyVO } from 'src/vo/KeyVO';
 import { MergeDiffChangeKey } from 'src/entities/MergeDiffChangeKey';
 import { KeyValueVO } from 'src/vo/KeyValueVO';
 import { CompareBranchVO } from 'src/vo/CompareBranchVO';
-import { ErrorMessage } from 'src/constant/constant';
+import { ErrorMessage, CommonConstant } from 'src/constant/constant';
 import { Key } from 'src/entities/Key';
 import { Keyname } from 'src/entities/Keyname';
 import { Keyvalue } from 'src/entities/Keyvalue';
 import { UUIDUtils } from 'src/utils/uuid';
+import { BranchCommit } from 'src/entities/BranchCommit';
 
 @Injectable()
 export class BranchService {
@@ -32,6 +33,7 @@ export class BranchService {
     @InjectRepository(BranchKey) private readonly branchKeyRepository: Repository<BranchKey>,
     @InjectRepository(Project) private readonly projectRepository: Repository<Project>,
     @InjectRepository(BranchMerge) private readonly branchMergeRepository: Repository<BranchMerge>,
+    @InjectRepository(BranchCommit) private readonly branchCommitRepository: Repository<BranchCommit>,
     @InjectRepository(MergeDiffChangeKey) private readonly mergeDiffChangeKeyRepository: Repository<MergeDiffChangeKey>,
     private readonly config: ConfigService,
   ) {
@@ -335,7 +337,7 @@ export class BranchService {
     }
     let inheritBranch = false;
     let isMaster = false;
-    // check branch is exist?
+    // check branch exist?
     if (branchBody.branchId !== null && branchBody.branchId !== undefined) {
       const branch = await this.branchRepository.findOne({ id: branchBody.branchId });
       if (branch === undefined) {
@@ -366,8 +368,15 @@ export class BranchService {
       modifyTime: new Date(),
     });
 
-    //
     if (inheritBranch && !isMaster) {
+      const branchCommit = new BranchCommit();
+      const commitId = UUIDUtils.generateUUID();
+      branchCommit.branchId = branch.id;
+      branchCommit.commitId = commitId;
+      branchCommit.type = CommonConstant.COMMIT_TYPE_ADD;
+      branchCommit.commitTime = new Date();
+      await this.branchCommitRepository.save(branchCommit);
+
       const branchKeyList = await this.branchKeyRepository.find({ where: { branchId: branch.id } });
       const newBranchKeyList: BranchKey[] = [];
       const keyIdList: number[] = [];
@@ -384,7 +393,6 @@ export class BranchService {
 
       if (keyIdList.length > 0) {
         for (let i = 0; i < keyIdList.length; i++) {
-          // todo how to add branch_commit
           const keyId = keyIdList[i];
           const key = await this.keyRepository.findOne(keyId);
           if (key !== undefined) {
@@ -393,8 +401,6 @@ export class BranchService {
             newKey.namespaceId = key.namespaceId;
             newKey.delete = false;
             newKey = await this.keyRepository.save(newKey);
-
-            const commitId = UUIDUtils.generateUUID();
             const keyNameList = await this.keynameRepository.find({ where: { keyId } });
             if (keyNameList !== null && keyNameList.length > 0) {
             } else {
