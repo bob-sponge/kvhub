@@ -7,6 +7,7 @@ import { ConfigService } from '@ofm/nestjs-utils';
 import { Page } from 'src/vo/Page';
 import { PageResult } from 'src/vo/PageResult';
 import { BranchMerge } from 'src/entities/BranchMerge';
+import { BranchKey } from 'src/entities/BranchKey';
 import { BranchBody } from 'src/vo/BranchBody';
 import { BranchVO } from 'src/vo/BranchVO';
 import { CompareVO } from 'src/vo/CompareVO';
@@ -14,12 +15,21 @@ import { KeyVO } from 'src/vo/KeyVO';
 import { MergeDiffChangeKey } from 'src/entities/MergeDiffChangeKey';
 import { KeyValueVO } from 'src/vo/KeyValueVO';
 import { CompareBranchVO } from 'src/vo/CompareBranchVO';
+import { ErrorMessage } from 'src/constant/constant';
+import { Key } from 'src/entities/Key';
+import { Keyname } from 'src/entities/Keyname';
+import { Keyvalue } from 'src/entities/Keyvalue';
+import { UUIDUtils } from 'src/utils/uuid';
 
 @Injectable()
 export class BranchService {
   private constant: Map<string, string>;
   constructor(
+    @InjectRepository(Key) private readonly keyRepository: Repository<Key>,
+    @InjectRepository(Keyname) private readonly keynameRepository: Repository<Keyname>,
+    @InjectRepository(Keyvalue) private readonly keyvalueRepository: Repository<Keyvalue>,
     @InjectRepository(Branch) private readonly branchRepository: Repository<Branch>,
+    @InjectRepository(BranchKey) private readonly branchKeyRepository: Repository<BranchKey>,
     @InjectRepository(Project) private readonly projectRepository: Repository<Project>,
     @InjectRepository(BranchMerge) private readonly branchMergeRepository: Repository<BranchMerge>,
     @InjectRepository(MergeDiffChangeKey) private readonly mergeDiffChangeKeyRepository: Repository<MergeDiffChangeKey>,
@@ -31,7 +41,7 @@ export class BranchService {
       ['2', 'Refused'],
     ]);
   }
-  
+
   /**
    * 查询全部branch
    */
@@ -71,7 +81,7 @@ export class BranchService {
       return '';
     }
     // eslint-disable-next-line prettier/prettier
-    const prefix = '<span style=\'color:blue\'>';
+    const prefix = "<span style='color:blue'>";
     const suffix = '</sapn>';
     if (source === '' && destination !== '') {
       return prefix + destination + suffix;
@@ -279,7 +289,7 @@ export class BranchService {
       let branchVO = new BranchVO();
       branchVO.id = d.id;
       branchVO.name = d.name;
-      branchVO.time = d.modifyTime.valueOf();
+      branchVO.time = d.modifyTime === null || d.modifyTime === undefined ? null : d.modifyTime.valueOf();
       // 默认是 0 -> open
       branchVO.merge = this.constant.get('0');
       map.forEach((x, y) => {
@@ -324,13 +334,99 @@ export class BranchService {
     if ((await this.projectRepository.findOne({ id: branchBody.projectId })) === undefined) {
       throw new BadRequestException('project_id is not exist');
     }
-    await this.branchRepository.save({
+    let inheritBranch = false;
+    let isMaster = false;
+    // check branch is exist?
+    if (branchBody.branchId !== null && branchBody.branchId !== undefined) {
+      const branch = await this.branchRepository.findOne({ id: branchBody.branchId });
+      if (branch === undefined) {
+        throw new BadRequestException(ErrorMessage.BRANCH_NOT_EXIST);
+      } else {
+        inheritBranch = true;
+        const masterBranch = await this.findMasterBranchByProjectId(branchBody.projectId);
+        if (masterBranch !== undefined) {
+          if (masterBranch.id === branchBody.branchId) {
+            isMaster = true;
+          }
+        }
+      }
+    }
+
+    // check branch name duplicate
+    const dupBranch = await this.branchRepository.find({
+      where: { name: branchBody.name, projectId: branchBody.projectId },
+    });
+    if (dupBranch !== null && dupBranch.length > 0) {
+      throw new BadRequestException(ErrorMessage.BRANCH_DUPLICATE);
+    }
+    const branch = await this.branchRepository.save({
       name: branchBody.name,
       projectId: branchBody.projectId,
       master: false,
       modifier: this.config.get('constants', 'modifier'),
       modifyTime: new Date(),
     });
+
+    //
+    if (inheritBranch && !isMaster) {
+      const branchKeyList = await this.branchKeyRepository.find({ where: { branchId: branch.id } });
+      const newBranchKeyList: BranchKey[] = [];
+      const keyIdList: number[] = [];
+      branchKeyList.forEach(bk => {
+        const branchKey = new BranchKey();
+        branchKey.keyId = bk.keyId;
+        branchKey.branchId = branch.id;
+        branchKey.delete = false;
+        newBranchKeyList.push(branchKey);
+        keyIdList.push(bk.keyId);
+      });
+      // add branch_key
+      await this.branchKeyRepository.save(newBranchKeyList);
+
+      if (keyIdList.length > 0) {
+        for (let i = 0; i < keyIdList.length; i++) {
+          // todo how to add branch_commit
+          const keyId = keyIdList[i];
+          const key = await this.keyRepository.findOne(keyId);
+          if (key !== undefined) {
+            let newKey = new Key();
+            newKey.actualId = key.actualId;
+            newKey.namespaceId = key.namespaceId;
+            newKey.delete = false;
+            newKey = await this.keyRepository.save(newKey);
+
+            const commitId = UUIDUtils.generateUUID();
+            const keyNameList = await this.keynameRepository.find({ where: { keyId } });
+            if (keyNameList !== null && keyNameList.length > 0) {
+            } else {
+              const keyname = keyNameList[0];
+              if (keyname !== undefined) {
+                let newKeyname = new Keyname();
+                newKeyname.keyId = newKey.id;
+                newKeyname.name = keyname.name;
+                newKeyname.commitId = commitId;
+                await this.keynameRepository.save(newKeyname);
+              }
+            }
+
+            const keyvalueList = await this.keyvalueRepository.find({ where: { keyId: key.id, latest: true } });
+            if (keyvalueList !== null && keyvalueList.length > 0) {
+              const newKeyvalueList: Keyvalue[] = [];
+              keyvalueList.forEach(kv => {
+                const newKv = new Keyvalue();
+                newKv.keyId = newKey.id;
+                newKv.languageId = kv.languageId;
+                newKv.value = kv.value;
+                newKv.latest = true;
+                newKv.commitId = commitId;
+                newKeyvalueList.push(newKv);
+              });
+              await this.keyvalueRepository.save(newKeyvalueList);
+            }
+          }
+        }
+      }
+    }
   }
 
   /**
@@ -378,10 +474,10 @@ export class BranchService {
    * 通过项目id查询master分支
    * @param projectId projectId
    */
-  async findMasterBranchByProjectId(projectId: number): Promise<Branch> | undefined{
+  async findMasterBranchByProjectId(projectId: number): Promise<Branch> | undefined {
     const branchList = await this.branchRepository.find({ projectId, master: true });
-    if (branchList === null){
-      return undefined
+    if (branchList === null) {
+      return undefined;
     } else {
       return branchList[0];
     }
@@ -391,6 +487,6 @@ export class BranchService {
    * 通过分支ID获取分支信息
    */
   async getBranchById(id: number): Promise<Branch> | undefined {
-    return await this.branchRepository.findOne({id: id});
+    return await this.branchRepository.findOne({ id: id });
   }
 }

@@ -1,9 +1,9 @@
 /* eslint-disable max-len */
 /* eslint-disable no-multi-str */
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadGatewayException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Namespace } from 'src/entities/Namespace';
-import { Repository, getConnection } from 'typeorm';
+import { Repository, getConnection, In } from 'typeorm';
 import { NamespaceViewDetail } from 'src/vo/NamespaceViewDetail';
 import * as Log4js from 'log4js';
 import { Keyvalue } from 'src/entities/Keyvalue';
@@ -12,6 +12,9 @@ import { Keyname } from 'src/entities/Keyname';
 import { Key } from 'src/entities/Key';
 import { Branch } from 'src/entities/Branch';
 import { UUIDUtils } from 'src/utils/uuid';
+import { BranchCommit } from 'src/entities/BranchCommit';
+import { BranchMerge } from 'src/entities/BranchMerge';
+import { CommonConstant, ErrorMessage } from 'src/constant/constant';
 
 @Injectable()
 export class NamespaceService {
@@ -28,6 +31,10 @@ export class NamespaceService {
     private readonly keynameRepository: Repository<Keyname>,
     @InjectRepository(Branch)
     private readonly branchRepository: Repository<Branch>,
+    @InjectRepository(BranchCommit)
+    private readonly branchCommitRepository: Repository<BranchCommit>,
+    @InjectRepository(BranchMerge)
+    private readonly branchMergeRepository: Repository<BranchMerge>,
   ) {}
 
   async deleteNamespace(namespaceId: number) {
@@ -65,10 +72,11 @@ export class NamespaceService {
         throw new Error(`Key id get name is equals key name ${keyName}`);
       }
       // key 表不动，key name 增加，key value 增加
+      // todo branch commit record
       const commitId = UUIDUtils.generateUUID();
       const keyNameEntity = new Keyname();
       keyNameEntity.keyId = keyId;
-      keyNameEntity.modifier = 'lw';
+      keyNameEntity.modifier = 'lw'; // todo modifier ??
       keyNameEntity.modifyTime = new Date();
       keyNameEntity.name = keyName;
       keyNameEntity.commitId = commitId;
@@ -178,7 +186,7 @@ export class NamespaceService {
           keyValueEntity.commitId = commitId;
           keyValueEntity.languageId = languageId;
           keyValueEntity.latest = true;
-          keyValueEntity.modifier = 'lw';
+          keyValueEntity.modifier = 'lw'; // todo modifier ??
           keyValueEntity.midifyTime = new Date();
           keyValueEntitys.push(keyValueEntity);
         });
@@ -205,28 +213,63 @@ export class NamespaceService {
           keyValueEntity.commitId = commitId;
           keyValueEntity.languageId = languageId;
           keyValueEntity.latest = true;
-          keyValueEntity.modifier = 'lw';
+          keyValueEntity.modifier = 'lw'; // todo modifier ??
           keyValueEntity.midifyTime = new Date();
           keyValueEntitys.push(keyValueEntity);
         });
         await queryRunner.manager.insert<Keyvalue>(Keyvalue, keyValueEntitys);
       }
-     await queryRunner.commitTransaction();
+      await queryRunner.commitTransaction();
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw new Error(error.message);
     }
   }
 
-  async editKeyValueOnlanguage(languageId: number, keyId: number, keyvalue: string) {
+  async editKeyValueOnlanguage(branchId: number, languageId: number, keyId: number, keyvalue: string, valueId: number) {
     const logger = Log4js.getLogger();
     logger.level = 'INFO';
     logger.info(languageId, keyId, keyvalue);
-    const value = new Keyvalue();
-    value.keyId = keyId;
-    value.languageId = languageId;
-    value.value = keyvalue;
-    return await this.keyvalueRepository.insert(value);
+
+    // check branch is or not merging status
+    const branchMergeList: BranchMerge[] = await this.branchMergeRepository.find({
+      where: [
+        { sourceBranchId: branchId, type: In([CommonConstant.MERGE_TYPE_CREATED, CommonConstant.MERGE_TYPE_MERGING]) },
+        { targetBranchId: branchId, type: In([CommonConstant.MERGE_TYPE_CREATED, CommonConstant.MERGE_TYPE_MERGING])  },
+      ]
+    });
+    if(branchMergeList !== null && branchMergeList.length > 0){
+      throw new BadRequestException(ErrorMessage.BRANCH_IS_MERGING);
+    }
+
+    /* todo
+        Every time change keyvalue, you need to set the latest for the previous version of keyvalue to false,
+        and the newest keyvalue is true, and commit the branch-commit record*/
+    const branchCommit = new BranchCommit();
+    branchCommit.type = CommonConstant.COMMIT_TYPE_CHANGE;
+    branchCommit.commitId = UUIDUtils.generateUUID();
+    branchCommit.branchId = branchId;
+    branchCommit.commitTime = new Date();
+    await this.branchCommitRepository.save(branchCommit);
+
+    const value = await this.keyvalueRepository.findOne(valueId);
+    if (value !== undefined){
+      if (!value.latest){
+        throw new BadRequestException(ErrorMessage.VALUE_CHANGED);
+      } else {
+        value.latest = false;
+        value.midifyTime = new Date();
+        await this.keyvalueRepository.save(value);
+      }
+    }
+
+    const newValue = new Keyvalue();
+    newValue.keyId = keyId;
+    newValue.languageId = languageId;
+    newValue.value = keyvalue;
+    newValue.latest = true;
+    newValue.commitId = branchCommit.commitId;
+    return await this.keyvalueRepository.insert(newValue);
   }
 
   async getNamespaceLanguage(id: number) {

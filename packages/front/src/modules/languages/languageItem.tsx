@@ -3,9 +3,9 @@ import * as css from './styles/languageItem.modules.less';
 import { Button, Progress, Popover, Input } from 'antd';
 import { doneColor, processColor, toThousands, getPercent } from './constant';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
-import { namespaceSaveApi } from '../../api/languages';
+import { namespaceSaveApi, projectLanguageDeleteApi } from '../../api/languages';
 
-const LanguageItem = ({ item, index }: any) => {
+const LanguageItem = ({ item, index, projectView }: any) => {
   const [visible, setVisible] = useState(false);
   const [addNamespaceName, setAddNamespaceName] = useState('');
 
@@ -15,9 +15,10 @@ const LanguageItem = ({ item, index }: any) => {
 
   const namespaceSave = async () => {
     const detail = { name: addNamespaceName, projectId: item.id, type: 'private' };
-    const res = await namespaceSaveApi(detail);
+    await namespaceSaveApi(detail);
+    projectView(item.id);
     setVisible(false);
-    window.console.log(res);
+    setAddNamespaceName('');
   };
 
   const progressRender = (size: string, translatedKeys: number, totalKeys: number) => {
@@ -49,6 +50,11 @@ const LanguageItem = ({ item, index }: any) => {
     );
   };
 
+  const deleteLanguage = async () => {
+    await projectLanguageDeleteApi(item.id);
+    projectView(item.id);
+  };
+
   const AddNamespace = (
     <div className={css.addNamespace}>
       <p className={css.title}>{'Add New Namespace'}</p>
@@ -78,7 +84,7 @@ const LanguageItem = ({ item, index }: any) => {
           </p>
           <div className={css.languageIocnList}>
             {/* <Popover content={AddNamespace} trigger="click" placement="bottomRight"> */}
-            <Button>
+            <Button onClick={deleteLanguage}>
               <DeleteOutlined />
             </Button>
             {/* </Popover> */}

@@ -20,9 +20,12 @@ export class ErrorMessage {
   static BRANCH_NOT_EXIST = 'Branch is not exist!';
   static BRANCH_NOT_CHOOSE = 'Branch can not be null!';
   static BRANCH_NOT_SAME = 'Branch can not be the same!';
+  static BRANCH_DUPLICATE = 'Branch is duplicate!';
   static BRANCH_IS_MERGING = 'Branch is merging!';
   static BRANCH_MERGE_NOT_EXIST = 'Branch merge is not exist!';
   static BRANCH_MERGE_IS_NOT_CREATED = 'Branch merge has been merged or refused!';
   static BRANCH_MERGE_DIFF_KEY_NOT_CHOOSE = 'Branch merge diff key can not be empty!';
   static BRANCH_MERGE_DIFF_KEY_NOT_SELECT_ALL = 'Please confirm all ths branch merge diff keys are selected!';
+  static KEY_NOT_EXIST = 'Key is not exist!';
+  static VALUE_CHANGED = 'Value is changed!';
 }

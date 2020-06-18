@@ -19,6 +19,7 @@ import { UUIDUtils } from 'src/utils/uuid';
 import { ValueVO } from 'src/vo/ValueVO';
 import { KeyValueDetailVO } from 'src/vo/KeyValueDetailVO';
 import { SelectedKeyDTO, SelectedValueDTO } from './dto/SelectMergeDTO';
+import { Key } from 'src/entities/Key';
 import { Keyname } from 'src/entities/Keyname';
 import { Keyvalue } from 'src/entities/Keyvalue';
 
@@ -35,6 +36,8 @@ export class BranchMergeService {
     private readonly mergeDiffValueRepository: Repository<MergeDiffValue>,
     @InjectRepository(BranchCommit)
     private readonly branchCommitRepository: Repository<BranchCommit>,
+    @InjectRepository(Key)
+    private readonly keyRepository: Repository<Key>,
     @InjectRepository(Keyname)
     private readonly keynameRepository: Repository<Keyname>,
     @InjectRepository(Keyvalue)
@@ -93,7 +96,7 @@ export class BranchMergeService {
     });
 
     // 拼接分支id后，通过sql查找到项目的分支merge记录，source 和 target 都需要进行查找
-    let branchMergeList: BranchMerge[] = await this.branchMergeRepository.find({
+    const branchMergeList: BranchMerge[] = await this.branchMergeRepository.find({
       where: [{ sourceBranchId: In(branchIdList) }, { targetBranchId: In(branchIdList) }],
       order: { id: 'DESC' },
     });
@@ -488,11 +491,11 @@ export class BranchMergeService {
     let branchCommit = new BranchCommit();
     branchCommit.branchId = target.branchId;
     branchCommit.commitId = branchMerge.commitId;
-    branchCommit.commitTime = new Date();
+    branchCommit.commitTime = time;
     branchCommit.type = CommonConstant.COMMIT_TYPE_MERGE;
     await this.branchCommitRepository.save(branchCommit);
 
-    if(branchMerge.crosMerge !== null && branchMerge.crosMerge){
+    if (branchMerge.crosMerge !== null && branchMerge.crosMerge) {
       branchCommit.branchId = source.branchId;
       branchCommit.commitId = branchMerge.commitId;
       branchCommit.commitTime = time;
@@ -500,43 +503,163 @@ export class BranchMergeService {
       await this.branchCommitRepository.save(branchCommit);
     }
 
+    // todo crosmerge && transaction
     // master -> branch1
-    if(sourceMaster && !targetMaster){
-      await this.keynameRepository.delete(target.keyNameId);
-      
-    } else if (!sourceMaster && targetMaster){
-      // branch1 -> master
+    if (sourceMaster && !targetMaster) {
+      // save keyname
+      const keyName = await this.keynameRepository.findOne(source.keyNameId);
+      keyName.name = selectedKey.keyName;
+      keyName.commitId = branchMerge.commitId;
+      keyName.modifyTime = time;
+      await this.keynameRepository.save(keyName);
 
+      // save value
+      let valueList: Keyvalue[] = [];
+      if (source.valueList !== null && source.valueList.length > 0) {
+        for (let i = 0; i < source.valueList.length; i++) {
+          const sv = source.valueList[i];
+          for (let j = 0; j < selectedKey.valueList.length; j++) {
+            const skv = selectedKey.valueList[j];
+            if (sv.languageId === skv.languageId) {
+              const value = await this.keyvalueRepository.findOne(sv.id);
+              value.latest = false;
+              value.midifyTime = time;
+              await this.keyvalueRepository.save(value);
+              const newValue = new Keyvalue();
+              newValue.keyId = source.keyId;
+              newValue.languageId = sv.languageId;
+              newValue.value = skv.value;
+              newValue.latest = true;
+              newValue.mergeId = branchMerge.id;
+              newValue.commitId = branchMerge.commitId;
+              valueList.push(newValue);
+
+              selectedKey.valueList.splice(j, 1);
+              break;
+            }
+          }
+        }
+      }
+      if (selectedKey.valueList !== null && selectedKey.valueList.length > 0) {
+        selectedKey.valueList.forEach(v => {
+          const value = new Keyvalue();
+          value.keyId = source.keyId;
+          value.languageId = v.languageId;
+          value.value = v.value;
+          value.latest = true;
+          value.mergeId = branchMerge.id;
+          value.commitId = branchMerge.commitId;
+          valueList.push(value);
+        });
+      }
+      await this.keyvalueRepository.save(valueList);
+
+      await this.keyService.delete(target.keyId);
+      // todo keyname keyvalue need to delete????
+      // await this.keynameRepository.delete(target.keyNameId);
+      // let deleteIdList : number[] = [];
+      // await this.keyvalueRepository.delete(deleteIdList);
+    } else if (!sourceMaster && targetMaster) {
+      // branch1 -> master
+      // save keyname
+      const keyName = await this.keynameRepository.findOne(target.keyNameId);
+      keyName.name = selectedKey.keyName;
+      keyName.commitId = branchMerge.commitId;
+      keyName.modifyTime = time;
+      await this.keynameRepository.save(keyName);
+
+      // save value
+      let valueList: Keyvalue[] = [];
+      if (target.valueList !== null && target.valueList.length > 0) {
+        for (let i = 0; i < target.valueList.length; i++) {
+          const sv = target.valueList[i];
+          for (let j = 0; j < selectedKey.valueList.length; j++) {
+            const skv = selectedKey.valueList[j];
+            if (sv.languageId === skv.languageId) {
+              const value = await this.keyvalueRepository.findOne(sv.id);
+              value.latest = false;
+              value.midifyTime = time;
+              await this.keyvalueRepository.save(value);
+              const newValue = new Keyvalue();
+              newValue.keyId = target.keyId;
+              newValue.languageId = sv.languageId;
+              newValue.value = skv.value;
+              newValue.latest = true;
+              newValue.mergeId = branchMerge.id;
+              newValue.commitId = branchMerge.commitId;
+              valueList.push(newValue);
+
+              selectedKey.valueList.splice(j, 1);
+              break;
+            }
+          }
+        }
+      }
+      if (selectedKey.valueList !== null && selectedKey.valueList.length > 0) {
+        selectedKey.valueList.forEach(v => {
+          const value = new Keyvalue();
+          value.keyId = target.keyId;
+          value.languageId = v.languageId;
+          value.value = v.value;
+          value.latest = true;
+          value.mergeId = branchMerge.id;
+          value.commitId = branchMerge.commitId;
+          valueList.push(value);
+        });
+      }
+      await this.keyvalueRepository.save(valueList);
+
+      await this.keyService.delete(source.keyId);
     } else {
       // branch1 -> branch2
+      // save keyname
+      const keyName = await this.keynameRepository.findOne(target.keyNameId);
+      keyName.name = selectedKey.keyName;
+      keyName.commitId = branchMerge.commitId;
+      keyName.modifyTime = time;
+      await this.keynameRepository.save(keyName);
 
+      // save value
+      let valueList: Keyvalue[] = [];
+      if (target.valueList !== null && target.valueList.length > 0) {
+        for (let i = 0; i < target.valueList.length; i++) {
+          const sv = target.valueList[i];
+          for (let j = 0; j < selectedKey.valueList.length; j++) {
+            const skv = selectedKey.valueList[j];
+            if (sv.languageId === skv.languageId) {
+              const value = await this.keyvalueRepository.findOne(sv.id);
+              value.latest = false;
+              value.midifyTime = time;
+              await this.keyvalueRepository.save(value);
+              const newValue = new Keyvalue();
+              newValue.keyId = target.keyId;
+              newValue.languageId = sv.languageId;
+              newValue.value = skv.value;
+              newValue.latest = true;
+              newValue.mergeId = branchMerge.id;
+              newValue.commitId = branchMerge.commitId;
+              valueList.push(newValue);
+
+              selectedKey.valueList.splice(j, 1);
+              break;
+            }
+          }
+        }
+      }
+      if (selectedKey.valueList !== null && selectedKey.valueList.length > 0) {
+        selectedKey.valueList.forEach(v => {
+          const value = new Keyvalue();
+          value.keyId = target.keyId;
+          value.languageId = v.languageId;
+          value.value = v.value;
+          value.latest = true;
+          value.mergeId = branchMerge.id;
+          value.commitId = branchMerge.commitId;
+          valueList.push(value);
+        });
+      }
+      await this.keyvalueRepository.save(valueList);
     }
-
-    // save keyname
-    let keyName = await this.keynameRepository.findOne(target.keyNameId);
-    keyName.name = selectedKey.keyName;
-    keyName.commitId = branchMerge.commitId;
-    keyName.modifyTime = time;
-    await this.keynameRepository.save(keyName);
-
-    // save value
-    let valueList: Keyvalue[] = [];
-    for (let i = 0; i < selectedKey.valueList.length; i++) {
-      const value = selectedKey.valueList[i];
-      let keyvalue = await this.keyvalueRepository.findOne(value.valueId);
-      keyvalue.latest = false;
-      await this.keyvalueRepository.save(keyvalue);
-
-      let newValue = JSON.parse(JSON.stringify(keyvalue));
-      newValue.id = null;
-      newValue.value = value.value;
-      newValue.commitId = branchMerge.commitId;
-      newValue.latest = true;
-      newValue.modifyTime = time;
-      newValue.mergeId = branchMerge.id;
-      valueList.push(newValue);
-    }
-    await this.keyvalueRepository.save(valueList);
   }
 
   /**

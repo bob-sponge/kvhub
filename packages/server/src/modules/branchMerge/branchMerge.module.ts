@@ -9,12 +9,13 @@ import { Branch } from 'src/entities/Branch';
 import { BranchModule } from '../branch/branch.module';
 import { KeyModule } from 'src/modules/key/key.module';
 import { BranchCommit } from 'src/entities/BranchCommit';
+import { Key } from 'src/entities/Key';
 import { Keyname } from 'src/entities/Keyname';
 import { Keyvalue } from 'src/entities/Keyvalue';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Branch, BranchCommit, BranchMerge, Keyname, Keyvalue, MergeDiffKey, MergeDiffValue]),
+    TypeOrmModule.forFeature([Branch, BranchCommit, BranchMerge, Key, Keyname, Keyvalue, MergeDiffKey, MergeDiffValue]),
     BranchModule,
     KeyModule,
   ],

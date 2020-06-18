@@ -10,6 +10,7 @@ import { Repository, createQueryBuilder, getRepository } from 'typeorm';
 import { ValueDTO } from './dto/ValueDTO';
 import { KeyValueDetailVO } from 'src/vo/KeyValueDetailVO';
 import { ValueVO } from 'src/vo/ValueVO';
+import { CommonConstant, ErrorMessage } from 'src/constant/constant';
 
 @Injectable()
 export class KeyService {
@@ -211,5 +212,23 @@ export class KeyService {
       }
     }
     return result;
+  }
+
+  async delete(id:number){
+    const key = await this.keyRepository.findOne(id);
+    if (null === key || (key.delete !== null && key.delete)) {
+      throw new BadRequestException(ErrorMessage.KEY_NOT_EXIST);
+    }
+    key.delete = true;
+    await this.keyRepository.save(key);
+  }
+
+  async getKeynameByKeyId(keyId:number):Promise<Keyname> | undefined{
+    const keyNameList = await this.keynameRepository.find({where:{keyId}});
+    if (keyNameList === null || keyNameList.length === 0){
+      return undefined;
+    } else {
+      return keyNameList[0];
+    }
   }
 }

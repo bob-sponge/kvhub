@@ -7,9 +7,15 @@ import { ajax } from '@ofm/ajax';
 import { PlusOutlined } from '@ant-design/icons';
 import { columns } from './tableConfig';
 import AddOrEdit from './addOrEdit';
+import { branchMergeListApi } from '../../api/mergeRequest';
 const { Search } = Input;
 
-const MergeRequest = () => {
+interface MergeRequestProps {
+  match: any;
+}
+
+const MergeRequest = (props: MergeRequestProps) => {
+  const { match } = props;
   const [visible, setVisible] = useState<boolean>(false);
   const [mergeRequestList, setMergeRequestList] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -21,30 +27,18 @@ const MergeRequest = () => {
   });
 
   useEffect(() => {
-    getMergeRequest(filter);
+    getMergeRequest();
   }, [filter]);
 
-  const getMergeRequest = (params: any) => {
-    ajax
-      .post('/mergeRequest/all', params)
-      .then(result => {
-        setLoading(false);
-        const {
-          data: {
-            statusCode,
-            data: { total: totalItem, data: source },
-          },
-        } = result;
-        if (statusCode === 0) {
-          setTotal(totalItem);
-          setMergeRequestList(source);
-        }
-      })
-      .catch(error => {
-        if (error) {
-          setLoading(false);
-        }
-      });
+  const getMergeRequest = async () => {
+    const projectId = match.params.projectId;
+    const detail = {
+      projectId,
+      keywrod: filter.content,
+    };
+    const result = await branchMergeListApi(detail);
+    setTotal(result.data);
+    setMergeRequestList(result.data);
   };
 
   const showTotal = () => {
@@ -125,15 +119,19 @@ const MergeRequest = () => {
                 pageSizeOptions: ['10', '20', '50'],
                 onChange: onChange,
                 total,
-                pageSize: filter.size,
-                current: filter.page,
                 onShowSizeChange: onPageChange,
               }}
             />
           </div>
         </Spin>
       </div>
-      <AddOrEdit visible={visible} setVisible={setVisible} getMergeRequest={getMergeRequest} filter={filter} />
+      <AddOrEdit
+        id={match.params.projectId}
+        visible={visible}
+        setVisible={setVisible}
+        getMergeRequest={getMergeRequest}
+        filter={filter}
+      />
     </ContainerMenu>
   );
 };
