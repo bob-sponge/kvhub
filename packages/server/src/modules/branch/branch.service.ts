@@ -218,19 +218,17 @@ export class BranchService {
   async findAllWithPage(page: BranchPage): Promise<PageResult> {
     let pageResult = new PageResult();
     const start: number = (page.page - 1) * page.size;
-    const total: number = await this.branchRepository.count();
-    const data: Branch[] = await this.branchRepository
-      .createQueryBuilder('branch')
-      .where('branch.project_id = :projectId',{projectId:page.projectId})
-      .orderBy('branch.modify_time')
-      .limit(page.size)
-      .offset(start)
-      .getMany();
+    const result = await this.branchRepository.findAndCount({
+      where: { projectId: page.projectId },
+      order: { name: 'ASC' },
+      skip: start,
+      take: page.size,
+    });
 
     pageResult.size = page.size;
     pageResult.page = page.page;
-    pageResult.total = total;
-    pageResult.data = await this.calculateMerge(data);
+    pageResult.total = result[1];
+    pageResult.data = await this.calculateMerge(result[0]);
     return pageResult;
   }
 
@@ -242,18 +240,16 @@ export class BranchService {
     const start: number = (page.page - 1) * page.size;
     let result = new PageResult();
     // 查询不区分大小写
-    const data: Branch[] = await this.branchRepository
-      .createQueryBuilder('branch')
-      .where('branch.name Like :name',{name:'%' + page.content + '%'})
-      .andWhere('branch.project_id = :projectId',{projectId:page.projectId})
-      .orderBy('branch.modify_time')
-      .limit(page.size)
-      .offset(start)
-      .getMany();
-    result.total = data.length;
+    const data = await this.branchRepository.findAndCount({
+      where: { projectId: page.projectId,name: '%' + page.content + '%' },
+      order: { name: 'ASC' },
+      skip: start,
+      take: page.size,
+    });
+    result.total = data[1];
     result.page = page.page;
     result.size = page.size;
-    result.data = await this.calculateMerge(data);
+    result.data = await this.calculateMerge(data[0]);
     return result;
   }
 
@@ -261,7 +257,7 @@ export class BranchService {
    * 获取branch merge参数状态
    * @param data data
    */
-  async calculateMerge(data: Branch[]): Promise<BranchVO[]> {
+  private async calculateMerge(data: Branch[]): Promise<BranchVO[]> {
     // merge table source & target 都不存在
     const mergeResult: BranchMerge[] = await this.branchMergeRepository.find();
     // 获取全部的merge ids
