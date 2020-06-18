@@ -4,7 +4,7 @@ import { Branch } from 'src/entities/Branch';
 import { Repository, DeleteResult } from 'typeorm';
 import { Project } from 'src/entities/Project';
 import { ConfigService } from '@ofm/nestjs-utils';
-import { Page } from 'src/vo/Page';
+import { BranchPage } from 'src/vo/Page';
 import { PageResult } from 'src/vo/PageResult';
 import { BranchMerge } from 'src/entities/BranchMerge';
 import { BranchKey } from 'src/entities/BranchKey';
@@ -213,12 +213,13 @@ export class BranchService {
    * 分页返回branchs
    * @param page page
    */
-  async findAllWithPage(page: Page): Promise<PageResult> {
+  async findAllWithPage(page: BranchPage): Promise<PageResult> {
     let pageResult = new PageResult();
     const start: number = (page.page - 1) * page.size;
     const total: number = await this.branchRepository.count();
     const data: Branch[] = await this.branchRepository
       .createQueryBuilder('branch')
+      .where('branch.project_id = :projectId',{projectId:page.projectId})
       .orderBy('branch.modify_time')
       .limit(page.size)
       .offset(start)
@@ -235,16 +236,14 @@ export class BranchService {
    * 分页模糊查询
    * @param pageSearch pageSearch
    */
-  async findByCondition(page: Page): Promise<PageResult> {
+  async findByCondition(page: BranchPage): Promise<PageResult> {
     const start: number = (page.page - 1) * page.size;
     let result = new PageResult();
     // 查询不区分大小写
     const data: Branch[] = await this.branchRepository
       .createQueryBuilder('branch')
-      .where('branch.name Like :name')
-      .setParameters({
-        name: '%' + page.content + '%',
-      })
+      .where('branch.name Like :name',{name:'%' + page.content + '%'})
+      .andWhere('branch.project_id = :projectId',{projectId:page.projectId})
       .orderBy('branch.modify_time')
       .limit(page.size)
       .offset(start)

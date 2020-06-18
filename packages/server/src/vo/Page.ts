@@ -13,3 +13,9 @@ export class Page {
   @IsString()
   content: string;
 }
+
+export class BranchPage extends Page {
+  @IsInt()
+  @IsNotEmpty()
+  projectId:number;
+}
