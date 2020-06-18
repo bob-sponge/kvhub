@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import * as css from './styles/languageItem.modules.less';
-import { Button, Progress, Popover, Input } from 'antd';
+import { Button, Progress, Popover, Input, message, Popconfirm } from 'antd';
 import { doneColor, processColor, toThousands, getPercent } from './constant';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
-import { namespaceSaveApi, projectLanguageDeleteApi } from '../../api/languages';
+import * as Api from '../../api/languages';
 
-const LanguageItem = ({ item, index, projectView }: any) => {
+const LanguageItem = ({ item, index, projectView, branchId }: any) => {
   const [visible, setVisible] = useState(false);
   const [addNamespaceName, setAddNamespaceName] = useState('');
 
@@ -15,10 +15,11 @@ const LanguageItem = ({ item, index, projectView }: any) => {
 
   const namespaceSave = async () => {
     const detail = { name: addNamespaceName, projectId: item.id, type: 'private' };
-    await namespaceSaveApi(detail);
-    projectView(item.id);
+    const res = await Api.namespaceSaveApi(detail);
+    projectView(branchId);
     setVisible(false);
     setAddNamespaceName('');
+    message.success(res && res.data);
   };
 
   const progressRender = (size: string, translatedKeys: number, totalKeys: number) => {
@@ -51,8 +52,9 @@ const LanguageItem = ({ item, index, projectView }: any) => {
   };
 
   const deleteLanguage = async () => {
-    await projectLanguageDeleteApi(item.id);
-    projectView(item.id);
+    const res = await Api.projectLanguageDeleteApi(item.id);
+    projectView(branchId);
+    message.success(res && res.data);
   };
 
   const AddNamespace = (
@@ -83,11 +85,11 @@ const LanguageItem = ({ item, index, projectView }: any) => {
             {index === 0 && <span>{' (Reference Language)'}</span>}
           </p>
           <div className={css.languageIocnList}>
-            {/* <Popover content={AddNamespace} trigger="click" placement="bottomRight"> */}
-            <Button onClick={deleteLanguage}>
-              <DeleteOutlined />
-            </Button>
-            {/* </Popover> */}
+            <Popconfirm title="Are you sure？" okText="Yes" cancelText="No" onConfirm={deleteLanguage}>
+              <Button>
+                <DeleteOutlined />
+              </Button>
+            </Popconfirm>
             <Popover
               content={AddNamespace}
               trigger="click"

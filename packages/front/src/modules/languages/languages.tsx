@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import ContainerMenu from '../../containerMenu';
 import * as css from './styles/languages.modules.less';
-import { Button, Select } from 'antd';
+import { Button, Select, message } from 'antd';
 import LanguageItem from './languageItem';
 import AddNewLanguage from './addNewLanguage';
-import { projectViewApi, branchListApi, projectLanguageSaveApi } from '../../api/languages';
+import * as Api from '../../api/languages';
 
 const Option = Select.Option;
 
@@ -21,7 +21,7 @@ const Languages = (props: LanguagesProps) => {
 
   const getBranchList = useCallback(async () => {
     const projectId = match.params.projectId;
-    const res = await branchListApi(projectId);
+    const res = await Api.branchListApi(projectId);
     if (res.data) {
       setBranchList(res.data);
       setBranchId(res.data[0] && res.data[0].id);
@@ -31,7 +31,7 @@ const Languages = (props: LanguagesProps) => {
 
   const projectView = useCallback(async (id: string) => {
     const projectId = match.params.projectId;
-    const res = await projectViewApi({
+    const res = await Api.projectViewApi({
       pid: projectId,
       id,
     });
@@ -45,7 +45,6 @@ const Languages = (props: LanguagesProps) => {
   }, [getBranchList]);
 
   const changeModal = async (detail?: any) => {
-    window.console.log(detail);
     setVisible(!visible);
     if (detail) {
       const projectId = match.params.projectId;
@@ -53,8 +52,9 @@ const Languages = (props: LanguagesProps) => {
         // id: branchId,
         projectId: parseInt(projectId),
       });
-      await projectLanguageSaveApi(content);
+      const res = await Api.projectLanguageSaveApi(content);
       projectView(branchId);
+      message.success(res && res.data);
     }
   };
 
@@ -89,7 +89,9 @@ const Languages = (props: LanguagesProps) => {
           <div className={css.languagesContent}>
             {languageList &&
               languageList.map((item: any, index) => {
-                return <LanguageItem item={item} index={index} key={item.id} projectView={projectView} />;
+                return (
+                  <LanguageItem branchId={branchId} item={item} index={index} key={item.id} projectView={projectView} />
+                );
               })}
           </div>
         </div>
