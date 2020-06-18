@@ -78,7 +78,11 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
             {project &&
               project.length > 0 &&
               project.map(item => {
-                return <Select.Option value={item.id}>{item.name}</Select.Option>;
+                return (
+                  <Select.Option key={item.id} value={item.id}>
+                    {item.name}
+                  </Select.Option>
+                );
               })}
           </Select>
         </Form.Item>
