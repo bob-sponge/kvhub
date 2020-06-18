@@ -23,6 +23,7 @@ import { Key } from 'src/entities/Key';
 import { Keyname } from 'src/entities/Keyname';
 import { Keyvalue } from 'src/entities/Keyvalue';
 import { BranchKey } from 'src/entities/BranchKey';
+import { Namespace } from 'src/entities/Namespace';
 
 @Injectable()
 export class BranchMergeService {
@@ -45,6 +46,8 @@ export class BranchMergeService {
     private readonly keynameRepository: Repository<Keyname>,
     @InjectRepository(Keyvalue)
     private readonly keyvalueRepository: Repository<Keyvalue>,
+    @InjectRepository(Namespace)
+    private readonly namespaceRepository: Repository<Namespace>,
     private readonly branchService: BranchService,
     private readonly keyService: KeyService,
   ) {}
@@ -98,39 +101,41 @@ export class BranchMergeService {
       branchIdList.push(branch.id);
     });
 
-    // 拼接分支id后，通过sql查找到项目的分支merge记录，source 和 target 都需要进行查找
-    const branchMergeList: BranchMerge[] = await this.branchMergeRepository.find({
-      where: [{ sourceBranchId: In(branchIdList) }, { targetBranchId: In(branchIdList) }],
-      order: { id: 'DESC' },
-    });
+    if (branchIdList.length > 0) {
+      // 拼接分支id后，通过sql查找到项目的分支merge记录，source 和 target 都需要进行查找
+      const branchMergeList: BranchMerge[] = await this.branchMergeRepository.find({
+        where: [{ sourceBranchId: In(branchIdList) }, { targetBranchId: In(branchIdList) }],
+        order: { id: 'DESC' },
+      });
 
-    // 得到记录后，按照source和target分支id获取对应的分支名称
-    for (let i = 0; i < branchMergeList.length; i++) {
-      let branchMergeVO = new BranchMergeVO();
-      const branchMerge = branchMergeList[i];
+      // 得到记录后，按照source和target分支id获取对应的分支名称
+      for (let i = 0; i < branchMergeList.length; i++) {
+        let branchMergeVO = new BranchMergeVO();
+        const branchMerge = branchMergeList[i];
 
-      branchMergeVO.id = branchMerge.id;
-      branchMergeVO.sourceBranchId = branchMerge.sourceBranchId;
-      branchMergeVO.targetBranchId = branchMerge.targetBranchId;
-      branchMergeVO.type = branchMerge.type;
-      branchMergeVO.crosMerge = branchMerge.crosMerge;
-      branchMergeVO.commitId = branchMerge.commitId;
-      branchMergeVO.modifier = branchMerge.modifier;
-      branchMergeVO.modifyTime = branchMerge.modifyTime;
+        branchMergeVO.id = branchMerge.id;
+        branchMergeVO.sourceBranchId = branchMerge.sourceBranchId;
+        branchMergeVO.targetBranchId = branchMerge.targetBranchId;
+        branchMergeVO.type = branchMerge.type;
+        branchMergeVO.crosMerge = branchMerge.crosMerge;
+        branchMergeVO.commitId = branchMerge.commitId;
+        branchMergeVO.modifier = branchMerge.modifier;
+        branchMergeVO.modifyTime = branchMerge.modifyTime;
 
-      for (let j = 0; j < branchAllList.length; j++) {
-        const branch = branchAllList[j];
-        if (branch.id === branchMergeVO.sourceBranchId) {
-          branchMergeVO.sourceBranchName = branch.name;
+        for (let j = 0; j < branchAllList.length; j++) {
+          const branch = branchAllList[j];
+          if (branch.id === branchMergeVO.sourceBranchId) {
+            branchMergeVO.sourceBranchName = branch.name;
+          }
+          if (branch.id === branchMergeVO.targetBranchId) {
+            branchMergeVO.targetBranchName = branch.name;
+          }
+          if (branchMergeVO.sourceBranchName && branchMergeVO.targetBranchName) {
+            break;
+          }
         }
-        if (branch.id === branchMergeVO.targetBranchId) {
-          branchMergeVO.targetBranchName = branch.name;
-        }
-        if (branchMergeVO.sourceBranchName && branchMergeVO.targetBranchName) {
-          break;
-        }
+        result.push(branchMergeVO);
       }
-      result.push(branchMergeVO);
     }
     return result;
   }
@@ -160,6 +165,13 @@ export class BranchMergeService {
       vo.target = await this.getMergeDiffInfo(vo.mergeDiffKey.id, targetBranchId, vo.mergeDiffKey.key);
       result.push(vo);
     }
+    result.sort((a, b) => {
+      if (a.source.namespaceName !== b.source.namespaceName) {
+        return a.source.keyName.localeCompare(b.source.keyName);
+      } else {
+        return a.source.namespaceName.localeCompare(b.source.namespaceName);
+      }
+    });
     return result;
   }
   private async getMergeDiffInfo(
@@ -175,6 +187,11 @@ export class BranchMergeService {
     } else {
       vo.keyId = key.id;
       vo.branchId = branchId;
+      vo.namespaceId = key.namespaceId;
+      const namespace = await this.namespaceRepository.findOne(vo.namespaceId);
+      if (namespace !== undefined && !namespace.delete) {
+        vo.namespaceName = namespace.name;
+      }
     }
 
     // key -> keyname
@@ -557,8 +574,10 @@ export class BranchMergeService {
       }
       await this.keyvalueRepository.save(valueList);
 
-      const branchKeys = await this.branchKeyRepository.find({where:{branchId:target.branchId,keyId:target.keyId}});
-      if (branchKeys !== null && branchKeys.length > 0){
+      const branchKeys = await this.branchKeyRepository.find({
+        where: { branchId: target.branchId, keyId: target.keyId },
+      });
+      if (branchKeys !== null && branchKeys.length > 0) {
         const bk = branchKeys[0];
         bk.delete = true;
         await this.branchKeyRepository.save(bk);
@@ -613,8 +632,10 @@ export class BranchMergeService {
       }
       await this.keyvalueRepository.save(valueList);
 
-      const branchKeys = await this.branchKeyRepository.find({where:{branchId:source.branchId,keyId:source.keyId}});
-      if (branchKeys !== null && branchKeys.length > 0){
+      const branchKeys = await this.branchKeyRepository.find({
+        where: { branchId: source.branchId, keyId: source.keyId },
+      });
+      if (branchKeys !== null && branchKeys.length > 0) {
         const bk = branchKeys[0];
         bk.delete = true;
         await this.branchKeyRepository.save(bk);

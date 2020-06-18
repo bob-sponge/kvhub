@@ -10,6 +10,7 @@ import { BranchModule } from '../branch/branch.module';
 import { KeyModule } from 'src/modules/key/key.module';
 import { BranchCommit } from 'src/entities/BranchCommit';
 import { BranchKey } from 'src/entities/BranchKey';
+import { Namespace } from 'src/entities/Namespace';
 import { Key } from 'src/entities/Key';
 import { Keyname } from 'src/entities/Keyname';
 import { Keyvalue } from 'src/entities/Keyvalue';
@@ -26,6 +27,7 @@ import { Keyvalue } from 'src/entities/Keyvalue';
       Keyvalue,
       MergeDiffKey,
       MergeDiffValue,
+      Namespace
     ]),
     BranchModule,
     KeyModule,
