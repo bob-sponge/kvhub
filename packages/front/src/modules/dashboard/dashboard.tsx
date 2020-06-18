@@ -32,7 +32,7 @@ const Dashboard: React.SFC = () => {
   };
 
   const handleClick = (id: any) => {
-    browserHistory.push(`/branch/${id}`);
+    browserHistory.push(`/languages/${id}`);
   };
 
   return (
