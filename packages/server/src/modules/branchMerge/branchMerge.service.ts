@@ -22,6 +22,7 @@ import { SelectedKeyDTO, SelectedValueDTO } from './dto/SelectMergeDTO';
 import { Key } from 'src/entities/Key';
 import { Keyname } from 'src/entities/Keyname';
 import { Keyvalue } from 'src/entities/Keyvalue';
+import { BranchKey } from 'src/entities/BranchKey';
 
 @Injectable()
 export class BranchMergeService {
@@ -36,6 +37,8 @@ export class BranchMergeService {
     private readonly mergeDiffValueRepository: Repository<MergeDiffValue>,
     @InjectRepository(BranchCommit)
     private readonly branchCommitRepository: Repository<BranchCommit>,
+    @InjectRepository(BranchKey)
+    private readonly branchKeyRepository: Repository<BranchKey>,
     @InjectRepository(Key)
     private readonly keyRepository: Repository<Key>,
     @InjectRepository(Keyname)
@@ -554,11 +557,12 @@ export class BranchMergeService {
       }
       await this.keyvalueRepository.save(valueList);
 
-      await this.keyService.delete(target.keyId);
-      // todo keyname keyvalue need to delete????
-      // await this.keynameRepository.delete(target.keyNameId);
-      // let deleteIdList : number[] = [];
-      // await this.keyvalueRepository.delete(deleteIdList);
+      const branchKeys = await this.branchKeyRepository.find({where:{branchId:target.branchId,keyId:target.keyId}});
+      if (branchKeys !== null && branchKeys.length > 0){
+        const bk = branchKeys[0];
+        bk.delete = true;
+        await this.branchKeyRepository.save(bk);
+      }
     } else if (!sourceMaster && targetMaster) {
       // branch1 -> master
       // save keyname
@@ -609,7 +613,12 @@ export class BranchMergeService {
       }
       await this.keyvalueRepository.save(valueList);
 
-      await this.keyService.delete(source.keyId);
+      const branchKeys = await this.branchKeyRepository.find({where:{branchId:source.branchId,keyId:source.keyId}});
+      if (branchKeys !== null && branchKeys.length > 0){
+        const bk = branchKeys[0];
+        bk.delete = true;
+        await this.branchKeyRepository.save(bk);
+      }
     } else {
       // branch1 -> branch2
       // save keyname

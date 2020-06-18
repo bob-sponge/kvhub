@@ -1,7 +1,7 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Branch } from 'src/entities/Branch';
-import { Repository, DeleteResult } from 'typeorm';
+import { Repository, DeleteResult, Like } from 'typeorm';
 import { Project } from 'src/entities/Project';
 import { ConfigService } from '@ofm/nestjs-utils';
 import { BranchPage } from 'src/vo/Page';
@@ -59,7 +59,7 @@ export class BranchService {
     const ids = [compareVO.source, compareVO.destination];
     const branchs: Branch[] = await this.branchRepository.findByIds(ids);
     if (branchs.length !== 2) {
-      throw new BadRequestException('branchId is not exist');
+      throw new BadRequestException(ErrorMessage.BRANCH_NOT_EXIST);
     }
     let source = new CompareBranchVO();
     let destination = new CompareBranchVO();
@@ -241,7 +241,7 @@ export class BranchService {
     let result = new PageResult();
     // 查询不区分大小写
     const data = await this.branchRepository.findAndCount({
-      where: { projectId: page.projectId,name: '%' + page.content + '%' },
+      where: { projectId: page.projectId,name: Like('%' + page.content + '%') },
       order: { name: 'ASC' },
       skip: start,
       take: page.size,
@@ -312,14 +312,7 @@ export class BranchService {
    * @param projectId
    */
   async findBranchByProjectIdAndKeyword(projectId: number, keyword: string): Promise<Branch[]> {
-    return await this.branchRepository
-      .createQueryBuilder('branch')
-      .where('branch.name Like :name and branch.project_id = :projectId')
-      .setParameters({
-        projectId,
-        name: '%' + keyword + '%',
-      })
-      .getMany();
+    return await this.branchRepository.find({where:{name:Like('%' + keyword + '%'),projectId}});
   }
 
   /**
