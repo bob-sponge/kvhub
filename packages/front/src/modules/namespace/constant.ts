@@ -182,6 +182,10 @@ export const geolocation = {
   ZM: 'Zambia',
 };
 
+export const EDIT = 'edit';
+export const RENAME = 'rename';
+export const DELETE = 'delete';
+
 export interface LanguageValue {
   keyValue: string;
   languageId: number;
@@ -209,4 +213,9 @@ export interface ConditionReq {
   page: number;
   pageSize: number;
   condition: string;
+}
+
+export interface ModifyKeyReq {
+  keyvalue: string;
+  valueId: number;
 }

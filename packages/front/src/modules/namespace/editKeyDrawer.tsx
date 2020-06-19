@@ -7,9 +7,11 @@ const { TextArea } = Input;
 interface EditKeyDrawerProps {
   onClose: Function;
   visible: boolean;
+  currentKeyData: any;
 }
 
-const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({ onClose, visible }: EditKeyDrawerProps) => {
+const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({ onClose, visible, currentKeyData }: EditKeyDrawerProps) => {
+  window.console.log('currentKeyData', currentKeyData);
   return (
     <div>
       <Drawer

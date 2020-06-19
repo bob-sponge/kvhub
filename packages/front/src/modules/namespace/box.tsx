@@ -1,7 +1,8 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Input, Button, Popover } from 'antd';
-import { ItemKey } from './constant';
+import { ItemKey, ModifyKeyReq, EDIT, RENAME, DELETE } from './constant';
 import EditKeyDrawer from './editKeyDrawer';
+import * as Api from '../../api/namespace';
 import * as css from './styles/namespace.modules.less';
 import { KeyOutlined, SettingOutlined, SwapRightOutlined } from '@ant-design/icons';
 
@@ -9,18 +10,43 @@ const { TextArea } = Input;
 
 interface LanguageBoxProps {
   keyData: ItemKey;
+  refreshList: Function;
 }
 
-const LanguageBox: React.FC<LanguageBoxProps> = ({ keyData }: LanguageBoxProps) => {
+const LanguageBox: React.FC<LanguageBoxProps> = ({ keyData, refreshList }: LanguageBoxProps) => {
   const [showDrawer, setShowDrawer] = useState<boolean>(false);
+  const [visible, setVisible] = useState<boolean>(false);
   const [currentKeyData, setCurrentKeyData] = useState<ItemKey>(keyData);
+
+  const handleKeyOperate = useCallback(async flag => {
+    switch (flag) {
+      case EDIT:
+        setShowDrawer(true);
+        break;
+      case RENAME:
+        setShowDrawer(true);
+        break;
+      case DELETE:
+        await Api.deleteKey(keyData.keyId);
+        setVisible(false);
+        break;
+      default:
+    }
+    refreshList();
+  }, []);
 
   const settingContent = useCallback(() => {
     const content = (
-      <div>
-        <p>Edit Key</p>
-        <p>Rename Key</p>
-        <p>Delete Key</p>
+      <div onMouseLeave={() => setVisible(false)}>
+        <p className={css.settingOperate} onClick={() => handleKeyOperate(EDIT)}>
+          Edit Key
+        </p>
+        <p className={css.settingOperate} onClick={() => handleKeyOperate(RENAME)}>
+          Rename Key
+        </p>
+        <p className={css.settingOperate} onClick={() => handleKeyOperate(DELETE)}>
+          Delete Key
+        </p>
       </div>
     );
     return content;
@@ -34,7 +60,17 @@ const LanguageBox: React.FC<LanguageBoxProps> = ({ keyData }: LanguageBoxProps) 
     setCurrentKeyData(keyData);
   }, [keyData]);
 
-  const handleSave = useCallback(() => {}, []);
+  const handleSave = useCallback(async () => {
+    const targetLanguageValue = currentKeyData.targetLanguageValue;
+    const modifyKeyReq: ModifyKeyReq = {
+      keyvalue: targetLanguageValue.keyValue,
+      valueId: targetLanguageValue.valueId,
+    };
+    const res: any = await Api.modifyValue(targetLanguageValue.languageId, currentKeyData.keyId, modifyKeyReq);
+    if (res.statusCode === 0) {
+      refreshList();
+    }
+  }, [currentKeyData]);
 
   const handleChange = useCallback(
     e => {
@@ -62,8 +98,10 @@ const LanguageBox: React.FC<LanguageBoxProps> = ({ keyData }: LanguageBoxProps) 
             <KeyOutlined />
             <label className={css.boxTitle}>{currentKeyData ? currentKeyData.keyName : ''}</label>
           </div>
-          <Popover placement="bottomRight" content={settingContent} trigger="click">
-            <Button className={css.settingIcon} icon={<SettingOutlined />} />
+          <Popover placement="bottomRight" visible={visible} content={settingContent}>
+            <div onClick={() => setVisible(true)}>
+              <Button className={css.settingIcon} icon={<SettingOutlined />} />
+            </div>
           </Popover>
         </div>
         <div className={css.language}>
@@ -104,7 +142,9 @@ const LanguageBox: React.FC<LanguageBoxProps> = ({ keyData }: LanguageBoxProps) 
           </div>
         )}
       </div>
-      <EditKeyDrawer visible={showDrawer} onClose={() => setShowDrawer(false)} />
+      {showDrawer && (
+        <EditKeyDrawer currentKeyData={currentKeyData} visible={showDrawer} onClose={() => setShowDrawer(false)} />
+      )}
     </>
   );
 };

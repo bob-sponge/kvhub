@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import LanguageBox from './box';
-import { ajax } from '@ofm/ajax';
+import Container from '../../container';
+import * as Api from '../../api/namespace';
 import * as css from './styles/namespace.modules.less';
 import { Button, Select, Radio, Input, Pagination } from 'antd';
 import { ItemKey, LanguageItem, ConditionReq } from './constant';
@@ -9,15 +10,16 @@ import { DeleteFilled, ArrowLeftOutlined, PlusOutlined } from '@ant-design/icons
 const { Option } = Select;
 const { Search } = Input;
 
-const PREFIX_URL = 'http://localhost:5000';
-
 const NamespaceView: React.FC = () => {
+  const paths = window.location.pathname.split('/');
+  const namespaceId = parseInt(paths[2]);
+  const languageId = parseInt(paths[3]);
   const [keys, setKeys] = useState<Array<any>>([]);
   const [languages, setLanguages] = useState<Array<any>>([]);
   const [filter, setFilter] = useState<ConditionReq>({
-    namespaceId: 1,
-    referenceLanguageId: 1,
-    targetLanguageId: 2,
+    namespaceId: namespaceId,
+    referenceLanguageId: languageId,
+    targetLanguageId: 0,
     KeyTranslateProgressStatus: 'all',
     page: 1,
     pageSize: 10,
@@ -28,20 +30,25 @@ const NamespaceView: React.FC = () => {
     window.console.log(current, pageSize);
   }, []);
 
-  const fetchData = useCallback(async () => {
-    const namespaceId = 1;
-    const languagesRes = await ajax.get(`${PREFIX_URL}/namespace/view/${namespaceId}/languages`);
-    setLanguages(languagesRes.data.data);
-    const keyRes = await ajax.post(`${PREFIX_URL}/namespace/view/keys`, filter);
-    setKeys(keyRes.data.data.keys);
+  const getList = useCallback(async filterData => {
+    const keyRes = await Api.getKeys(filterData);
+    setKeys(keyRes.data.keys);
   }, []);
+
+  const fetchData = useCallback(async () => {
+    const languagesRes = await Api.getLanguages(namespaceId);
+    setLanguages(languagesRes.data);
+    if (languagesRes.data && languagesRes.data.length > 0) {
+      filter.targetLanguageId = languagesRes.data[0].id;
+    }
+    getList(filter);
+  }, [filter]);
 
   const handleConditionChange = useCallback(
     async e => {
       filter.condition = e.target.value;
-      const keyRes = await ajax.post(`${PREFIX_URL}/namespace/view/keys`, filter);
       setFilter(filter);
-      setKeys(keyRes.data.data.keys);
+      getList(filter);
     },
     [filter],
   );
@@ -49,19 +56,29 @@ const NamespaceView: React.FC = () => {
   const handleRadioChange = useCallback(
     async e => {
       filter.KeyTranslateProgressStatus = e.target.value;
-      const keyRes = await ajax.post(`${PREFIX_URL}/namespace/view/keys`, filter);
       setFilter(filter);
-      setKeys(keyRes.data.data.keys);
+      getList(filter);
     },
     [filter],
   );
+
+  const handleLangChange = useCallback(async value => {
+    filter.targetLanguageId = value;
+    const keyRes = await Api.getKeys(filter);
+    setFilter(filter);
+    setKeys(keyRes.data.keys);
+  }, []);
+
+  const handleRefreshList = useCallback(() => {
+    getList(filter);
+  }, [filter]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
   return (
-    <>
+    <Container>
       <div className={css.title}>
         <div>
           <span>Namespace-1</span>
@@ -81,7 +98,7 @@ const NamespaceView: React.FC = () => {
       <div className={css.title}>
         <div>
           {languages.length > 0 && (
-            <Select defaultValue={languages[0].id} style={{ width: '129px' }}>
+            <Select defaultValue={languages[0].id} style={{ width: '129px' }} onChange={handleLangChange}>
               {languages.map((lang: LanguageItem, index: number) => (
                 <Option key={index} value={lang.id}>
                   {lang.name}
@@ -110,15 +127,15 @@ const NamespaceView: React.FC = () => {
           keys.map((item: ItemKey, index: number) => {
             const referLang = languages.find(t => t.id === item.refreLanguageValue.languageId);
             const targetLang = languages.find(t => t.id === item.targetLanguageValue.languageId);
-            Object.assign(item.refreLanguageValue, { languageName: referLang.name });
-            Object.assign(item.targetLanguageValue, { languageName: targetLang.name });
-            return <LanguageBox key={index} keyData={item} />;
+            Object.assign(item.refreLanguageValue, { languageName: referLang ? referLang.name : '' });
+            Object.assign(item.targetLanguageValue, { languageName: targetLang ? targetLang.name : '' });
+            return <LanguageBox key={index} keyData={item} refreshList={handleRefreshList} />;
           })}
       </div>
       <div className={css.pagenation}>
         <Pagination showSizeChanger onShowSizeChange={onShowSizeChange} defaultCurrent={1} total={keys.length} />
       </div>
-    </>
+    </Container>
   );
 };
 
