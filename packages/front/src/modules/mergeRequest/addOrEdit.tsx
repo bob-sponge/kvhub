@@ -41,6 +41,7 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
           sourceBranchId: source,
           targetBranchId: destination,
           crosMerge,
+          projectId: id,
         };
         await MergeSApi.branchMergeSaveApi(detail);
         getMergeRequest();

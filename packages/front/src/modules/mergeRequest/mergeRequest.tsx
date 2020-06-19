@@ -7,6 +7,7 @@ import { PlusOutlined } from '@ant-design/icons';
 import { columns } from './tableConfig';
 import AddOrEdit from './addOrEdit';
 import * as Api from '../../api/mergeRequest';
+
 const { Search } = Input;
 
 interface MergeRequestProps {
@@ -15,6 +16,7 @@ interface MergeRequestProps {
 
 const MergeRequest = (props: MergeRequestProps) => {
   const { match } = props;
+  const projectId = match.params.projectId;
   const [visible, setVisible] = useState<boolean>(false);
   const [mergeRequestList, setMergeRequestList] = useState<any[]>([]);
   const [filter, setFilter] = useState('');
@@ -24,7 +26,6 @@ const MergeRequest = (props: MergeRequestProps) => {
   }, [filter]);
 
   const getMergeRequest = async () => {
-    const projectId = match.params.projectId;
     const detail = {
       projectId,
       keywrod: filter,
@@ -34,7 +35,7 @@ const MergeRequest = (props: MergeRequestProps) => {
   };
 
   const onMerge = (record: any) => {
-    history.push(`/mergeRequest/merge/${record.id}`);
+    history.push(`/mergeRequest/detail/${record.id}`);
   };
 
   const onResufe = async (record: any) => {
@@ -45,6 +46,10 @@ const MergeRequest = (props: MergeRequestProps) => {
 
   const onSearch = (value: string) => {
     setFilter(value);
+  };
+
+  const goToBranchCompare = () => {
+    history.push(`/branch/compare/${projectId}`);
   };
 
   return (
@@ -58,7 +63,7 @@ const MergeRequest = (props: MergeRequestProps) => {
               onSearch={value => onSearch(value)}
               style={{ width: 264, marginRight: 16 }}
             />
-            <Button type="primary" icon={<PlusOutlined />} onClick={() => setVisible(true)}>
+            <Button type="primary" icon={<PlusOutlined />} onClick={goToBranchCompare}>
               Create Merge Request
             </Button>
           </div>

@@ -3,7 +3,9 @@ import * as css from '../styles/merge.modules.less';
 import { Button } from 'antd';
 import { KeyOutlined, EditOutlined } from '@ant-design/icons';
 
-const DiffItem = () => {
+const DiffItem = ({ item }: any) => {
+  window.console.log(item);
+
   return (
     <div className={css.diffItem}>
       <div className={css.itemList}>
