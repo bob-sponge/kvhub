@@ -211,10 +211,10 @@ export class KeyService {
             const v = value[j];
             const language = await this.languageRepository.findOne(v.languageId);
             let languageName = CommonConstant.STRING_BLANK;
-            if (language !== undefined ){
+            if (language !== undefined) {
               languageName = language.name;
             }
-            valueList.push({ valueId: v.id, value: v.value, languageId: v.languageId,languageName });
+            valueList.push({ valueId: v.id, value: v.value, languageId: v.languageId, languageName });
           }
           detail.valueList = valueList;
         } else {
