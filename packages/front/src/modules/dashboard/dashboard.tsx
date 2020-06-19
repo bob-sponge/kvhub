@@ -59,7 +59,9 @@ const Dashboard: React.SFC = () => {
                 return (
                   <div className={css.cardWapper} key={index} onClick={() => handleClick(item.id)}>
                     <div className={css.cardList}>
-                      <div className={css.cardTitle}>{item.name}</div>
+                      <div className={css.cardTitle} style={{ WebkitBoxOrient: 'vertical' }} title={item.name}>
+                        {item.name}
+                      </div>
                       <div className={css.cardTranslate}>
                         <div className={css.keys}>
                           <div className={css.keysCurrent} style={{ color: isDone ? doneColor : processColor }}>
