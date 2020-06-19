@@ -169,14 +169,28 @@ export class BranchMergeService {
       result.push(vo);
     }
     result.sort((a, b) => {
-      let keyName = CommonConstant.STRING_BLANK;
-      if (a.source !== null && a.source !== undefined) {
-        keyName = a.source.keyName;
+      let sortNameA = CommonConstant.STRING_BLANK;
+      let sortNameB = CommonConstant.STRING_BLANK;
+      let sourceAExist = false;
+      let sourceBExist = false;
+      if (a.source !== null && a.source !== undefined && a.source.namespaceName !== undefined) {
+        sourceAExist = true;
+        sortNameA = a.source.namespaceName;
       }
-      if (a.source.namespaceName !== b.source.namespaceName) {
-        return a.source.keyName.localeCompare(b.source.keyName);
+      if (b.source !== null && b.source !== undefined && b.source.namespaceName !== undefined) {
+        sourceBExist = true;
+        sortNameB = b.source.namespaceName;
+      }
+      if (sortNameA !== sortNameB) {
+        if (sourceAExist){
+          sortNameA = a.source.keyName;
+        }
+        if (sourceBExist){
+          sortNameB = b.source.keyName;
+        }
+        return sortNameA.localeCompare(sortNameB);
       } else {
-        return a.source.namespaceName.localeCompare(b.source.namespaceName);
+        return sortNameA.localeCompare(sortNameB);
       }
     });
     return result;

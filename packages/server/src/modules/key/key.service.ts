@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable,Inject,forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Branch } from 'src/entities/Branch';
 import { Key } from 'src/entities/Key';
@@ -18,6 +18,7 @@ export class KeyService {
     @InjectRepository(Key) private readonly keyRepository: Repository<Key>,
     @InjectRepository(Keyname) private readonly keynameRepository: Repository<Keyname>,
     @InjectRepository(Keyvalue) private readonly keyvalueRepository: Repository<Keyvalue>,
+    @Inject(forwardRef(() => BranchService))
     private readonly branchService: BranchService,
   ) {}
 
@@ -193,6 +194,7 @@ export class KeyService {
         const key = keyList[i];
         detail.keyId = key.id;
         detail.keyActualId = key.actualId;
+        detail.namespaceId = key.namespaceId;
 
         const keyName = await this.keynameRepository.find({ keyId: detail.keyId });
         if (keyName !== null && keyName.length > 0) {
