@@ -226,7 +226,13 @@ export class NamespaceService {
     }
   }
 
-  async editKeyValueOnlanguage(branchId: number, languageId: number, keyId: number, keyvalue: string, valueId: number) {
+  async editKeyValueOnlanguage(
+    branchId: number,
+    languageId: number,
+    keyId: number,
+    keyvalue: string,
+    valueId: number | undefined,
+  ) {
     const logger = Log4js.getLogger();
     logger.level = 'INFO';
     logger.info(languageId, keyId, keyvalue);
@@ -235,10 +241,10 @@ export class NamespaceService {
     const branchMergeList: BranchMerge[] = await this.branchMergeRepository.find({
       where: [
         { sourceBranchId: branchId, type: In([CommonConstant.MERGE_TYPE_CREATED, CommonConstant.MERGE_TYPE_MERGING]) },
-        { targetBranchId: branchId, type: In([CommonConstant.MERGE_TYPE_CREATED, CommonConstant.MERGE_TYPE_MERGING])  },
-      ]
+        { targetBranchId: branchId, type: In([CommonConstant.MERGE_TYPE_CREATED, CommonConstant.MERGE_TYPE_MERGING]) },
+      ],
     });
-    if(branchMergeList !== null && branchMergeList.length > 0){
+    if (branchMergeList !== null && branchMergeList.length > 0) {
       throw new BadRequestException(ErrorMessage.BRANCH_IS_MERGING);
     }
 
@@ -252,14 +258,16 @@ export class NamespaceService {
     branchCommit.commitTime = new Date();
     await this.branchCommitRepository.save(branchCommit);
 
-    const value = await this.keyvalueRepository.findOne(valueId);
-    if (value !== undefined){
-      if (!value.latest){
-        throw new BadRequestException(ErrorMessage.VALUE_CHANGED);
-      } else {
-        value.latest = false;
-        value.midifyTime = new Date();
-        await this.keyvalueRepository.save(value);
+    if (valueId !== undefined) {
+      const value = await this.keyvalueRepository.findOne(valueId);
+      if (value !== undefined) {
+        if (!value.latest) {
+          throw new BadRequestException(ErrorMessage.VALUE_CHANGED);
+        } else {
+          value.latest = false;
+          value.midifyTime = new Date();
+          await this.keyvalueRepository.save(value);
+        }
       }
     }
 
