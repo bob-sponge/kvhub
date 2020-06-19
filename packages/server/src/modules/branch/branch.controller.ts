@@ -38,10 +38,7 @@ export class BranchController {
   @Post('/all')
   @UsePipes(new ValidationPipe())
   async findBranchList(@Body() page: BranchPage): Promise<ResponseBody> {
-    if (page.content === '') {
-      return ResponseBody.okWithData(await this.branchService.findAllWithPage(page));
-    }
-    return ResponseBody.okWithData(await this.branchService.findByCondition(page));
+    return ResponseBody.okWithData(await this.branchService.findAllWithPage(page));
   }
 
   /**

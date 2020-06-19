@@ -5,5 +5,7 @@ export class MergeDiffShowVO {
   keyNameId:number;
   keyName: string;
   branchId: number;
+  namespaceId:number;
+  namespaceName:string;
   valueList: MergeDiffValueShowVO[];
 }

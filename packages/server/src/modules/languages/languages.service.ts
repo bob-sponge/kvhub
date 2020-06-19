@@ -12,6 +12,6 @@ export class LanguagesService {
   }
 
   async findOne(id: number): Promise<boolean> {
-    return (await this.languagesRepository.findOne({ id: id })) === undefined;
+    return (await this.languagesRepository.findOne({ id })) === undefined;
   }
 }

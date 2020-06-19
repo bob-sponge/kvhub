@@ -1,6 +1,6 @@
-export class ValueVO {
+export class CompareValueVO {
   valueId: number;
   value: string;
   languageId: number;
-  languageName: string;
+  language: string;
 }

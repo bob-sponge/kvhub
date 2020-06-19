@@ -1,6 +1,5 @@
-import { KeyVO } from './KeyVO';
-
+import { CompareKeyVO } from './CompareKeyVO';
 export class CompareBranchVO {
-  id: number;
-  keys: KeyVO[];
+  source:CompareKeyVO;
+  target:CompareKeyVO;
 }
