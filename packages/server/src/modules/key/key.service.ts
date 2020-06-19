@@ -1,9 +1,10 @@
-import { BadRequestException, Injectable,Inject,forwardRef } from '@nestjs/common';
+import { BadRequestException, Injectable, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Branch } from 'src/entities/Branch';
 import { Key } from 'src/entities/Key';
 import { Keyname } from 'src/entities/Keyname';
 import { Keyvalue } from 'src/entities/Keyvalue';
+import { Language } from 'src/entities/Language';
 import { BranchService } from 'src/modules/branch/branch.service';
 import { KeyInfoDto } from 'src/modules/key/dto/KeyInfoDTO';
 import { Repository, getRepository } from 'typeorm';
@@ -18,6 +19,7 @@ export class KeyService {
     @InjectRepository(Key) private readonly keyRepository: Repository<Key>,
     @InjectRepository(Keyname) private readonly keynameRepository: Repository<Keyname>,
     @InjectRepository(Keyvalue) private readonly keyvalueRepository: Repository<Keyvalue>,
+    @InjectRepository(Language) private readonly languageRepository: Repository<Language>,
     @Inject(forwardRef(() => BranchService))
     private readonly branchService: BranchService,
   ) {}
@@ -76,20 +78,22 @@ export class KeyService {
       masterBranch = branch;
     }
     let keyList: Key[] = [];
-    keyList = await getRepository(Key).createQueryBuilder("key")
-    .leftJoinAndSelect("branch_key","bk","bk.key_id = key.id")
-    .where("key.actual_id = :actualId and bk.branch_id = :branchId",{actualId,branchId:branch.id})
-    .printSql()
-    .getMany();
+    keyList = await getRepository(Key)
+      .createQueryBuilder('key')
+      .leftJoinAndSelect('branch_key', 'bk', 'bk.key_id = key.id')
+      .where('key.actual_id = :actualId and bk.branch_id = :branchId', { actualId, branchId: branch.id })
+      .printSql()
+      .getMany();
     if (keyList === null || keyList.length === 0) {
       if (branch.master !== null && branch.master) {
         return undefined;
       } else {
-        keyList = await getRepository(Key).createQueryBuilder("key")
-        .leftJoinAndSelect("branch_key","bk","bk.key_id = key.id")
-        .where("key.actual_id = :actualId and bk.branch_id = :branchId",{actualId,branchId:masterBranch.id})
-        .printSql()
-        .getMany();
+        keyList = await getRepository(Key)
+          .createQueryBuilder('key')
+          .leftJoinAndSelect('branch_key', 'bk', 'bk.key_id = key.id')
+          .where('key.actual_id = :actualId and bk.branch_id = :branchId', { actualId, branchId: masterBranch.id })
+          .printSql()
+          .getMany();
         if (keyList === null || keyList.length === 0) {
           return undefined;
         }
@@ -132,7 +136,7 @@ export class KeyService {
         ' from keyvalue v left join language l on v.language_id = l.id where v.id = ' +
         id,
     );
-    if(valueDTO !== null && valueDTO.length > 0){
+    if (valueDTO !== null && valueDTO.length > 0) {
       return valueDTO[0];
     } else {
       return undefined;
@@ -203,9 +207,15 @@ export class KeyService {
         let valueList: ValueVO[] = [];
         const value = await this.keyvalueRepository.find({ keyId: detail.keyId, latest: true });
         if (value !== null && value.length > 0) {
-          value.forEach(v => {
-            valueList.push({ valueId: v.id, value: v.value, languageId: v.languageId });
-          });
+          for (let j = 0; j < value.length; j++) {
+            const v = value[j];
+            const language = await this.languageRepository.findOne(v.languageId);
+            let languageName = CommonConstant.STRING_BLANK;
+            if (language !== undefined ){
+              languageName = language.name;
+            }
+            valueList.push({ valueId: v.id, value: v.value, languageId: v.languageId,languageName });
+          }
           detail.valueList = valueList;
         } else {
           detail.valueList = [];
@@ -216,7 +226,7 @@ export class KeyService {
     return result;
   }
 
-  async delete(id:number){
+  async delete(id: number) {
     const key = await this.keyRepository.findOne(id);
     if (null === key || (key.delete !== null && key.delete)) {
       throw new BadRequestException(ErrorMessage.KEY_NOT_EXIST);
@@ -225,9 +235,9 @@ export class KeyService {
     await this.keyRepository.save(key);
   }
 
-  async getKeynameByKeyId(keyId:number):Promise<Keyname> | undefined{
-    const keyNameList = await this.keynameRepository.find({where:{keyId}});
-    if (keyNameList === null || keyNameList.length === 0){
+  async getKeynameByKeyId(keyId: number): Promise<Keyname> | undefined {
+    const keyNameList = await this.keynameRepository.find({ where: { keyId } });
+    if (keyNameList === null || keyNameList.length === 0) {
       return undefined;
     } else {
       return keyNameList[0];
