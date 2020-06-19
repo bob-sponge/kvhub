@@ -31,7 +31,6 @@ const CompareProject: React.SFC<CompareProjectProps> = (props: CompareProjectPro
     if (detail && detail.projectId) {
       getBranchList(detail.projectId);
     }
-    // getBranchList();
   }, [detail]);
 
   useEffect(() => {

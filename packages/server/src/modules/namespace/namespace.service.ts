@@ -230,7 +230,13 @@ export class NamespaceService {
     }
   }
 
-  async editKeyValueOnlanguage(branchId: number, languageId: number, keyId: number, keyvalue: string, valueId: number) {
+  async editKeyValueOnlanguage(
+    branchId: number,
+    languageId: number,
+    keyId: number,
+    keyvalue: string,
+    valueId: number | undefined,
+  ) {
     const logger = Log4js.getLogger();
     logger.level = 'INFO';
     logger.info(languageId, keyId, keyvalue);
@@ -256,14 +262,16 @@ export class NamespaceService {
     branchCommit.commitTime = new Date();
     await this.branchCommitRepository.save(branchCommit);
 
-    const value = await this.keyvalueRepository.findOne(valueId);
-    if (value !== undefined) {
-      if (!value.latest) {
-        throw new BadRequestException(ErrorMessage.VALUE_CHANGED);
-      } else {
-        value.latest = false;
-        value.midifyTime = new Date();
-        await this.keyvalueRepository.save(value);
+    if (valueId !== undefined) {
+      const value = await this.keyvalueRepository.findOne(valueId);
+      if (value !== undefined) {
+        if (!value.latest) {
+          throw new BadRequestException(ErrorMessage.VALUE_CHANGED);
+        } else {
+          value.latest = false;
+          value.midifyTime = new Date();
+          await this.keyvalueRepository.save(value);
+        }
       }
     }
 

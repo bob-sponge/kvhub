@@ -148,6 +148,8 @@ export class BranchService {
             const diffValue = new CompareValueVO();
             diffValue.languageId = v.languageId;
             diffValue.valueId = v.valueId;
+            diffValue.value = v.value;
+            diffValue.language = v.languageName;
             sourceValueList.push(diffValue);
           });
         }
@@ -159,6 +161,8 @@ export class BranchService {
             const diffValue = new CompareValueVO();
             diffValue.languageId = v.languageId;
             diffValue.valueId = v.valueId;
+            diffValue.value = v.value;
+            diffValue.language = v.languageName;
             targetValueList.push(diffValue);
           });
         }

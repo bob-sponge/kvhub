@@ -1,11 +1,13 @@
 @import '../../../style/main.less';
+@import '../../../style/util.less';
 
 .dashboard {
- 
+
   &-title {
     display: flex;
     justify-content: space-between;
     margin: 0 24px;
+
     .title {
       color: @black;
       font-size: 24px;
@@ -27,23 +29,26 @@
 .i18n-card-list(@width: 33%) {
   display: flex;
   flex-wrap: wrap;
-  padding-right:12px;
+  padding-right: 12px;
 
   .card {
-    &-wapper{
+    &-wapper {
       padding: 0 0 24px 24px;
       width: @width;
       cursor: pointer;
     }
+
     &-list {
       background-color: @white;
       padding: 16px;
+
     }
 
     &-title {
       color: @black;
       font-size: 16px;
       font-weight: bold;
+      .block-with-text-1();
     }
 
     &-translate {

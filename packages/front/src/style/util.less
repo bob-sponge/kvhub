@@ -6,11 +6,28 @@
     float: right;
   }
 
-  .ant-table-pagination.ant-pagination{
+  .ant-table-pagination.ant-pagination {
     width: 100%;
     background-color: #fff;
     margin: 0;
     padding: 16px 0;
     text-align: right;
   }
+}
+
+
+/*
+** 单行换行特殊处理
+*/
+.block-with-text-1() {
+  display: -webkit-box;
+  overflow: hidden;
+  box-orient: horizontal;
+  /* autoprefixer: ignore next */
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  line-height: 1.5;
+  text-overflow: ellipsis;
+  white-space: normal;
+  word-break: break-all;
 }
