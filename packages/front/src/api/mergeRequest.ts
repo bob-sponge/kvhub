@@ -16,3 +16,8 @@ export const branchMergeSaveApi = (detail: any) => ajax.post(`${prefix}/save`, d
  * 获取Merge Request 详情页
  * */
 export const branchMergeInfoApi = (branchMergeId: any) => ajax.get(`${prefix}/info/${branchMergeId}`);
+
+/**
+ * refuse Merge Request
+ * */
+export const branchMergeRefuseApi = (branchMergeId: any) => ajax.get(`${prefix}/refuse/${branchMergeId}`);

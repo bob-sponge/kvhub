@@ -1,18 +1,27 @@
 import React from 'react';
 import moment from 'moment';
+import { SwapRightOutlined, SwapOutlined } from '@ant-design/icons';
 import * as css from './styles/mergeRequest.modules.less';
 import { Popconfirm } from 'antd';
 
-export const columns = (onMerge: Function, onDelete: Function) => {
+const TYPE_STATE = {
+  '0': 'created',
+  '1': 'merged',
+  '2': 'refused',
+  '3': 'mergeing',
+};
+
+export const columns = (onMerge: Function, onResufe: Function) => {
   let tableColumns: any[] = [
     {
-      key: 'sourceBranchName',
+      key: 'crosMerge',
       title: 'Title',
-      dataIndex: 'Title',
-      render: (_text: any, record: any) => {
+      dataIndex: 'crosMerge',
+      render: (text: any, record: any) => {
         return (
           <span>
             {record.sourceBranchName}
+            {text ? <SwapOutlined className={css.mergeIcon} /> : <SwapRightOutlined className={css.mergeIcon} />}
             {record.targetBranchName}
           </span>
         );
@@ -27,24 +36,31 @@ export const columns = (onMerge: Function, onDelete: Function) => {
       },
     },
     {
-      key: 'Author',
+      key: 'modifier',
       title: 'Author',
-      dataIndex: 'Author',
+      dataIndex: 'modifier',
     },
     {
-      key: 'Status',
+      key: 'type',
       title: 'Status',
-      dataIndex: 'Status',
+      dataIndex: 'type',
+      render: (text: any) => {
+        return TYPE_STATE[text];
+      },
     },
     {
       title: 'Opeartion',
       key: 'operation',
       render: (_text: any, record: any) => (
         <div className={css.operation}>
-          <span onClick={() => onMerge(record)}>Merge</span>
-          <Popconfirm title="Are you sure？" okText="Yes" cancelText="No" onConfirm={() => onDelete(record)}>
-            <span>Delete</span>
-          </Popconfirm>
+          {record.type === '0' && (
+            <>
+              <span onClick={() => onMerge(record)}>Merge</span>
+              <Popconfirm title="Are you sure？" okText="Yes" cancelText="No" onConfirm={() => onResufe(record)}>
+                <span>Refused</span>
+              </Popconfirm>
+            </>
+          )}
         </div>
       ),
     },

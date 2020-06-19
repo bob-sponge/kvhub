@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import * as css from '../style/compare.modules.less';
 import { KeyOutlined } from '@ant-design/icons';
+import Diff from './diff';
 
 interface DiffProps {
-  diffData: any[];
+  diffData: any;
 }
 
 const DiffItem: React.SFC<DiffProps> = (props: DiffProps) => {
@@ -11,38 +12,9 @@ const DiffItem: React.SFC<DiffProps> = (props: DiffProps) => {
   const [source, setSource] = useState<any[]>([]);
   const [desination, setDesination] = useState<any[]>([]);
   useEffect(() => {
-    setSource(diffData[0].keys);
-    setDesination(diffData[1].keys);
+    setSource(diffData.source.keys);
+    setDesination(diffData.target.keys);
   }, [diffData]);
-
-  const renderCompare = (orignal: string, diff: string) => {
-    let newSource = orignal;
-    let newDiff = diff;
-    let diffIndex = [];
-    if (orignal.length < diff.length) {
-      newDiff = diff.substring(0, orignal.length);
-    }
-    if (orignal.length > diff.length) {
-      newSource = orignal.substring(0, diff.length);
-    }
-    for (let i = 0; i < newDiff.length; i++) {
-      if (newSource[i] !== newDiff[i]) {
-        diffIndex.push(i);
-      }
-    }
-
-    const diffs =
-      diffIndex.length >= 0 &&
-      diffIndex.map((item: any) => {
-        const matchs = diff.match(diff[item]);
-        if (matchs) {
-          return [<span style={{ color: '#43BDE0' }}>{diff[item]}</span>];
-        } else {
-          return [diff[item]];
-        }
-      });
-    return diffs;
-  };
 
   return (
     <div className={css.diffWapper}>
@@ -82,7 +54,9 @@ const DiffItem: React.SFC<DiffProps> = (props: DiffProps) => {
                   return (
                     <div className={css.keyList} key={index}>
                       <div className={css.language}>{list.language}</div>
-                      <div className={css.name}>{renderCompare(source[i].values[index].value, list.value)}</div>
+                      <div className={css.name}>
+                        <Diff orignal={source[i].values[index].value} target={list.value} />
+                      </div>
                     </div>
                   );
                 })}

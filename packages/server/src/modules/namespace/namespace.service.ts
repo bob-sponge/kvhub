@@ -1,6 +1,6 @@
 /* eslint-disable max-len */
 /* eslint-disable no-multi-str */
-import { Injectable, BadGatewayException, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Namespace } from 'src/entities/Namespace';
 import { Repository, getConnection, In } from 'typeorm';
@@ -14,6 +14,7 @@ import { Branch } from 'src/entities/Branch';
 import { UUIDUtils } from 'src/utils/uuid';
 import { BranchCommit } from 'src/entities/BranchCommit';
 import { BranchMerge } from 'src/entities/BranchMerge';
+import { Project } from 'src/entities/Project';
 import { CommonConstant, ErrorMessage } from 'src/constant/constant';
 
 @Injectable()
@@ -35,6 +36,8 @@ export class NamespaceService {
     private readonly branchCommitRepository: Repository<BranchCommit>,
     @InjectRepository(BranchMerge)
     private readonly branchMergeRepository: Repository<BranchMerge>,
+    @InjectRepository(Project)
+    private readonly projectRepository: Repository<Project>,
   ) {}
 
   async deleteNamespace(namespaceId: number) {
@@ -48,6 +51,7 @@ export class NamespaceService {
   }
 
   async deleteKey(keyId: number) {
+    // todo
     const logger = Log4js.getLogger();
     logger.level = 'INFO';
     const modifier = 'lw';
@@ -68,7 +72,7 @@ export class NamespaceService {
     await queryRunner.startTransaction();
     try {
       const keyNameInfo = await this.keyRepository.query(`select * from keyname where key_id = ${keyId}`);
-      if (keyNameInfo.filter(a => a.name === keyName).length > 0) {
+      if (keyNameInfo.filter(a => a.name === keyName.trim()).length > 0) {
         throw new Error(`Key id get name is equals key name ${keyName}`);
       }
       // key 表不动，key name 增加，key value 增加
@@ -78,7 +82,7 @@ export class NamespaceService {
       keyNameEntity.keyId = keyId;
       keyNameEntity.modifier = 'lw'; // todo modifier ??
       keyNameEntity.modifyTime = new Date();
-      keyNameEntity.name = keyName;
+      keyNameEntity.name = keyName.trim();
       keyNameEntity.commitId = commitId;
       const insertKeyName = await queryRunner.manager.insert<Keyname>(Keyname, keyNameEntity);
       logger.info(`insert key name id: ${insertKeyName.raw[0].id}`);
@@ -482,8 +486,14 @@ export class NamespaceService {
   }
 
   async save(vo: Namespace) {
+    const project = await this.projectRepository.findOne(vo.projectId);
+    if (project === undefined || project.delete) {
+      throw new BadRequestException(ErrorMessage.PROJECT_NOT_EXIST);
+    }
+
     vo.delete = false;
     vo.modifyTime = new Date();
+    vo.name = vo.name.trim();
     this.namespaceRepository.save(vo);
   }
 }

@@ -22,6 +22,9 @@ import { SelectedKeyDTO, SelectedValueDTO } from './dto/SelectMergeDTO';
 import { Key } from 'src/entities/Key';
 import { Keyname } from 'src/entities/Keyname';
 import { Keyvalue } from 'src/entities/Keyvalue';
+import { BranchKey } from 'src/entities/BranchKey';
+import { Namespace } from 'src/entities/Namespace';
+import { Project } from 'src/entities/Project';
 
 @Injectable()
 export class BranchMergeService {
@@ -36,12 +39,18 @@ export class BranchMergeService {
     private readonly mergeDiffValueRepository: Repository<MergeDiffValue>,
     @InjectRepository(BranchCommit)
     private readonly branchCommitRepository: Repository<BranchCommit>,
+    @InjectRepository(BranchKey)
+    private readonly branchKeyRepository: Repository<BranchKey>,
     @InjectRepository(Key)
     private readonly keyRepository: Repository<Key>,
     @InjectRepository(Keyname)
     private readonly keynameRepository: Repository<Keyname>,
     @InjectRepository(Keyvalue)
     private readonly keyvalueRepository: Repository<Keyvalue>,
+    @InjectRepository(Namespace)
+    private readonly namespaceRepository: Repository<Namespace>,
+    @InjectRepository(Project)
+    private readonly projectRepository: Repository<Project>,
     private readonly branchService: BranchService,
     private readonly keyService: KeyService,
   ) {}
@@ -95,39 +104,41 @@ export class BranchMergeService {
       branchIdList.push(branch.id);
     });
 
-    // 拼接分支id后，通过sql查找到项目的分支merge记录，source 和 target 都需要进行查找
-    const branchMergeList: BranchMerge[] = await this.branchMergeRepository.find({
-      where: [{ sourceBranchId: In(branchIdList) }, { targetBranchId: In(branchIdList) }],
-      order: { id: 'DESC' },
-    });
+    if (branchIdList.length > 0) {
+      // 拼接分支id后，通过sql查找到项目的分支merge记录，source 和 target 都需要进行查找
+      const branchMergeList: BranchMerge[] = await this.branchMergeRepository.find({
+        where: [{ sourceBranchId: In(branchIdList) }, { targetBranchId: In(branchIdList) }],
+        order: { id: 'DESC' },
+      });
 
-    // 得到记录后，按照source和target分支id获取对应的分支名称
-    for (let i = 0; i < branchMergeList.length; i++) {
-      let branchMergeVO = new BranchMergeVO();
-      const branchMerge = branchMergeList[i];
+      // 得到记录后，按照source和target分支id获取对应的分支名称
+      for (let i = 0; i < branchMergeList.length; i++) {
+        let branchMergeVO = new BranchMergeVO();
+        const branchMerge = branchMergeList[i];
 
-      branchMergeVO.id = branchMerge.id;
-      branchMergeVO.sourceBranchId = branchMerge.sourceBranchId;
-      branchMergeVO.targetBranchId = branchMerge.targetBranchId;
-      branchMergeVO.type = branchMerge.type;
-      branchMergeVO.crosMerge = branchMerge.crosMerge;
-      branchMergeVO.commitId = branchMerge.commitId;
-      branchMergeVO.modifier = branchMerge.modifier;
-      branchMergeVO.modifyTime = branchMerge.modifyTime;
+        branchMergeVO.id = branchMerge.id;
+        branchMergeVO.sourceBranchId = branchMerge.sourceBranchId;
+        branchMergeVO.targetBranchId = branchMerge.targetBranchId;
+        branchMergeVO.type = branchMerge.type;
+        branchMergeVO.crosMerge = branchMerge.crosMerge;
+        branchMergeVO.commitId = branchMerge.commitId;
+        branchMergeVO.modifier = branchMerge.modifier;
+        branchMergeVO.modifyTime = branchMerge.modifyTime;
 
-      for (let j = 0; j < branchAllList.length; j++) {
-        const branch = branchAllList[j];
-        if (branch.id === branchMergeVO.sourceBranchId) {
-          branchMergeVO.sourceBranchName = branch.name;
+        for (let j = 0; j < branchAllList.length; j++) {
+          const branch = branchAllList[j];
+          if (branch.id === branchMergeVO.sourceBranchId) {
+            branchMergeVO.sourceBranchName = branch.name;
+          }
+          if (branch.id === branchMergeVO.targetBranchId) {
+            branchMergeVO.targetBranchName = branch.name;
+          }
+          if (branchMergeVO.sourceBranchName && branchMergeVO.targetBranchName) {
+            break;
+          }
         }
-        if (branch.id === branchMergeVO.targetBranchId) {
-          branchMergeVO.targetBranchName = branch.name;
-        }
-        if (branchMergeVO.sourceBranchName && branchMergeVO.targetBranchName) {
-          break;
-        }
+        result.push(branchMergeVO);
       }
-      result.push(branchMergeVO);
     }
     return result;
   }
@@ -157,6 +168,31 @@ export class BranchMergeService {
       vo.target = await this.getMergeDiffInfo(vo.mergeDiffKey.id, targetBranchId, vo.mergeDiffKey.key);
       result.push(vo);
     }
+    result.sort((a, b) => {
+      let sortNameA = CommonConstant.STRING_BLANK;
+      let sortNameB = CommonConstant.STRING_BLANK;
+      let sourceAExist = false;
+      let sourceBExist = false;
+      if (a.source !== null && a.source !== undefined && a.source.namespaceName !== undefined) {
+        sourceAExist = true;
+        sortNameA = a.source.namespaceName;
+      }
+      if (b.source !== null && b.source !== undefined && b.source.namespaceName !== undefined) {
+        sourceBExist = true;
+        sortNameB = b.source.namespaceName;
+      }
+      if (sortNameA !== sortNameB) {
+        if (sourceAExist){
+          sortNameA = a.source.keyName;
+        }
+        if (sourceBExist){
+          sortNameB = b.source.keyName;
+        }
+        return sortNameA.localeCompare(sortNameB);
+      } else {
+        return sortNameA.localeCompare(sortNameB);
+      }
+    });
     return result;
   }
   private async getMergeDiffInfo(
@@ -172,6 +208,11 @@ export class BranchMergeService {
     } else {
       vo.keyId = key.id;
       vo.branchId = branchId;
+      vo.namespaceId = key.namespaceId;
+      const namespace = await this.namespaceRepository.findOne(vo.namespaceId);
+      if (namespace !== undefined && !namespace.delete) {
+        vo.namespaceName = namespace.name;
+      }
     }
 
     // key -> keyname
@@ -206,43 +247,15 @@ export class BranchMergeService {
    * @returns branch merge id
    */
   async save(vo: BranchMerge): Promise<number> {
-    if (vo.sourceBranchId !== null && vo.sourceBranchId !== undefined) {
-      const branch = await this.branchService.getBranchById(vo.sourceBranchId);
-      if (branch === undefined) {
-        throw new BadRequestException(ErrorMessage.BRANCH_NOT_EXIST);
-      } else {
-        const existBranchMerge = await this.branchMergeRepository.find({
-          where: [
-            { sourceBranchId: vo.sourceBranchId, type: CommonConstant.MERGE_TYPE_CREATED },
-            { targetBranchId: vo.sourceBranchId, type: CommonConstant.MERGE_TYPE_CREATED },
-          ],
-        });
-        if (existBranchMerge !== null && existBranchMerge.length > 0) {
-          throw new BadRequestException(ErrorMessage.BRANCH_IS_MERGING);
-        }
-      }
-    } else {
-      throw new BadRequestException(ErrorMessage.BRANCH_NOT_CHOOSE);
+
+    const project = await this.projectRepository.findOne(vo.projectId);
+    if (project === undefined || project.delete){
+      throw new BadRequestException(ErrorMessage.PROJECT_NOT_EXIST);
     }
 
-    if (vo.targetBranchId !== null && vo.targetBranchId !== undefined) {
-      const branch = await this.branchService.getBranchById(vo.targetBranchId);
-      if (branch === undefined) {
-        throw new BadRequestException(ErrorMessage.BRANCH_NOT_EXIST);
-      } else {
-        const existBranchMerge = await this.branchMergeRepository.find({
-          where: [
-            { sourceBranchId: vo.targetBranchId, type: CommonConstant.MERGE_TYPE_CREATED },
-            { targetBranchId: vo.targetBranchId, type: CommonConstant.MERGE_TYPE_CREATED },
-          ],
-        });
-        if (existBranchMerge !== null && existBranchMerge.length > 0) {
-          throw new BadRequestException(ErrorMessage.BRANCH_IS_MERGING);
-        }
-      }
-    } else {
-      throw new BadRequestException(ErrorMessage.BRANCH_NOT_CHOOSE);
-    }
+    // check branch id
+    await this.checkBranch(vo.sourceBranchId);
+    await this.checkBranch(vo.targetBranchId);
 
     if (vo.targetBranchId === vo.sourceBranchId) {
       throw new BadRequestException(ErrorMessage.BRANCH_NOT_SAME);
@@ -253,6 +266,33 @@ export class BranchMergeService {
     vo.modifyTime = new Date();
     const branchMerge = await this.branchMergeRepository.save(vo);
     return branchMerge.id;
+  }
+
+  private async checkBranch(id:number){
+    if (id !== null && id !== undefined) {
+      const branch = await this.branchService.getBranchById(id);
+      if (branch === undefined) {
+        throw new BadRequestException(ErrorMessage.BRANCH_NOT_EXIST);
+      } else {
+        const existBranchMerge = await this.branchMergeRepository.find({
+          where: [
+            {
+              sourceBranchId: id,
+              type: In([CommonConstant.MERGE_TYPE_CREATED, CommonConstant.MERGE_TYPE_MERGING]),
+            },
+            {
+              targetBranchId: id,
+              type: In([CommonConstant.MERGE_TYPE_CREATED, CommonConstant.MERGE_TYPE_MERGING]),
+            },
+          ],
+        });
+        if (existBranchMerge !== null && existBranchMerge.length > 0) {
+          throw new BadRequestException(ErrorMessage.BRANCH_IS_MERGING);
+        }
+      }
+    } else {
+      throw new BadRequestException(ErrorMessage.BRANCH_NOT_CHOOSE);
+    }
   }
 
   /**
@@ -554,11 +594,14 @@ export class BranchMergeService {
       }
       await this.keyvalueRepository.save(valueList);
 
-      await this.keyService.delete(target.keyId);
-      // todo keyname keyvalue need to delete????
-      // await this.keynameRepository.delete(target.keyNameId);
-      // let deleteIdList : number[] = [];
-      // await this.keyvalueRepository.delete(deleteIdList);
+      const branchKeys = await this.branchKeyRepository.find({
+        where: { branchId: target.branchId, keyId: target.keyId },
+      });
+      if (branchKeys !== null && branchKeys.length > 0) {
+        const bk = branchKeys[0];
+        bk.delete = true;
+        await this.branchKeyRepository.save(bk);
+      }
     } else if (!sourceMaster && targetMaster) {
       // branch1 -> master
       // save keyname
@@ -609,7 +652,14 @@ export class BranchMergeService {
       }
       await this.keyvalueRepository.save(valueList);
 
-      await this.keyService.delete(source.keyId);
+      const branchKeys = await this.branchKeyRepository.find({
+        where: { branchId: source.branchId, keyId: source.keyId },
+      });
+      if (branchKeys !== null && branchKeys.length > 0) {
+        const bk = branchKeys[0];
+        bk.delete = true;
+        await this.branchKeyRepository.save(bk);
+      }
     } else {
       // branch1 -> branch2
       // save keyname
