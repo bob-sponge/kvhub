@@ -31,6 +31,7 @@ export class NamespaceController {
       "page":1, #起始页，第一页为 1
       "pageSize":10, #分页大小
       "condition":"" #搜索条件 ，如果么有，传"",表示查询所有
+      "branchId": 分支 id
       }
    * @returns
    * {
@@ -140,7 +141,8 @@ export class NamespaceController {
   ): Promise<ResponseBody> {
     const value = keyvalue.keyvalue;
     const valueId = keyvalue.valueId;
-    const data = await (await this.namespaceService.editKeyValueOnlanguage(branchId,languageId, keyId, value, valueId)).raw;
+    const data = await (await this.namespaceService.editKeyValueOnlanguage(branchId, languageId, keyId, value, valueId))
+      .raw;
     return ResponseBody.okWithData(data);
   }
 

@@ -124,7 +124,7 @@ export class NamespaceService {
     const queryRunner = connection.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
-
+    const commitId = UUIDUtils.generateUUID();
     try {
       if (keyId === '') {
         // 新增
@@ -161,6 +161,13 @@ export class NamespaceService {
         const insertKey = await queryRunner.manager.insert<Key>(Key, keyEntity);
         const keyEntityId = insertKey.raw[0].id;
         logger.info(`insert key id: ${keyEntityId}`);
+        // 插入branch commit
+        const branchCommit = new BranchCommit();
+        branchCommit.type = CommonConstant.COMMIT_TYPE_ADD;
+        branchCommit.commitId = commitId;
+        branchCommit.branchId = branchId;
+        branchCommit.commitTime = new Date();
+        await this.branchCommitRepository.save(branchCommit);
         // 处理其他的关联表
         // 插入 key branch 表
         const branchKeyEntity = new BranchKey();
@@ -169,7 +176,6 @@ export class NamespaceService {
         branchKeyEntity.delete = false;
         await queryRunner.manager.insert<BranchKey>(BranchKey, branchKeyEntity);
         // 插入keyName 表,
-        const commitId = UUIDUtils.generateUUID();
         const keyNameEntity = new Keyname();
         keyNameEntity.keyId = keyEntityId;
         keyNameEntity.modifier = 'lw';
@@ -197,6 +203,12 @@ export class NamespaceService {
         await queryRunner.manager.insert<Keyvalue>(Keyvalue, keyValueEntitys);
       } else {
         // 編輯
+        const branchCommit = new BranchCommit();
+        branchCommit.type = CommonConstant.COMMIT_TYPE_CHANGE;
+        branchCommit.commitId = commitId;
+        branchCommit.branchId = branchId;
+        branchCommit.commitTime = new Date();
+        await this.branchCommitRepository.save(branchCommit);
         // 根据 key id 查询比较
         const keyNameInfo = await this.keyRepository.query(`select * from keyname where key_id = ${keyId}`);
         const keyIdGetName = keyNameInfo[0].name;
@@ -207,7 +219,6 @@ export class NamespaceService {
         await queryRunner.manager.query(`UPDATE keyvalue SET latest = false WHERE key_id = ${keyId}`);
         // 插入key Value 表,
         let keyValueEntitys = [];
-        const commitId = UUIDUtils.generateUUID();
         data.forEach(d => {
           const languageId = d.languageId;
           const value = d.value;
@@ -315,6 +326,7 @@ export class NamespaceService {
     const pageSize = namespaceViewDetail.pageSize;
     const condition = namespaceViewDetail.condition;
     const keyTranslateProgressStatus = namespaceViewDetail.KeyTranslateProgressStatus;
+    const branchId = namespaceViewDetail.branchId;
     const offset = (page - 1) * pageSize;
     let statusCondition = '';
     if (keyTranslateProgressStatus.toLowerCase() === 'all') {
@@ -334,6 +346,7 @@ export class NamespaceService {
       targetLanguageId,
       statusCondition,
       pageCondition,
+      branchId,
     );
     // 获取总数
     pageCondition = '';
@@ -343,6 +356,7 @@ export class NamespaceService {
       targetLanguageId,
       statusCondition,
       pageCondition,
+      branchId,
     );
     const totalNum = namespaceAllKeys.length;
     let keyidlist = [];
@@ -436,40 +450,54 @@ export class NamespaceService {
     return result;
   }
 
-  async getNamespaceTargetLanguageKeys(namespaceId, searchCondition, targetLanguageId, statusCondition, pageCondition) {
+  async getNamespaceTargetLanguageKeys(
+    namespaceId,
+    searchCondition,
+    targetLanguageId,
+    statusCondition,
+    pageCondition,
+    branchId,
+  ) {
     const logger = Log4js.getLogger();
     logger.level = 'INFO';
     const query = `SELECT *
     FROM (
-     SELECT kkk.keyId AS keyId, kkk.keyNameId AS keyNameId, kkk.keyName AS keyName, kkk.id AS valueId, kkk.language_id AS languageId\
-       , kkk.value AS keyValue
-     FROM (
-       SELECT *
-       FROM (
-         SELECT kkn.keyid AS keyId, kkn.id AS keyNameId, kkn.name AS keyName
-         FROM (
-           SELECT *
-           FROM (
-             SELECT k.id AS keyid
-             FROM key k
-             WHERE k.delete = 'f'
-               AND namespace_id = ${namespaceId}
-           ) kt
-             JOIN keyname kn ON kt.keyid = kn.key_id
-         ) kkn
-         WHERE kkn.name LIKE '%${searchCondition}%'
-       ) kknt
-         LEFT JOIN (
-           SELECT *
-           FROM keyvalue
-           WHERE language_id = ${targetLanguageId}
-         ) kv
-         ON kknt.keyid = kv.key_id
-     ) kkk
-   ) kkkt
-   ${statusCondition}
-   ORDER BY keyName ASC
-   ${pageCondition}`;
+      SELECT kkk.keyId AS keyId, kkk.keyNameId AS keyNameId, kkk.keyName AS keyName, kkk.id AS valueId, kkk.language_id AS languageId
+        , kkk.value AS keyValue
+      FROM (
+        SELECT *
+        FROM (
+          SELECT kkn.keyid AS keyId, kkn.id AS keyNameId, kkn.name AS keyName
+          FROM ((
+            SELECT *
+            FROM (
+              SELECT k.id AS keyid
+              FROM key k
+              WHERE k.delete = 'f'
+                AND namespace_id = ${namespaceId}
+            ) kt
+              JOIN (
+                SELECT key_id
+                FROM branch_key
+                WHERE branch_id = ${branchId}
+              ) bk
+              ON kt.keyid = bk.key_id
+          ) kbt
+            JOIN keyname kn ON kbt.keyid = kn.key_id) kkn
+          WHERE kkn.name LIKE '%${searchCondition}%'
+        ) kknt
+          LEFT JOIN (
+            SELECT *
+            FROM keyvalue
+            WHERE language_id = ${targetLanguageId}
+          ) kv
+          ON kknt.keyid = kv.key_id
+      ) kkk
+    ) kkkt
+    ${statusCondition}
+    ORDER BY keyName ASC
+    ${pageCondition}
+    `;
     logger.info(`query is ${query}`);
     return await this.namespaceRepository.query(query);
   }
