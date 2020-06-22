@@ -293,4 +293,17 @@ export class NamespaceController {
     }
     return ResponseBody.okWithMsg('success');
   }
+
+  @Get('/view/keyId/:keyId')
+  async getKeyDetailInfo(@Param('keyId') keyId: number) {
+    let msg = '';
+    let data: any;
+    try {
+      data = await this.namespaceService.getKeyDetailInfo(keyId);
+    } catch (error) {
+      msg = error.message;
+      return ResponseBody.error(msg, 500);
+    }
+    return ResponseBody.okWithData(data);
+  }
 }

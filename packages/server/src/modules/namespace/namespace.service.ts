@@ -1,6 +1,6 @@
 /* eslint-disable max-len */
 /* eslint-disable no-multi-str */
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Namespace } from 'src/entities/Namespace';
 import { Repository, getConnection, In } from 'typeorm';
@@ -16,6 +16,7 @@ import { BranchCommit } from 'src/entities/BranchCommit';
 import { BranchMerge } from 'src/entities/BranchMerge';
 import { Project } from 'src/entities/Project';
 import { CommonConstant, ErrorMessage } from 'src/constant/constant';
+import { Z_FILTERED } from 'zlib';
 
 @Injectable()
 export class NamespaceService {
@@ -523,5 +524,20 @@ export class NamespaceService {
     vo.modifyTime = new Date();
     vo.name = vo.name.trim();
     this.namespaceRepository.save(vo);
+  }
+
+  async getKeyDetailInfo(keyId: number) {
+    const logger = Log4js.getLogger();
+    logger.level = 'INFO';
+    const query1 = `select * from keyname where key_id= ${keyId}`;
+    const keyName = await this.keynameRepository.query(query1);
+    let keyNameTrue: any;
+    if (keyName.length > 1) {
+      const aa = keyName.sort((a, b) => b.modify_time - a.modify_time);
+      keyNameTrue = aa[0];
+    } else {
+      keyNameTrue = keyName[0];
+    }
+    logger.info(`key name: ${keyName}, ${keyNameTrue}`);
   }
 }
