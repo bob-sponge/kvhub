@@ -294,6 +294,53 @@ export class NamespaceController {
     return ResponseBody.okWithMsg('success');
   }
 
+  /**
+   * @description
+   *  获取一个key的详细信息
+   * @request
+   *  url: http://localhost:5000/namespace/view/keyId/26
+   *  method: Get
+   * @returns
+   * {
+    "statusCode": 0,
+    "data": {
+        "keyName": {
+            "id": 16,
+            "key_id": 13,
+            "name": "h2w",
+            "modifier": "lw",
+            "modify_time": "2020-06-22T09:23:59.550Z",
+            "commit_id": "368a706ffa39"
+        },
+        "value": [
+            {
+                "id": 21,
+                "value": "hao2",
+                "key_id": 13,
+                "language_id": 1,
+                "merge_id": null,
+                "modifier": "lw",
+                "midify_time": "2020-06-22T09:23:58.553Z",
+                "latest": true,
+                "commit_id": "0154a5a9-b208-0e3c-0a85-368a706ffa36"
+            },
+            {
+                "id": 22,
+                "value": "好2",
+                "key_id": 13,
+                "language_id": 2,
+                "merge_id": null,
+                "modifier": "lw",
+                "midify_time": "2020-06-22T09:23:58.554Z",
+                "latest": true,
+                "commit_id": "0154a5a9-b208-0e3c-0a85-368a706ffa36"
+            }
+        ]
+    },
+    "success": true,
+    "timestamp": 1592876495916
+    }
+   */
   @Get('/view/keyId/:keyId')
   async getKeyDetailInfo(@Param('keyId') keyId: number) {
     let msg = '';

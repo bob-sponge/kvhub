@@ -539,5 +539,12 @@ export class NamespaceService {
       keyNameTrue = keyName[0];
     }
     logger.info(`key name: ${keyName}, ${keyNameTrue}`);
+    const query2 = `select * from keyvalue where key_id=${keyId} and latest=TRUE`;
+    const keyValue = await this.keynameRepository.query(query2);
+    const result = {
+      keyName: keyNameTrue,
+      value: keyValue,
+    };
+    return result;
   }
 }
