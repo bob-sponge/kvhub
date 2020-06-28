@@ -90,7 +90,14 @@ const Languages = (props: LanguagesProps) => {
             {languageList &&
               languageList.map((item: any, index) => {
                 return (
-                  <LanguageItem branchId={branchId} item={item} index={index} key={item.id} projectView={projectView} />
+                  <LanguageItem
+                    pid={match.params.projectId}
+                    branchId={branchId}
+                    item={item}
+                    index={index}
+                    key={item.id}
+                    projectView={projectView}
+                  />
                 );
               })}
           </div>

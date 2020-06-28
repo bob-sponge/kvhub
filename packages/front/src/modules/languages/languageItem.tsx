@@ -6,7 +6,7 @@ import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import * as Api from '../../api/languages';
 import { history } from '@ofm/history';
 
-const LanguageItem = ({ item, index, projectView, branchId }: any) => {
+const LanguageItem = ({ item, index, projectView, branchId, pid }: any) => {
   const [visible, setVisible] = useState(false);
   const [addNamespaceName, setAddNamespaceName] = useState('');
 
@@ -15,7 +15,7 @@ const LanguageItem = ({ item, index, projectView, branchId }: any) => {
   };
 
   const namespaceSave = async () => {
-    const detail = { name: addNamespaceName, projectId: item.id, type: 'private' };
+    const detail = { name: addNamespaceName, projectId: pid, type: 'private' };
     const res = await Api.namespaceSaveApi(detail);
     projectView(branchId);
     setVisible(false);
