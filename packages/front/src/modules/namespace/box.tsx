@@ -33,7 +33,6 @@ const LanguageBox: React.FC<LanguageBoxProps> = ({
         break;
       case DELETE:
         await Api.deleteKey(keyData.keyId);
-        setVisible(false);
         break;
       default:
     }
@@ -96,6 +95,10 @@ const LanguageBox: React.FC<LanguageBoxProps> = ({
     [currentKeyData],
   );
 
+  const handleVisibleChange = (isShow: boolean) => {
+    setVisible(isShow);
+  };
+
   useEffect(() => {
     setCurrentKeyData(keyData);
   }, [keyData]);
@@ -108,7 +111,12 @@ const LanguageBox: React.FC<LanguageBoxProps> = ({
             <KeyOutlined />
             <label className={css.boxTitle}>{currentKeyData ? currentKeyData.keyName : ''}</label>
           </div>
-          <Popover placement="bottomRight" visible={visible} content={settingContent}>
+          <Popover
+            placement="bottomRight"
+            onVisibleChange={handleVisibleChange}
+            visible={visible}
+            trigger="click"
+            content={settingContent}>
             <div onClick={() => setVisible(true)}>
               <Button className={css.settingIcon} icon={<SettingOutlined />} />
             </div>

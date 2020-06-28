@@ -124,7 +124,7 @@ const NamespaceView: React.FC = () => {
     await Api.deleteNamespace(namespaceId);
     window.history.go(-1);
     message.success('Namespace delete successfully!');
-  }, []);
+  }, [namespaceId]);
 
   useEffect(() => {
     fetchData();

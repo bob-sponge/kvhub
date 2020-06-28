@@ -37,4 +37,4 @@ export const addOrEditKeyValue = (data: any) => ajax.post('/namespace/view/keyva
 /**
  * 删除 namespace
  */
-export const deleteNamespace = (namespaceId: number) => ajax.post(`/namespace/view/${namespaceId}`);
+export const deleteNamespace = (namespaceId: number) => ajax.delete(`/namespace/view/${namespaceId}`);
