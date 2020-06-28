@@ -12452,7 +12452,7 @@ react-dev-utils@^10.2.0:
 
 react-diff-viewer@^3.1.1:
   version "3.1.1"
-  resolved "http://10.192.30.129:80/npm/react-diff-viewer/-/react-diff-viewer-3.1.1.tgz#21ac9c891193d05a3734bfd6bd54b107ee6d46cc"
+  resolved "http://devops.siemens.com:80/npm/react-diff-viewer/-/react-diff-viewer-3.1.1.tgz#21ac9c891193d05a3734bfd6bd54b107ee6d46cc"
   integrity sha1-IayciRGT0Fo3NL/WvVSxB+5tRsw=
   dependencies:
     classnames "^2.2.6"

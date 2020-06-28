@@ -1,7 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Input, Button, Popover } from 'antd';
 import { ItemKey, ModifyKeyReq, EDIT, RENAME, DELETE } from './constant';
-import EditKeyDrawer from './editKeyDrawer';
 import * as Api from '../../api/namespace';
 import * as css from './styles/namespace.modules.less';
 import { KeyOutlined, SettingOutlined, SwapRightOutlined } from '@ant-design/icons';
@@ -10,21 +9,27 @@ const { TextArea } = Input;
 
 interface LanguageBoxProps {
   keyData: ItemKey;
+  branchId: number;
   refreshList: Function;
+  setShowDrawer: Function;
 }
 
-const LanguageBox: React.FC<LanguageBoxProps> = ({ keyData, refreshList }: LanguageBoxProps) => {
-  const [showDrawer, setShowDrawer] = useState<boolean>(false);
+const LanguageBox: React.FC<LanguageBoxProps> = ({
+  keyData,
+  branchId,
+  refreshList,
+  setShowDrawer,
+}: LanguageBoxProps) => {
   const [visible, setVisible] = useState<boolean>(false);
   const [currentKeyData, setCurrentKeyData] = useState<ItemKey>(keyData);
 
   const handleKeyOperate = useCallback(async flag => {
     switch (flag) {
       case EDIT:
-        setShowDrawer(true);
+        setShowDrawer(EDIT, true, currentKeyData);
         break;
       case RENAME:
-        setShowDrawer(true);
+        setShowDrawer(EDIT, true, currentKeyData);
         break;
       case DELETE:
         await Api.deleteKey(keyData.keyId);
@@ -53,7 +58,7 @@ const LanguageBox: React.FC<LanguageBoxProps> = ({ keyData, refreshList }: Langu
   }, []);
 
   const editKey = useCallback(() => {
-    setShowDrawer(true);
+    setShowDrawer(EDIT, true, currentKeyData);
   }, []);
 
   const handleDiscard = useCallback(() => {
@@ -66,7 +71,12 @@ const LanguageBox: React.FC<LanguageBoxProps> = ({ keyData, refreshList }: Langu
       keyvalue: targetLanguageValue.keyValue,
       valueId: targetLanguageValue.valueId,
     };
-    const res: any = await Api.modifyValue(targetLanguageValue.languageId, currentKeyData.keyId, modifyKeyReq);
+    const res: any = await Api.modifyValue(
+      branchId,
+      targetLanguageValue.languageId,
+      currentKeyData.keyId,
+      modifyKeyReq,
+    );
     if (res.statusCode === 0) {
       refreshList();
     }
@@ -142,9 +152,6 @@ const LanguageBox: React.FC<LanguageBoxProps> = ({ keyData, refreshList }: Langu
           </div>
         )}
       </div>
-      {showDrawer && (
-        <EditKeyDrawer currentKeyData={currentKeyData} visible={showDrawer} onClose={() => setShowDrawer(false)} />
-      )}
     </>
   );
 };

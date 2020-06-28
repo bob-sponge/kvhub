@@ -78,7 +78,8 @@ const LanguageItem = ({ item, index, projectView, branchId }: any) => {
   );
 
   const handleJump = (id: number, languageId: number) => {
-    history.push(`/namespace/${id}/${languageId}`);
+    const path = window.location.pathname.split('/');
+    history.push(`/namespace/${path[2]}/${id}/${languageId}`);
   };
 
   return (
