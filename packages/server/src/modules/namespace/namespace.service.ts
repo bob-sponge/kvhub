@@ -112,7 +112,10 @@ export class NamespaceService {
       await queryRunner.manager.insert<Keyvalue>(Keyvalue, keyValueEntitys);
       // 更新 key 表actual id 为 key name id
       queryRunner.manager.query(`update key set actual_id=${keyNameId} where id=${keyId}`);
+
+      const reskeynameInfo = queryRunner.manager.query(`select * from keyname where id = ${keyNameId}`);
       await queryRunner.commitTransaction();
+      return reskeynameInfo;
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw new Error(error.message);

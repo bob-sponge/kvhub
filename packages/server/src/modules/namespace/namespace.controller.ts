@@ -231,14 +231,15 @@ export class NamespaceController {
   async editKeyname(@Body() data: any) {
     const keyId = data.keyId;
     const keyName = data.keyName;
+    let res: any;
     let msg = '';
     try {
-      await this.namespaceService.editKeyname(keyId, keyName);
+      res = await this.namespaceService.editKeyname(keyId, keyName);
     } catch (error) {
       msg = error.message;
       return ResponseBody.error(msg, 500);
     }
-    return ResponseBody.okWithMsg('success');
+    return ResponseBody.okWithData(res[0]);
   }
 
   /**
