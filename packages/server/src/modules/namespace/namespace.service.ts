@@ -239,6 +239,7 @@ export class NamespaceService {
           if (value === null || value === '' || value === undefined) {
             // keyValueEntity.value = ' ';
           } else {
+            keyValueEntity.value = value;
             keyValueEntity.keyId = keyId;
             keyValueEntity.commitId = commitId;
             keyValueEntity.languageId = languageId;
