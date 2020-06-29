@@ -33,13 +33,11 @@ const LanguageBox: React.FC<LanguageBoxProps> = ({
           setShowDrawer(EDIT, true, currentKeyData);
           break;
         case DELETE:
-          setShowDrawer(EDIT, false, currentKeyData);
-          await Api.deleteKey(currentKeyData.keyId);
+          setShowDrawer(DELETE, false, currentKeyData);
           setVisible(false);
           break;
         default:
       }
-      refreshList();
     },
     [currentKeyData],
   );
@@ -59,7 +57,7 @@ const LanguageBox: React.FC<LanguageBoxProps> = ({
       </div>
     );
     return content;
-  }, []);
+  }, [handleKeyOperate]);
 
   const editKey = useCallback(() => {
     setShowDrawer(EDIT, true, currentKeyData);
