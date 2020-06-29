@@ -196,17 +196,19 @@ export class NamespaceService {
         data.forEach(d => {
           const languageId = d.languageId;
           const value = d.value;
-          if (value !== null && value !== '' && value !== undefined) {
-            const keyValueEntity = new Keyvalue();
+          const keyValueEntity = new Keyvalue();
+          if (value === null || value === '' || value === undefined) {
+            keyValueEntity.value = ' ';
+          } else {
             keyValueEntity.value = value;
-            keyValueEntity.keyId = keyEntityId;
-            keyValueEntity.commitId = commitId;
-            keyValueEntity.languageId = languageId;
-            keyValueEntity.latest = true;
-            keyValueEntity.modifier = 'lw'; // todo modifier ??
-            keyValueEntity.midifyTime = new Date();
-            keyValueEntitys.push(keyValueEntity);
           }
+          keyValueEntity.keyId = keyEntityId;
+          keyValueEntity.commitId = commitId;
+          keyValueEntity.languageId = languageId;
+          keyValueEntity.latest = true;
+          keyValueEntity.modifier = 'lw'; // todo modifier ??
+          keyValueEntity.midifyTime = new Date();
+          keyValueEntitys.push(keyValueEntity);
         });
         await queryRunner.manager.insert<Keyvalue>(Keyvalue, keyValueEntitys);
       } else {
@@ -230,17 +232,19 @@ export class NamespaceService {
         data.forEach(d => {
           const languageId = d.languageId;
           const value = d.value;
-          if (value !== null && value !== '' && value !== undefined) {
-            const keyValueEntity = new Keyvalue();
+          const keyValueEntity = new Keyvalue();
+          if (value === null || value === '' || value === undefined) {
+            keyValueEntity.value = ' ';
+          } else {
             keyValueEntity.value = value;
-            keyValueEntity.keyId = keyId;
-            keyValueEntity.commitId = commitId;
-            keyValueEntity.languageId = languageId;
-            keyValueEntity.latest = true;
-            keyValueEntity.modifier = 'lw'; // todo modifier ??
-            keyValueEntity.midifyTime = new Date();
-            keyValueEntitys.push(keyValueEntity);
           }
+          keyValueEntity.keyId = keyId;
+          keyValueEntity.commitId = commitId;
+          keyValueEntity.languageId = languageId;
+          keyValueEntity.latest = true;
+          keyValueEntity.modifier = 'lw'; // todo modifier ??
+          keyValueEntity.midifyTime = new Date();
+          keyValueEntitys.push(keyValueEntity);
         });
         await queryRunner.manager.insert<Keyvalue>(Keyvalue, keyValueEntitys);
       }

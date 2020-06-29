@@ -99,7 +99,7 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
   }, [keyItem, mode]);
 
   const modifyLanguage = useCallback(() => {
-    form.validateFields().then(values => {
+    form.validateFields().then(async values => {
       if (mode === ADD) {
         const kv: any = [];
         let keyName = null;
@@ -122,7 +122,7 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
             keyName: keyName,
             kv: kv,
           };
-          Api.addOrEditKeyValue(data);
+          await Api.addOrEditKeyValue(data);
           onClose();
         }
       } else {

@@ -23,21 +23,26 @@ const LanguageBox: React.FC<LanguageBoxProps> = ({
   const [visible, setVisible] = useState<boolean>(false);
   const [currentKeyData, setCurrentKeyData] = useState<ItemKey>(keyData);
 
-  const handleKeyOperate = useCallback(async flag => {
-    switch (flag) {
-      case EDIT:
-        setShowDrawer(EDIT, true, currentKeyData);
-        break;
-      case RENAME:
-        setShowDrawer(EDIT, true, currentKeyData);
-        break;
-      case DELETE:
-        await Api.deleteKey(keyData.keyId);
-        break;
-      default:
-    }
-    refreshList();
-  }, []);
+  const handleKeyOperate = useCallback(
+    async flag => {
+      switch (flag) {
+        case EDIT:
+          setShowDrawer(EDIT, true, currentKeyData);
+          break;
+        case RENAME:
+          setShowDrawer(EDIT, true, currentKeyData);
+          break;
+        case DELETE:
+          setShowDrawer(EDIT, false, currentKeyData);
+          await Api.deleteKey(currentKeyData.keyId);
+          setVisible(false);
+          break;
+        default:
+      }
+      refreshList();
+    },
+    [currentKeyData],
+  );
 
   const settingContent = useCallback(() => {
     const content = (
