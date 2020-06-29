@@ -2620,7 +2620,7 @@ ansi-styles@^4.0.0, ansi-styles@^4.1.0:
 
 antd@^4.2.0:
   version "4.3.5"
-  resolved "http://registry.npm.taobao.org/npm/antd/-/antd-4.3.5.tgz#1bafbc2920a1b5266bcd46496532578b2fd0f98e"
+  resolved "http://10.192.30.129/npm/antd/-/antd-4.3.5.tgz#1bafbc2920a1b5266bcd46496532578b2fd0f98e"
   integrity sha1-G6+8KSChtSZrzUZJZTJXiy/Q+Y4=
   dependencies:
     "@ant-design/css-animation" "^1.7.2"
