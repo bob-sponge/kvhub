@@ -204,14 +204,14 @@ export class NamespaceService {
             keyValueEntity.value = ' ';
           } else {
             keyValueEntity.value = value;
+            keyValueEntity.keyId = keyEntityId;
+            keyValueEntity.commitId = commitId;
+            keyValueEntity.languageId = languageId;
+            keyValueEntity.latest = true;
+            keyValueEntity.modifier = 'lw'; // todo modifier ??
+            keyValueEntity.midifyTime = new Date();
+            keyValueEntitys.push(keyValueEntity);
           }
-          keyValueEntity.keyId = keyEntityId;
-          keyValueEntity.commitId = commitId;
-          keyValueEntity.languageId = languageId;
-          keyValueEntity.latest = true;
-          keyValueEntity.modifier = 'lw'; // todo modifier ??
-          keyValueEntity.midifyTime = new Date();
-          keyValueEntitys.push(keyValueEntity);
         });
         await queryRunner.manager.insert<Keyvalue>(Keyvalue, keyValueEntitys);
       } else {
@@ -237,17 +237,16 @@ export class NamespaceService {
           const value = d.value;
           const keyValueEntity = new Keyvalue();
           if (value === null || value === '' || value === undefined) {
-            keyValueEntity.value = ' ';
+            // keyValueEntity.value = ' ';
           } else {
-            keyValueEntity.value = value;
+            keyValueEntity.keyId = keyId;
+            keyValueEntity.commitId = commitId;
+            keyValueEntity.languageId = languageId;
+            keyValueEntity.latest = true;
+            keyValueEntity.modifier = 'lw'; // todo modifier ??
+            keyValueEntity.midifyTime = new Date();
+            keyValueEntitys.push(keyValueEntity);
           }
-          keyValueEntity.keyId = keyId;
-          keyValueEntity.commitId = commitId;
-          keyValueEntity.languageId = languageId;
-          keyValueEntity.latest = true;
-          keyValueEntity.modifier = 'lw'; // todo modifier ??
-          keyValueEntity.midifyTime = new Date();
-          keyValueEntitys.push(keyValueEntity);
         });
         await queryRunner.manager.insert<Keyvalue>(Keyvalue, keyValueEntitys);
       }
@@ -290,7 +289,7 @@ export class NamespaceService {
     branchCommit.commitTime = new Date();
     await this.branchCommitRepository.save(branchCommit);
 
-    if (valueId !== undefined) {
+    if (valueId !== undefined && valueId !== null) {
       const value = await this.keyvalueRepository.findOne(valueId);
       if (value !== undefined) {
         if (!value.latest) {
@@ -386,10 +385,10 @@ export class NamespaceService {
       branchId,
     );
 
-    namespaceKeys = namespaceKeys.filter(t => t.keynameid === t.actualid);
+    // namespaceKeys = namespaceKeys.filter(t => t.keynameid === t.actualid);
     // 获取总数
     pageCondition = '';
-    const namespaceAllKeys: any[] = await this.getNamespaceTargetLanguageKeys(
+    let namespaceAllKeys: any[] = await this.getNamespaceTargetLanguageKeys(
       namespaceId,
       condition,
       targetLanguageId,
@@ -397,6 +396,8 @@ export class NamespaceService {
       pageCondition,
       branchId,
     );
+
+    //namespaceAllKeys = namespaceAllKeys.filter(t => t.keynameid === t.actualid);
     const totalNum = namespaceAllKeys.length;
     let keyidlist = [];
     let retNsKey = [];
@@ -499,7 +500,9 @@ export class NamespaceService {
   ) {
     const logger = Log4js.getLogger();
     logger.level = 'INFO';
-    const query = `SELECT *
+    const query = `
+    SELECT * from (
+    SELECT *
     FROM (
       SELECT kkk.keyId AS keyId, kkk.keyNameId AS keyNameId, kkk.keyName AS keyName, kkk.id AS valueId, kkk.language_id AS languageId
         , kkk.value AS keyValue, kkk.actualId AS actualId
@@ -532,7 +535,8 @@ export class NamespaceService {
           ) kv
           ON kknt.keyid = kv.key_id
       ) kkk
-    ) kkkt
+    ) kkkt where actualId=keyNameId
+    ) ret
     ${statusCondition}
     ORDER BY keyName ASC
     ${pageCondition}
@@ -577,7 +581,32 @@ export class NamespaceService {
       keyNameTrue = keyName[0];
     }
     logger.info(`key name: ${keyName}, ${keyNameTrue}`);
-    const query2 = `select * from keyvalue where key_id=${keyId} and latest=TRUE`;
+    const query2 = `
+    SELECT *
+    FROM (
+      SELECT *
+      FROM keyvalue
+      WHERE key_id = ${keyId}
+        AND latest = true
+    ) t1
+      RIGHT JOIN (
+        SELECT *
+        FROM (
+          SELECT language_id
+          FROM project_language
+          WHERE project_id = (
+            SELECT project_id
+            FROM "namespace"
+            WHERE id = (
+              SELECT namespace_id
+              FROM key
+              WHERE id = ${keyId}
+            )
+          )
+        ) t3
+      ) t2
+      ON t1.language_id = t2.language_id
+    `;
     const keyValue = await this.keynameRepository.query(query2);
     const result = {
       keyName: keyNameTrue,
