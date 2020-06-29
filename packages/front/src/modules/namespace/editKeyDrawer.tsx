@@ -92,14 +92,25 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
     if (mode === EDIT) {
       const languageRes = await Api.getLanguagesByKeyId(keyItem.keyId);
       if (languageRes.success) {
-        setLanguage(languageRes.data);
+        const editLanguages: any = [];
+        languageRes.data.value.map((ele: any) => {
+          const lang = languages.find((t: any) => t.id === ele.language_id);
+          if (lang) {
+            const obj = {
+              id: lang.id,
+              value: ele.value,
+              name: lang.name,
+            };
+            editLanguages.push(obj);
+          }
+        });
+        setLanguage([...editLanguages]);
       }
     }
-    setLanguage(null);
-  }, [keyItem, mode]);
+  }, [keyItem, mode, languages]);
 
   const modifyLanguage = useCallback(() => {
-    form.validateFields().then(async values => {
+    form.validateFields().then(async (values: any) => {
       if (mode === ADD) {
         const kv: any = [];
         let keyName = null;
@@ -126,6 +137,23 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
           onClose();
         }
       } else {
+        const kv: any = [];
+        Object.keys(values).map(key => {
+          const lang: any = languages.find((t: any) => t.name === key);
+          kv.push({
+            languageId: lang.id,
+            value: values[key],
+          });
+        });
+        const data = {
+          branchId: branchId,
+          namespaceId: namespaceId,
+          keyId: keyItem.keyId,
+          keyName: keyItem.keyName,
+          kv: kv,
+        };
+        await Api.addOrEditKeyValue(data);
+        onClose();
       }
     });
   }, [keyItem]);
@@ -134,7 +162,6 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
     getLanguageInfo();
   }, []);
 
-  window.console.log('language', language);
   return (
     <div>
       <Drawer
@@ -198,11 +225,12 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
           {mode === EDIT && (
             <div>
               {language &&
-                language.value.map((ele: any, index: any) => {
+                language.map((ele: any, index: any) => {
                   return (
                     <Row gutter={16} key={index}>
                       <Col span={16}>
                         <Form.Item
+                          initialValue={ele.value}
                           name={ele.name}
                           label={
                             <div>
