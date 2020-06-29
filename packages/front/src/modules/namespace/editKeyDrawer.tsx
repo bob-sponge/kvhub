@@ -38,6 +38,7 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
       keyName: currKeyItem.keyName,
     };
     await Api.modifyKeyname(data);
+    setPopoverVisible(false);
     refreshList();
   }, [currKeyItem]);
 
@@ -82,7 +83,7 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
       </div>
     );
     return title;
-  }, [popoverVisible, currKeyItem]);
+  }, [popoverVisible, currKeyItem, keyItem]);
 
   const handleVisibleChange = (isShow: boolean) => {
     setPopoverVisible(isShow);

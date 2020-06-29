@@ -77,9 +77,9 @@ const LanguageItem = ({ item, index, projectView, branchId, pid }: any) => {
     </div>
   );
 
-  const handleJump = (id: number, languageId: number) => {
+  const handleJump = (id: number, languageId: number, name: string) => {
     const path = window.location.pathname.split('/');
-    history.push(`/namespace/${path[2]}/${id}/${languageId}`);
+    history.push(`/namespace/${name}/${path[2]}/${id}/${languageId}`);
   };
 
   return (
@@ -116,7 +116,7 @@ const LanguageItem = ({ item, index, projectView, branchId, pid }: any) => {
                 <div
                   className={css.languageNamespacesProgressItem}
                   key={item.id}
-                  onClick={() => handleJump(detail.id, item.languageId)}>
+                  onClick={() => handleJump(detail.id, item.languageId, detail.name)}>
                   <p className={css.languageNamespacesProgressTitle}>{detail.name}</p>
                   {progressRender('small', detail.translatedKeys, detail.totalKeys)}
                 </div>

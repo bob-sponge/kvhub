@@ -13,9 +13,10 @@ const { Search } = Input;
 
 const NamespaceView: React.FC = () => {
   const paths = window.location.pathname.split('/');
-  const projectId = parseInt(paths[2]);
-  const namespaceId = parseInt(paths[3]);
-  const languageId = parseInt(paths[4]);
+  const name = paths[2];
+  const projectId = parseInt(paths[3]);
+  const namespaceId = parseInt(paths[4]);
+  const languageId = parseInt(paths[5]);
 
   const [showDrawer, setShowDrawer] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
@@ -139,7 +140,7 @@ const NamespaceView: React.FC = () => {
       <Container>
         <div className={css.title}>
           <div>
-            <span>Namespace-1</span>
+            <span>{name}</span>
           </div>
           <div>
             {branches.length > 0 && (
