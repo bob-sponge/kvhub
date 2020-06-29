@@ -4,7 +4,7 @@ import Container from '../../container';
 import * as Api from '../../api/namespace';
 import EditKeyDrawer from './editKeyDrawer';
 import * as css from './styles/namespace.modules.less';
-import { ItemKey, ADD, LanguageItem, ConditionReq } from './constant';
+import { ItemKey, ADD, LanguageItem, ConditionReq, DELETE } from './constant';
 import { Button, Select, Radio, Input, Pagination, Spin, message } from 'antd';
 import { DeleteFilled, ArrowLeftOutlined, PlusOutlined } from '@ant-design/icons';
 
@@ -114,10 +114,14 @@ const NamespaceView: React.FC = () => {
     setShowDrawer(true);
   }, []);
 
-  const editKeyValue = useCallback((flag: string, value: any, item: number) => {
+  const editKeyValue = useCallback(async (flag: string, value: any, item: any) => {
     setShowDrawer(value);
     setMode(flag);
     setKeyItem(item);
+    if (flag === DELETE) {
+      await Api.deleteKey(item.keyId);
+      handleRefreshList();
+    }
   }, []);
 
   const deletNamespace = useCallback(async () => {
