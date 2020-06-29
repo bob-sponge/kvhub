@@ -1,4 +1,6 @@
-import { Injectable, BadRequestException,Inject,forwardRef } from '@nestjs/common';
+/* eslint-disable no-shadow */
+/* eslint-disable @typescript-eslint/member-ordering */
+import { Injectable, BadRequestException, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Branch } from 'src/entities/Branch';
 import { Repository, DeleteResult, Like } from 'typeorm';
@@ -42,7 +44,7 @@ export class BranchService {
     @InjectRepository(Namespace) private readonly namespaceRepository: Repository<Namespace>,
     private readonly config: ConfigService,
     @Inject(forwardRef(() => KeyService))
-    private readonly keyService:KeyService
+    private readonly keyService: KeyService,
   ) {
     this.constant = new Map([
       ['0', 'Open'],
@@ -81,7 +83,7 @@ export class BranchService {
     let sourceKeyList = await this.keyService.getKeyListByBranchId(sourceBranchId);
     let targetKeyList = await this.keyService.getKeyListByBranchId(targetBranchId);
 
-    return await this.diffKey(sourceKeyList,targetKeyList,crosMerge);
+    return await this.diffKey(sourceKeyList, targetKeyList, crosMerge);
   }
 
   /**
@@ -90,8 +92,12 @@ export class BranchService {
    * @param target Target branches all keys, key names and their translations in different languages
    * @param mergeId branch merge id
    */
-  private async diffKey(source: KeyValueDetailVO[], target: KeyValueDetailVO[], crosMerge: boolean) :Promise<CompareBranchVO[]> {
-    let result : CompareBranchVO[] = [];
+  private async diffKey(
+    source: KeyValueDetailVO[],
+    target: KeyValueDetailVO[],
+    crosMerge: boolean,
+  ): Promise<CompareBranchVO[]> {
+    let result: CompareBranchVO[] = [];
     for (let i = 0; i < source.length; i++) {
       const sourceKey = source[i];
       let targetKey = new KeyValueDetailVO();
@@ -129,16 +135,16 @@ export class BranchService {
         sourceCompare.keyId = sourceKey.keyId;
         sourceCompare.keyname = sourceKey.keyName;
         const sNamespace = await this.namespaceRepository.findOne(sourceKey.namespaceId);
-        if (sNamespace !== undefined && !sNamespace.delete){
-          sourceCompare.namespaceName = sNamespace.name
+        if (sNamespace !== undefined && !sNamespace.delete) {
+          sourceCompare.namespaceName = sNamespace.name;
         }
-        if (targetKey !== null ){
+        if (targetKey !== null) {
           targetCompare.keyId = targetKey.keyId;
           targetCompare.keyname = targetKey.keyName;
-          if (targetKey.namespaceId !== undefined){
+          if (targetKey.namespaceId !== undefined) {
             const tNamespace = await this.namespaceRepository.findOne(targetKey.namespaceId);
-            if (tNamespace !== undefined && !tNamespace.delete){
-              targetCompare.namespaceName = tNamespace.name
+            if (tNamespace !== undefined && !tNamespace.delete) {
+              targetCompare.namespaceName = tNamespace.name;
             }
           }
         }
@@ -186,7 +192,7 @@ export class BranchService {
     // When crosmerge is true, the branches need to be compared with each other
     if (crosMerge) {
       const crosMergeResult = await this.diffKey(target, source, false);
-      if (crosMergeResult !== null && crosMergeResult.length > 0){
+      if (crosMergeResult !== null && crosMergeResult.length > 0) {
         result = result.concat(crosMergeResult);
       }
     }
@@ -233,6 +239,7 @@ export class BranchService {
    * @param source source
    * @param destination destination
    */
+  // eslint-disable-next-line @typescript-eslint/member-ordering
   async getDiff(source: string, destination: string): Promise<string> {
     if (source === destination) {
       return destination;
@@ -241,6 +248,7 @@ export class BranchService {
       return '';
     }
     // eslint-disable-next-line prettier/prettier
+    // eslint-disable-next-line @typescript-eslint/quotes
     const prefix = "<span style='color:blue'>";
     const suffix = '</sapn>';
     if (source === '' && destination !== '') {
@@ -396,6 +404,7 @@ export class BranchService {
    * 保存branch,默认创建master
    * @param branchBody branchBody
    */
+  // eslint-disable-next-line @typescript-eslint/member-ordering
   async save(branchBody: BranchBody): Promise<void> {
     // 判断project_id 是否存在
     if ((await this.projectRepository.findOne({ id: branchBody.projectId })) === undefined) {
