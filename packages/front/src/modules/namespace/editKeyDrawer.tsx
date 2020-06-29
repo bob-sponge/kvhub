@@ -95,7 +95,8 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
         setLanguage(languageRes.data);
       }
     }
-  }, [keyItem.keyId]);
+    setLanguage(null);
+  }, [keyItem, mode]);
 
   const modifyLanguage = useCallback(() => {
     form.validateFields().then(values => {
@@ -117,7 +118,7 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
           const data = {
             branchId: branchId,
             namespaceId: namespaceId,
-            keyId: keyItem.keyId,
+            keyId: null,
             keyName: keyName,
             kv: kv,
           };
@@ -127,7 +128,7 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
       } else {
       }
     });
-  }, []);
+  }, [keyItem]);
 
   useEffect(() => {
     getLanguageInfo();

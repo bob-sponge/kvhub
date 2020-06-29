@@ -86,7 +86,8 @@ export class NamespaceService {
       keyNameEntity.name = keyName.trim();
       keyNameEntity.commitId = commitId;
       const insertKeyName = await queryRunner.manager.insert<Keyname>(Keyname, keyNameEntity);
-      logger.info(`insert key name id: ${insertKeyName.raw[0].id}`);
+      const keyNameId = insertKeyName.raw[0].id;
+      logger.info(`insert key name id: ${keyNameId}`);
       // key value
       const keyvalueInfo = await this.keyvalueRepository.query(
         `select * from keyvalue where key_id = ${keyId} and latest is true`,
@@ -109,6 +110,8 @@ export class NamespaceService {
         keyValueEntitys.push(keyValueEntity);
       });
       await queryRunner.manager.insert<Keyvalue>(Keyvalue, keyValueEntitys);
+      // 更新 key 表actual id 为 key name id
+      queryRunner.manager.query(`update key set actual_id=${keyNameId} where id=${keyId}`);
       await queryRunner.commitTransaction();
     } catch (error) {
       await queryRunner.rollbackTransaction();
@@ -127,7 +130,7 @@ export class NamespaceService {
     await queryRunner.startTransaction();
     const commitId = UUIDUtils.generateUUID();
     try {
-      if (keyId === '') {
+      if (keyId === '' || keyId === null) {
         // 新增
         // 判断当前分支下是否有同名的 key name, 有抛出异常， 不能保存成功
         const sameKeyName = `
@@ -185,21 +188,25 @@ export class NamespaceService {
         keyNameEntity.commitId = commitId;
         // throw new Error('test transaction.');
         const insertKeyName = await queryRunner.manager.insert<Keyname>(Keyname, keyNameEntity);
-        logger.info(`insert key name id: ${insertKeyName.raw[0].id}`);
+        const keyNameId = insertKeyName.raw[0].id;
+        logger.info(`insert key name id: ${keyNameId}`);
+        queryRunner.manager.query(`update key set actual_id=${keyNameId} where id=${keyEntityId}`);
         // 插入key Value 表,
         let keyValueEntitys = [];
         data.forEach(d => {
           const languageId = d.languageId;
           const value = d.value;
-          const keyValueEntity = new Keyvalue();
-          keyValueEntity.value = value;
-          keyValueEntity.keyId = keyEntityId;
-          keyValueEntity.commitId = commitId;
-          keyValueEntity.languageId = languageId;
-          keyValueEntity.latest = true;
-          keyValueEntity.modifier = 'lw'; // todo modifier ??
-          keyValueEntity.midifyTime = new Date();
-          keyValueEntitys.push(keyValueEntity);
+          if (value !== null && value !== '' && value !== undefined) {
+            const keyValueEntity = new Keyvalue();
+            keyValueEntity.value = value;
+            keyValueEntity.keyId = keyEntityId;
+            keyValueEntity.commitId = commitId;
+            keyValueEntity.languageId = languageId;
+            keyValueEntity.latest = true;
+            keyValueEntity.modifier = 'lw'; // todo modifier ??
+            keyValueEntity.midifyTime = new Date();
+            keyValueEntitys.push(keyValueEntity);
+          }
         });
         await queryRunner.manager.insert<Keyvalue>(Keyvalue, keyValueEntitys);
       } else {
@@ -223,15 +230,17 @@ export class NamespaceService {
         data.forEach(d => {
           const languageId = d.languageId;
           const value = d.value;
-          const keyValueEntity = new Keyvalue();
-          keyValueEntity.value = value;
-          keyValueEntity.keyId = keyId;
-          keyValueEntity.commitId = commitId;
-          keyValueEntity.languageId = languageId;
-          keyValueEntity.latest = true;
-          keyValueEntity.modifier = 'lw'; // todo modifier ??
-          keyValueEntity.midifyTime = new Date();
-          keyValueEntitys.push(keyValueEntity);
+          if (value !== null && value !== '' && value !== undefined) {
+            const keyValueEntity = new Keyvalue();
+            keyValueEntity.value = value;
+            keyValueEntity.keyId = keyId;
+            keyValueEntity.commitId = commitId;
+            keyValueEntity.languageId = languageId;
+            keyValueEntity.latest = true;
+            keyValueEntity.modifier = 'lw'; // todo modifier ??
+            keyValueEntity.midifyTime = new Date();
+            keyValueEntitys.push(keyValueEntity);
+          }
         });
         await queryRunner.manager.insert<Keyvalue>(Keyvalue, keyValueEntitys);
       }
@@ -314,6 +323,26 @@ export class NamespaceService {
     `;
     logger.info(`query2 is ${languageQuery}`);
     const language: any[] = await this.namespaceRepository.query(languageQuery);
+
+    const referenceLanguageQuery = `
+    SELECT *
+    FROM language
+    WHERE id IN (
+      SELECT reference_language_id
+      FROM project
+      WHERE id = (
+        SELECT project_id
+        FROM namespace
+        WHERE id = ${id}
+      )
+    )
+    `;
+    const referenceLanguage: any[] = await this.namespaceRepository.query(referenceLanguageQuery);
+    language.forEach(ele => {
+      if (ele.id === referenceLanguage[0].id) {
+        ele.referenceLanguage = true;
+      }
+    });
     return language;
   }
 
@@ -341,7 +370,7 @@ export class NamespaceService {
     }
     // 获取target language key
     let pageCondition = `LIMIT ${pageSize} OFFSET ${offset}`;
-    const namespaceKeys: any[] = await this.getNamespaceTargetLanguageKeys(
+    let namespaceKeys: any[] = await this.getNamespaceTargetLanguageKeys(
       namespaceId,
       condition,
       targetLanguageId,
@@ -349,6 +378,8 @@ export class NamespaceService {
       pageCondition,
       branchId,
     );
+
+    namespaceKeys = namespaceKeys.filter(t => t.keynameid === t.actualid);
     // 获取总数
     pageCondition = '';
     const namespaceAllKeys: any[] = await this.getNamespaceTargetLanguageKeys(
@@ -464,15 +495,15 @@ export class NamespaceService {
     const query = `SELECT *
     FROM (
       SELECT kkk.keyId AS keyId, kkk.keyNameId AS keyNameId, kkk.keyName AS keyName, kkk.id AS valueId, kkk.language_id AS languageId
-        , kkk.value AS keyValue
+        , kkk.value AS keyValue, kkk.actualId AS actualId
       FROM (
         SELECT *
         FROM (
-          SELECT kkn.keyid AS keyId, kkn.id AS keyNameId, kkn.name AS keyName
+          SELECT kkn.keyid AS keyId, kkn.id AS keyNameId, kkn.name AS keyName, kkn.actualid AS actualId
           FROM ((
             SELECT *
             FROM (
-              SELECT k.id AS keyid
+              SELECT k.id AS keyid, k.actual_id AS actualid
               FROM key k
               WHERE k.delete = 'f'
                 AND namespace_id = ${namespaceId}
@@ -490,7 +521,7 @@ export class NamespaceService {
           LEFT JOIN (
             SELECT *
             FROM keyvalue
-            WHERE language_id = ${targetLanguageId}
+            WHERE language_id = ${targetLanguageId} and latest = true
           ) kv
           ON kknt.keyid = kv.key_id
       ) kkk
