@@ -361,9 +361,9 @@ export class NamespaceService {
     let statusCondition = '';
     if (keyTranslateProgressStatus.toLowerCase() === 'all') {
       statusCondition = '';
-    } else if (keyTranslateProgressStatus.toLowerCase() === 'unfinish') {
+    } else if (keyTranslateProgressStatus.toLowerCase() === 'unfinished') {
       statusCondition = 'WHERE valueId IS NULL';
-    } else if (keyTranslateProgressStatus.toLowerCase() === 'finish') {
+    } else if (keyTranslateProgressStatus.toLowerCase() === 'finished') {
       statusCondition = 'WHERE valueId IS NOT NULL';
     } else {
       statusCondition = '';
