@@ -30,7 +30,7 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
   const [language, setLanguage] = useState<any>(null);
   const [popoverVisible, setPopoverVisible] = useState(false);
   const [currKeyItem, setCurrKeyItem] = useState(keyItem);
-  const [currKeyName, setKeyName] = useState(keyItem.keyName);
+  const [currKeyName, setKeyName] = useState(keyItem ? keyItem.keyName : '');
   const [form] = Form.useForm();
 
   const modifyKeyName = useCallback(async () => {
