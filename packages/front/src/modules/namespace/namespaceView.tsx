@@ -25,6 +25,7 @@ const NamespaceView: React.FC = () => {
   const [branches, setBranches] = useState<Array<any>>([]);
   const [mode, setMode] = useState<string>(ADD);
   const [keyItem, setKeyItem] = useState<any>(null);
+  const [total, setTotal] = useState(0);
   const [filter, setFilter] = useState<ConditionReq>({
     namespaceId: namespaceId,
     referenceLanguageId: languageId,
@@ -42,6 +43,7 @@ const NamespaceView: React.FC = () => {
     if (keyRes.success) {
       setLoading(false);
       setKeys(keyRes.data.keys);
+      setTotal(keyRes.data.totalNum);
     }
   }, []);
 
@@ -98,6 +100,15 @@ const NamespaceView: React.FC = () => {
   );
 
   const onShowSizeChange = useCallback(
+    (current, pageSize) => {
+      filter.page = current;
+      filter.pageSize = pageSize;
+      getList(filter);
+    },
+    [filter],
+  );
+
+  const onPageChange = useCallback(
     (current, pageSize) => {
       filter.page = current;
       filter.pageSize = pageSize;
@@ -209,7 +220,13 @@ const NamespaceView: React.FC = () => {
             })}
         </div>
         <div className={css.pagenation}>
-          <Pagination showSizeChanger onShowSizeChange={onShowSizeChange} defaultCurrent={1} total={keys.length} />
+          <Pagination
+            showSizeChanger
+            onChange={onPageChange}
+            onShowSizeChange={onShowSizeChange}
+            defaultCurrent={1}
+            total={total}
+          />
         </div>
         {showDrawer && (
           <EditKeyDrawer

@@ -30,6 +30,7 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
   const [language, setLanguage] = useState<any>(null);
   const [popoverVisible, setPopoverVisible] = useState(false);
   const [currKeyItem, setCurrKeyItem] = useState(keyItem);
+  const [currKeyName, setKeyName] = useState(keyItem.keyName);
   const [form] = Form.useForm();
 
   const modifyKeyName = useCallback(async () => {
@@ -37,7 +38,10 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
       keyId: currKeyItem.keyId,
       keyName: currKeyItem.keyName,
     };
-    await Api.modifyKeyname(data);
+    const res = await Api.modifyKeyname(data);
+    if (res.success) {
+      setKeyName(res.data.name);
+    }
     setPopoverVisible(false);
     refreshList();
   }, [currKeyItem]);
@@ -66,7 +70,7 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
     );
     let title = (
       <div className={css.editKeyName}>
-        <div>{keyItem.keyName}</div>
+        <div>{currKeyName}</div>
         <Popover
           onVisibleChange={handleVisibleChange}
           placement="bottomLeft"
@@ -83,7 +87,7 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
       </div>
     );
     return title;
-  }, [popoverVisible, currKeyItem, keyItem]);
+  }, [popoverVisible, currKeyItem, keyItem, currKeyName]);
 
   const handleVisibleChange = (isShow: boolean) => {
     setPopoverVisible(isShow);
