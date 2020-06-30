@@ -101,7 +101,7 @@ const NamespaceView: React.FC = () => {
 
   const onShowSizeChange = useCallback(
     (current, pageSize) => {
-      filter.page = current;
+      filter.page = current === 0 ? 1 : current;
       filter.pageSize = pageSize;
       getList(filter);
     },
