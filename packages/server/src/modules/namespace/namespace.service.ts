@@ -3,7 +3,7 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Namespace } from 'src/entities/Namespace';
-import { Repository, getConnection, In } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { NamespaceViewDetail } from 'src/vo/NamespaceViewDetail';
 import * as Log4js from 'log4js';
 import { Keyvalue } from 'src/entities/Keyvalue';
@@ -16,7 +16,6 @@ import { BranchCommit } from 'src/entities/BranchCommit';
 import { BranchMerge } from 'src/entities/BranchMerge';
 import { Project } from 'src/entities/Project';
 import { CommonConstant, ErrorMessage } from 'src/constant/constant';
-import { Z_FILTERED } from 'zlib';
 
 @Injectable()
 export class NamespaceService {
@@ -67,10 +66,10 @@ export class NamespaceService {
     logger.level = 'INFO';
 
     // 开启事务
-    const connection = getConnection();
-    const queryRunner = connection.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+    // const connection = getConnection();
+    // const queryRunner = connection.createQueryRunner();
+    // await queryRunner.connect();
+    // await queryRunner.startTransaction();
     try {
       const keyNameInfo = await this.keyRepository.query(`select * from keyname where key_id = ${keyId}`);
       if (keyNameInfo.filter(a => a.name === keyName.trim()).length > 0) {
@@ -85,7 +84,7 @@ export class NamespaceService {
       keyNameEntity.modifyTime = new Date();
       keyNameEntity.name = keyName.trim();
       keyNameEntity.commitId = commitId;
-      const insertKeyName = await queryRunner.manager.insert<Keyname>(Keyname, keyNameEntity);
+      const insertKeyName = await this.keynameRepository.insert(keyNameEntity);
       const keyNameId = insertKeyName.raw[0].id;
       logger.info(`insert key name id: ${keyNameId}`);
       // key value
@@ -93,7 +92,7 @@ export class NamespaceService {
         `select * from keyvalue where key_id = ${keyId} and latest is true`,
       );
       // 更新 value 表的 latest 为false
-      await queryRunner.manager.query(`UPDATE keyvalue SET latest = false WHERE key_id = ${keyId}`);
+      await this.keyvalueRepository.query(`UPDATE keyvalue SET latest = false WHERE key_id = ${keyId}`);
       // 插入key Value 表,
       let keyValueEntitys = [];
       keyvalueInfo.forEach(d => {
@@ -109,15 +108,15 @@ export class NamespaceService {
         keyValueEntity.midifyTime = new Date();
         keyValueEntitys.push(keyValueEntity);
       });
-      await queryRunner.manager.insert<Keyvalue>(Keyvalue, keyValueEntitys);
+      await this.keyvalueRepository.insert(keyValueEntitys);
       // 更新 key 表actual id 为 key name id
-      queryRunner.manager.query(`update key set actual_id=${keyNameId} where id=${keyId}`);
+      this.keyRepository.query(`update key set actual_id=${keyNameId} where id=${keyId}`);
 
-      const reskeynameInfo = queryRunner.manager.query(`select * from keyname where id = ${keyNameId}`);
-      await queryRunner.commitTransaction();
+      const reskeynameInfo = this.keynameRepository.query(`select * from keyname where id = ${keyNameId}`);
+      //await queryRunner.commitTransaction();
       return reskeynameInfo;
     } catch (error) {
-      await queryRunner.rollbackTransaction();
+      //await queryRunner.rollbackTransaction();
       throw new Error(error.message);
     }
   }
@@ -127,10 +126,10 @@ export class NamespaceService {
     logger.level = 'INFO';
 
     // 开启事务
-    const connection = getConnection();
-    const queryRunner = connection.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+    // const connection = getConnection();
+    // const queryRunner = connection.createQueryRunner();
+    // await queryRunner.connect();
+    // await queryRunner.startTransaction();
     const commitId = UUIDUtils.generateUUID();
     try {
       if (keyId === '' || keyId === null) {
@@ -165,7 +164,7 @@ export class NamespaceService {
         keyEntity.modifyTime = new Date();
         keyEntity.delete = false;
         keyEntity.actualId = 0;
-        const insertKey = await queryRunner.manager.insert<Key>(Key, keyEntity);
+        const insertKey = await this.keyRepository.insert(keyEntity);
         const keyEntityId = insertKey.raw[0].id;
         logger.info(`insert key id: ${keyEntityId}`);
         // 插入branch commit
@@ -181,7 +180,7 @@ export class NamespaceService {
         branchKeyEntity.branchId = branchId;
         branchKeyEntity.keyId = keyEntityId;
         branchKeyEntity.delete = false;
-        await queryRunner.manager.insert<BranchKey>(BranchKey, branchKeyEntity);
+        await this.branchKeyRepository.insert(branchKeyEntity);
         // 插入keyName 表,
         const keyNameEntity = new Keyname();
         keyNameEntity.keyId = keyEntityId;
@@ -190,10 +189,10 @@ export class NamespaceService {
         keyNameEntity.name = keyName;
         keyNameEntity.commitId = commitId;
         // throw new Error('test transaction.');
-        const insertKeyName = await queryRunner.manager.insert<Keyname>(Keyname, keyNameEntity);
+        const insertKeyName = await this.keynameRepository.insert(keyNameEntity);
         const keyNameId = insertKeyName.raw[0].id;
         logger.info(`insert key name id: ${keyNameId}`);
-        queryRunner.manager.query(`update key set actual_id=${keyNameId} where id=${keyEntityId}`);
+        this.keyRepository.query(`update key set actual_id=${keyNameId} where id=${keyEntityId}`);
         // 插入key Value 表,
         let keyValueEntitys = [];
         data.forEach(d => {
@@ -213,7 +212,7 @@ export class NamespaceService {
             keyValueEntitys.push(keyValueEntity);
           }
         });
-        await queryRunner.manager.insert<Keyvalue>(Keyvalue, keyValueEntitys);
+        await this.keyvalueRepository.insert(keyValueEntitys);
       } else {
         // 編輯
         const branchCommit = new BranchCommit();
@@ -229,7 +228,7 @@ export class NamespaceService {
           throw new Error(`Key id get name ${keyIdGetName} not equals key name ${keyName}`);
         }
         // 更新 value 表的 latest 为false
-        await queryRunner.manager.query(`UPDATE keyvalue SET latest = false WHERE key_id = ${keyId}`);
+        await this.keyvalueRepository.query(`UPDATE keyvalue SET latest = false WHERE key_id = ${keyId}`);
         // 插入key Value 表,
         let keyValueEntitys = [];
         data.forEach(d => {
@@ -249,11 +248,11 @@ export class NamespaceService {
             keyValueEntitys.push(keyValueEntity);
           }
         });
-        await queryRunner.manager.insert<Keyvalue>(Keyvalue, keyValueEntitys);
+        await this.keyvalueRepository.insert(keyValueEntitys);
       }
-      await queryRunner.commitTransaction();
+      //await queryRunner.commitTransaction();
     } catch (error) {
-      await queryRunner.rollbackTransaction();
+      //await queryRunner.rollbackTransaction();
       throw new Error(error.message);
     }
   }
