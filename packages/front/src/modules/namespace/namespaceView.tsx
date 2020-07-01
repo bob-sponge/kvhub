@@ -177,10 +177,10 @@ const NamespaceView: React.FC = () => {
         <div className={css.title}>
           <div>
             {languages.length > 0 && (
-              <Select defaultValue={languages[0].id} style={{ width: '129px' }} onChange={handleLangChange}>
+              <Select defaultValue={languages[0].id} style={{ width: '270px' }} onChange={handleLangChange}>
                 {languages.map((lang: LanguageItem, index: number) => (
                   <Option key={index} value={lang.id}>
-                    {lang.name}
+                    {lang.referenceLanguage ? lang.name + ' (Reference Language) ' : lang.name}
                   </Option>
                 ))}
               </Select>

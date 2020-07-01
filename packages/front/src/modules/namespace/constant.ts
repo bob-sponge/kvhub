@@ -204,6 +204,7 @@ export interface ItemKey {
 export interface LanguageItem {
   id: number;
   name: string;
+  referenceLanguage?: boolean;
 }
 
 export interface ConditionReq {
