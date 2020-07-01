@@ -1,12 +1,13 @@
 import * as React from 'react';
 import { ajax } from '@ofm/ajax';
-import { Router, Route, Switch } from 'react-router-dom';
+import { Router, Route, Switch, Redirect } from 'react-router-dom';
 import { history } from '@ofm/history';
 import NamespaceView from './modules/namespace';
 import Languages from './modules/languages';
 import Dashboard from './modules/dashboard';
 import Branches from './modules/branches';
-import MargeRequest from './modules/margeRequest';
+import MergeRequest from './modules/mergeRequest';
+import MergeDetail from './modules/mergeRequest/mergeDetail/main';
 import Compare from './modules/branches/compare/compare';
 
 export function App() {
@@ -28,12 +29,14 @@ export function App() {
 const BasicRoute = () => (
   <Router history={history}>
     <Switch>
-      <Route exact path="/namespace" component={NamespaceView} />
-      <Route exact path="/languages" component={Languages} />
+      <Route exact path="/namespace/:name/:projectId/:namespaceId/:languageId" component={NamespaceView} />
+      <Route exact path="/languages/:projectId" component={Languages} />
       <Route exact path="/dashboard" component={Dashboard} />
-      <Route exact path="/branch" component={Branches} />
-      <Route exact path="/margeRequest" component={MargeRequest} />
+      <Route exact path="/branch/:projectId" component={Branches} />
+      <Route exact path="/mergeRequest/:projectId" component={MergeRequest} />
+      <Route exact path="/mergeRequest/detail/:branchMergeId" component={MergeDetail} />
       <Route exact path="/branch/compare/:id" component={Compare} />
+      <Redirect from={'/'} strict={true} to={'/dashboard'} />
     </Switch>
   </Router>
 );

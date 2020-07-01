@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Drawer, Button, Form, Input, Select, message, Modal } from 'antd';
 import * as css from './style/addOrEditProject.modules.less';
 import { CheckOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
-import { ajax } from '@ofm/ajax';
+import * as Api from '../../api';
 import { defaultDetail, compareObject } from './constant';
 const { confirm } = Modal;
 
@@ -19,15 +19,16 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
   const [detail, setDetail] = useState<any>(defaultDetail);
 
   useEffect(() => {
-    ajax.get('/languages/all').then(result => {
-      const {
-        data: { statusCode, data },
-      } = result;
-      if (statusCode === 0) {
-        setLanguages(data);
-      }
-    });
+    getLanguages();
   }, []);
+
+  const getLanguages = async () => {
+    let result = await Api.languagesApi();
+    const { success, data } = result;
+    if (success && data) {
+      setLanguages(data);
+    }
+  };
 
   const onContentChange = (label: string) => {
     form.validateFields().then(values => {
@@ -38,6 +39,17 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
     });
   };
 
+  const addProject = async (params: any) => {
+    let result = await Api.addProjectApi(params);
+    const { success, data } = result;
+    if (success) {
+      setVisible(false);
+      message.success(data);
+      getProjectAll();
+      form.resetFields();
+    }
+  };
+
   const handleAdd = () => {
     form.validateFields().then(values => {
       if (!values.outOfDate) {
@@ -45,23 +57,7 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
           name: values.name.trim(),
           referenceId: values.referenceId,
         };
-        ajax
-          .post('/project/dashboard/save', params)
-          .then(result => {
-            const {
-              data: { statusCode, message: msg },
-            } = result;
-            if (statusCode === 0) {
-              setVisible(false);
-              message.success(msg);
-              getProjectAll();
-              form.resetFields();
-            }
-          })
-          .catch(errorInfo => {
-            setVisible(false);
-            message.error(errorInfo);
-          });
+        addProject(params);
       }
     });
   };
@@ -103,7 +99,7 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
   };
 
   const checkProjectName = (_rule: any, value: any) => {
-    if (value.length <= 100) {
+    if (value && value.length <= 100) {
       return Promise.resolve();
     }
     return Promise.reject('Project name can contain at most 100 characters');
@@ -135,7 +131,11 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
             {languages &&
               languages.length > 0 &&
               languages.map(item => {
-                return <Select.Option value={item.id}>{item.name}</Select.Option>;
+                return (
+                  <Select.Option key={item.id} value={item.id}>
+                    {item.name}
+                  </Select.Option>
+                );
               })}
           </Select>
         </Form.Item>

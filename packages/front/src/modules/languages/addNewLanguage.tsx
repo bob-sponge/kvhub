@@ -1,37 +1,56 @@
-import React, { useState } from 'react';
-import { Drawer, Form, Button, Input, Select } from 'antd';
-import { CloseOutlined, PlusOutlined } from '@ant-design/icons';
+import React, { useState, useCallback, useEffect } from 'react';
+import { Drawer, Form, Button, Select } from 'antd';
+import { CloseOutlined } from '@ant-design/icons';
+import { languagesAllApi } from '../../api/languages';
 import * as css from './styles/addNewLanguage.modules.less';
 
 const Option = Select.Option;
 
 interface InjectedProps {
   visible: boolean;
-  showAdd: Function;
+  changeModal: Function;
 }
 
-const AddNewLanguage = ({ visible, showAdd }: InjectedProps) => {
+const AddNewLanguage = ({ visible, changeModal }: InjectedProps) => {
   const [form] = Form.useForm();
-  const [namespaceList, setNamespaceList] = useState([
-    {
-      key: 'namespace1',
-      name: 'namespace - 1',
-    },
-  ]);
+  const [languageList, setLanguageList] = useState([]);
+  // const [namespaceList, setNamespaceList] = useState([]);
 
-  const addNamespaceList = () => {
-    const list = Object.assign([], namespaceList);
-    list.push({
-      key: `namespace${namespaceList.length + 1}`,
-      name: `namespace - ${namespaceList.length + 1}`,
+  const languagesAll = useCallback(async () => {
+    const res = await languagesAllApi();
+    if (res.data) {
+      setLanguageList(res.data);
+    }
+  }, []);
+
+  useEffect(() => {
+    languagesAll();
+  }, [languagesAll]);
+
+  // const addNamespaceList = () => {
+  //   const list: any = Object.assign([], namespaceList);
+  //   list.push({
+  //     key: `namespace${namespaceList.length + 1}`,
+  //     name: `namespace - ${namespaceList.length + 1}`,
+  //   });
+  //   setNamespaceList(list);
+  // };
+
+  // const deleteNamespaceList = (index: number) => {
+  //   const list = Object.assign([], namespaceList);
+  //   list.splice(index);
+  //   setNamespaceList(list);
+  // };
+
+  const addLanguage = () => {
+    form.validateFields().then(values => {
+      window.console.log(values);
+      if (values && values.Language) {
+        changeModal({
+          languageId: values.Language,
+        });
+      }
     });
-    setNamespaceList(list);
-  };
-
-  const deleteNamespaceList = (index: number) => {
-    const list = Object.assign([], namespaceList);
-    list.splice(index);
-    setNamespaceList(list);
   };
 
   return (
@@ -39,7 +58,7 @@ const AddNewLanguage = ({ visible, showAdd }: InjectedProps) => {
       <Drawer
         title="Add New Language"
         width={590}
-        onClose={() => showAdd()}
+        onClose={() => changeModal()}
         visible={visible}
         bodyStyle={{ paddingBottom: 80 }}
         headerStyle={{ display: 'none' }}
@@ -48,10 +67,10 @@ const AddNewLanguage = ({ visible, showAdd }: InjectedProps) => {
             style={{
               textAlign: 'right',
             }}>
-            <Button onClick={() => showAdd()} style={{ marginRight: 8 }}>
+            <Button onClick={() => changeModal()} style={{ marginRight: 8 }}>
               Cancel
             </Button>
-            <Button onClick={() => showAdd()} type="primary">
+            <Button onClick={() => addLanguage()} type="primary">
               Submit
             </Button>
           </div>
@@ -63,32 +82,39 @@ const AddNewLanguage = ({ visible, showAdd }: InjectedProps) => {
           </div>
           <Form.Item name="Language" label="Language" rules={[{ required: true, message: 'Please select language' }]}>
             <Select placeholder="Please select language">
-              <Option value="en">English</Option>
-              <Option value="zh">中文</Option>
+              {languageList &&
+                languageList.map((item: any) => {
+                  return (
+                    <Option key={item.id} value={item.id}>
+                      {item.name}
+                    </Option>
+                  );
+                })}
             </Select>
           </Form.Item>
 
-          <div className={css.title}>
+          {/* <div className={css.title}>
             <p>{'Namespace'}</p>
-          </div>
+          </div> */}
 
-          {namespaceList.map((item, index) => {
-            return (
-              <Form.Item name={item.key} label={item.name}>
-                <div className={css.namespaceForm}>
-                  <Input placeholder="Please enter namespace" />
-                  {namespaceList.length > 1 && (
-                    <CloseOutlined onClick={() => deleteNamespaceList(index)} className={css.icon} />
-                  )}
-                </div>
-              </Form.Item>
-            );
-          })}
+          {/* {namespaceList &&
+            namespaceList.map((item: any, index) => {
+              return (
+                <Form.Item name={item.key} label={item.name} key={item.key}>
+                  <div className={css.namespaceForm}>
+                    <Input placeholder="Please enter namespace" />
+                    {namespaceList.length > 1 && (
+                      <CloseOutlined onClick={() => deleteNamespaceList(index)} className={css.icon} />
+                    )}
+                  </div>
+                </Form.Item>
+              );
+            })} */}
         </Form>
-        <Button onClick={addNamespaceList}>
+        {/* <Button onClick={addNamespaceList}>
           <PlusOutlined />
           {'Add Namespace'}
-        </Button>
+        </Button> */}
       </Drawer>
     </>
   );

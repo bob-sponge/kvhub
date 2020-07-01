@@ -5,7 +5,8 @@ import { UploadOutlined, PlusOutlined } from '@ant-design/icons';
 import Container from '../../container';
 import { doneColor, processColor, formatNumber, timeAgo } from './constant';
 import AddOrEditProject from './addOrEditProject';
-import { ajax } from '@ofm/ajax';
+import * as Api from '../../api';
+import { history as browserHistory } from '@ofm/history';
 
 const Dashboard: React.SFC = () => {
   const [visible, setVisible] = useState<boolean>(false);
@@ -16,29 +17,24 @@ const Dashboard: React.SFC = () => {
     getProjectAll();
   }, []);
 
-  const getProjectAll = () => {
+  const getProjectAll = async () => {
     setLoading(true);
-    ajax
-      .get('/project/dashboard/all')
-      .then(result => {
-        setLoading(false);
-        const {
-          data: { statusCode, data },
-        } = result;
-        if (statusCode === 0) {
-          setProjectList(data);
-        }
-      })
-      .catch(error => {
-        if (error) {
-          setLoading(false);
-        }
-      });
+    let result = await Api.projectAllListApi();
+    setLoading(false);
+    const { success, data } = result;
+    if (success && data) {
+      setProjectList(data);
+    }
   };
 
   const addProject = () => {
     setVisible(true);
   };
+
+  const handleClick = (id: any) => {
+    browserHistory.push(`/languages/${id}`);
+  };
+
   return (
     <Spin spinning={loading}>
       <Container>
@@ -61,9 +57,11 @@ const Dashboard: React.SFC = () => {
                 const isDone = item.translatedKeysNumber === item.KeysNumber;
                 const precent = (item.translatedKeysNumber / item.KeysNumber) * 100;
                 return (
-                  <div className={css.cardWapper} key={index}>
+                  <div className={css.cardWapper} key={index} onClick={() => handleClick(item.id)}>
                     <div className={css.cardList}>
-                      <div className={css.cardTitle}>{item.name}</div>
+                      <div className={css.cardTitle} style={{ WebkitBoxOrient: 'vertical' }} title={item.name}>
+                        {item.name}
+                      </div>
                       <div className={css.cardTranslate}>
                         <div className={css.keys}>
                           <div className={css.keysCurrent} style={{ color: isDone ? doneColor : processColor }}>

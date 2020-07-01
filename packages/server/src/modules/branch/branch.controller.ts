@@ -2,7 +2,7 @@ import { Controller, Get, Param, Body, UsePipes, ValidationPipe, Post, Delete } 
 import { Branch } from 'src/entities/Branch';
 import { BranchService } from './branch.service';
 import { ResponseBody } from 'src/vo/ResponseBody';
-import { Page } from 'src/vo/Page';
+import { BranchPage } from 'src/vo/Page';
 import { BranchBody } from 'src/vo/BranchBody';
 import { CompareVO } from 'src/vo/CompareVO';
 
@@ -15,8 +15,8 @@ export class BranchController {
    * @param projectId projectId
    */
   @Get('/list/:projectId')
-  async findListByProjectId(@Param('projectId') projectId: number): Promise<Branch[]> {
-    return this.branchService.findBranchByProjectId(projectId);
+  async findListByProjectId(@Param('projectId') projectId: number): Promise<ResponseBody> {
+    return ResponseBody.okWithData(await this.branchService.findBranchByProjectId(projectId));
   }
 
   @Get('/list')
@@ -37,11 +37,8 @@ export class BranchController {
    */
   @Post('/all')
   @UsePipes(new ValidationPipe())
-  async findBranchList(@Body() page: Page): Promise<ResponseBody> {
-    if (page.content === '') {
-      return ResponseBody.okWithData(await this.branchService.findAllWithPage(page));
-    }
-    return ResponseBody.okWithData(await this.branchService.findByCondition(page));
+  async findBranchList(@Body() page: BranchPage): Promise<ResponseBody> {
+    return ResponseBody.okWithData(await this.branchService.findAllWithPage(page));
   }
 
   /**

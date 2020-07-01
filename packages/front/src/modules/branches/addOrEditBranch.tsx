@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Drawer, Button, Form, Input, Select, message } from 'antd';
 import * as css from './style/addorEditBranch.modules.less';
 import { CheckOutlined } from '@ant-design/icons';
-import { ajax } from '@ofm/ajax';
+import * as Api from '../../api/branch';
 
 interface AddOrEditProjectProps {
   visible: boolean;
@@ -20,38 +20,34 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
   };
 
   useEffect(() => {
-    ajax.get('/project/all').then(result => {
-      const {
-        data: { statusCode, data },
-      } = result;
-      if (statusCode === 0) {
-        setProject(data);
-      }
-    });
+    getProject();
   }, []);
+
+  const getProject = async () => {
+    let result = await Api.projectAllApi();
+    const { success, data } = result;
+    if (success) {
+      setProject(data);
+    }
+  };
 
   const handleAdd = () => {
     form.validateFields().then(values => {
-      if (!values.outOfDate) {
-        ajax
-          .post('/branch/save', values)
-          .then(result => {
-            const {
-              data: { statusCode, message: msg },
-            } = result;
-            if (statusCode === 0) {
-              setVisible(false);
-              message.success(msg);
-              getBranch(filter);
-              form.resetFields();
-            }
-          })
-          .catch(errorInfo => {
-            setVisible(false);
-            message.error(errorInfo);
-          });
+      if (values && !values.outOfDate) {
+        addBranch(values);
       }
     });
+  };
+
+  const addBranch = async (params: any) => {
+    let result = await Api.saveBranchApi(params);
+    const { success, data } = result;
+    if (success) {
+      setVisible(false);
+      message.success(data);
+      getBranch(filter);
+      form.resetFields();
+    }
   };
 
   const renderFooter = () => {
@@ -82,7 +78,11 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
             {project &&
               project.length > 0 &&
               project.map(item => {
-                return <Select.Option value={item.id}>{item.name}</Select.Option>;
+                return (
+                  <Select.Option key={item.id} value={item.id}>
+                    {item.name}
+                  </Select.Option>
+                );
               })}
           </Select>
         </Form.Item>

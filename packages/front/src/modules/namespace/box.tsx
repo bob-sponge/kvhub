@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Input, Button, Popover } from 'antd';
-import { ItemKey } from './constant';
-import EditKeyDrawer from './editKeyDrawer';
+import { ItemKey, ModifyKeyReq, EDIT, RENAME, DELETE } from './constant';
+import * as Api from '../../api/namespace';
 import * as css from './styles/namespace.modules.less';
 import { KeyOutlined, SettingOutlined, SwapRightOutlined } from '@ant-design/icons';
 
@@ -9,32 +9,80 @@ const { TextArea } = Input;
 
 interface LanguageBoxProps {
   keyData: ItemKey;
+  branchId: number;
+  refreshList: Function;
+  setShowDrawer: Function;
 }
 
-const LanguageBox: React.FC<LanguageBoxProps> = ({ keyData }: LanguageBoxProps) => {
-  const [showDrawer, setShowDrawer] = useState<boolean>(false);
+const LanguageBox: React.FC<LanguageBoxProps> = ({
+  keyData,
+  branchId,
+  refreshList,
+  setShowDrawer,
+}: LanguageBoxProps) => {
+  const [visible, setVisible] = useState<boolean>(false);
   const [currentKeyData, setCurrentKeyData] = useState<ItemKey>(keyData);
+
+  const handleKeyOperate = useCallback(
+    async flag => {
+      switch (flag) {
+        case EDIT:
+          setShowDrawer(EDIT, true, currentKeyData);
+          break;
+        case RENAME:
+          setShowDrawer(EDIT, true, currentKeyData);
+          break;
+        case DELETE:
+          setShowDrawer(DELETE, false, currentKeyData);
+          setVisible(false);
+          break;
+        default:
+      }
+    },
+    [currentKeyData],
+  );
 
   const settingContent = useCallback(() => {
     const content = (
-      <div>
-        <p>Edit Key</p>
-        <p>Rename Key</p>
-        <p>Delete Key</p>
+      <div onMouseLeave={() => setVisible(false)}>
+        <p className={css.settingOperate} onClick={() => handleKeyOperate(EDIT)}>
+          Edit Key
+        </p>
+        <p className={css.settingOperate} onClick={() => handleKeyOperate(RENAME)}>
+          Rename Key
+        </p>
+        <p className={css.settingOperate} onClick={() => handleKeyOperate(DELETE)}>
+          Delete Key
+        </p>
       </div>
     );
     return content;
-  }, []);
+  }, [handleKeyOperate]);
 
   const editKey = useCallback(() => {
-    setShowDrawer(true);
+    setShowDrawer(EDIT, true, currentKeyData);
   }, []);
 
   const handleDiscard = useCallback(() => {
     setCurrentKeyData(keyData);
   }, [keyData]);
 
-  const handleSave = useCallback(() => {}, []);
+  const handleSave = useCallback(async () => {
+    const targetLanguageValue = currentKeyData.targetLanguageValue;
+    const modifyKeyReq: ModifyKeyReq = {
+      keyvalue: targetLanguageValue.keyValue,
+      valueId: targetLanguageValue.valueId,
+    };
+    const res: any = await Api.modifyValue(
+      branchId,
+      targetLanguageValue.languageId,
+      currentKeyData.keyId,
+      modifyKeyReq,
+    );
+    if (res.statusCode === 0) {
+      refreshList();
+    }
+  }, [currentKeyData]);
 
   const handleChange = useCallback(
     e => {
@@ -50,6 +98,10 @@ const LanguageBox: React.FC<LanguageBoxProps> = ({ keyData }: LanguageBoxProps) 
     [currentKeyData],
   );
 
+  const handleVisibleChange = (isShow: boolean) => {
+    setVisible(isShow);
+  };
+
   useEffect(() => {
     setCurrentKeyData(keyData);
   }, [keyData]);
@@ -62,8 +114,15 @@ const LanguageBox: React.FC<LanguageBoxProps> = ({ keyData }: LanguageBoxProps) 
             <KeyOutlined />
             <label className={css.boxTitle}>{currentKeyData ? currentKeyData.keyName : ''}</label>
           </div>
-          <Popover placement="bottomRight" content={settingContent} trigger="click">
-            <Button className={css.settingIcon} icon={<SettingOutlined />} />
+          <Popover
+            placement="bottomRight"
+            onVisibleChange={handleVisibleChange}
+            visible={visible}
+            trigger="click"
+            content={settingContent}>
+            <div onClick={() => setVisible(true)}>
+              <Button className={css.settingIcon} icon={<SettingOutlined />} />
+            </div>
           </Popover>
         </div>
         <div className={css.language}>
@@ -104,7 +163,6 @@ const LanguageBox: React.FC<LanguageBoxProps> = ({ keyData }: LanguageBoxProps) 
           </div>
         )}
       </div>
-      <EditKeyDrawer visible={showDrawer} onClose={() => setShowDrawer(false)} />
     </>
   );
 };

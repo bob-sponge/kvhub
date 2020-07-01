@@ -65,15 +65,15 @@ export class ProjectService {
   async saveProject(projectVO: ProjectVO): Promise<void> {
     // language_id是否存在
     if (await this.languageService.findOne(projectVO.referenceId)) {
-      throw new BadRequestException('ReferenceId is not exist');
+      throw new BadRequestException('Reference language is not exist');
     }
     // 判断名称是否重复
-    if ((await this.projectRepository.findOne({ name: projectVO.name })) !== undefined) {
+    if ((await this.projectRepository.findOne({ name: projectVO.name.trim() })) !== undefined) {
       throw new BadRequestException('Project name is exist');
     }
     // save project
     let project = new Project();
-    project.name = projectVO.name;
+    project.name = projectVO.name.trim();
     project.referenceLanguageId = projectVO.referenceId;
     project.modifyTime = new Date();
     project.delete = false;
@@ -91,7 +91,7 @@ export class ProjectService {
     projectLanguage.modifyTime = new Date();
     await this.projectLanguageRepository.save(projectLanguage);
 
-    //save branch
+    //save default branch -- master
     let branch = new Branch();
     branch.name = this.branchName;
     branch.projectId = savedProject.id;
@@ -208,6 +208,7 @@ export class ProjectService {
       let totalTranferKeys: number = 0;
       vo.id = p.id;
       vo.languageName = p.languageName;
+      vo.languageId = p.languageId;
       for (let j = 0; j < namespaceList.length; j++) {
         const n = namespaceList[j];
         let namespaceVO = new NamespaceVO();
@@ -243,13 +244,18 @@ export class ProjectService {
         } else {
           keyList = masterKeyList;
         }
-        const keyIdList = [];
-        keyList.map(key => keyIdList.push(key.id));
-        namespaceVO.translatedKeys = await this.keyValueRepository.count({
-          keyId: In(keyIdList),
-          languageId: p.languageId,
-          latest: true,
-        });
+        if(keyList !== null && keyList.length > 0){
+          const keyIdList = [];
+          keyList.map(key => keyIdList.push(key.id));
+          namespaceVO.translatedKeys = await this.keyValueRepository.count({
+            keyId: In(keyIdList),
+            languageId: p.languageId,
+            latest: true,
+          });
+        } else {
+          namespaceVO.translatedKeys = 0;
+        }
+
         // 根据获取的keylist 找对应value
         namespaceVO.id = n.id;
         namespaceVO.name = n.name;

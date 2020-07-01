@@ -62,7 +62,7 @@
       display: inline-block;
       margin-right: 10px;
       min-width: 18px;
-      height: 16px;
+      height: 21px;
       background: #909EAA;
       color: #ffffff;
       font-size: 12px;
@@ -88,6 +88,25 @@
 
 }
 
+.edit-key-name {
+  display: flex;
+
+  .rename {
+    margin-left: 12px;
+    cursor: pointer;
+
+    .icon {
+      color: #23b9b9;
+      margin-right: 12px;
+    }
+  
+    .lable {
+      color: #23b9b9;
+    }
+  }
+
+}
+
 .namespace {
   display: flex;
   flex-wrap: wrap;
@@ -101,6 +120,10 @@
   color: #192228 100%;
   margin: 8px 24px;
   font-size: 24px;
+
+  :global(.ant-select-single:not(.ant-select-customize-input) .ant-select-selector) {
+    border: unset;
+  }
 
   .operation-btn {
     margin: 0 8px;
@@ -119,17 +142,55 @@
 }
 
 .label {
+  padding: 2px;
   margin-right: 10px;
-  width: 16px;
-  height: 16px;
+  width: 21px;
+  height: 21px;
   background: #909EAA;
   color: #ffffff;
   font-size: 12px;
   font-family: PingFangSC-Semibold;
 }
 
+.key-label {
+  &::after {
+    content: '*';
+    color: red;
+    padding-left: 4px;
+  }
+}
+
 .refLanguage {
   margin-left: 10px;
   font-size: 12px;
   font-family: PingFangSC-Semibold;
+}
+
+.setting-operate {
+  cursor: pointer;
+
+  &:hover {
+    color: #23b9b9;
+  }
+}
+
+.modify-key-name {
+  width: 336px;
+  height: 116px;
+
+  .key-title {
+    font-family: SiemensSans-Bold;
+    color: #22313d;
+    font-size: 14px;
+  }
+
+  .button-list {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 14px;
+
+    button {
+      margin-left: 14px;
+    }
+  }
 }

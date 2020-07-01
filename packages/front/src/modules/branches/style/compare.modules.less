@@ -10,59 +10,64 @@
       color: @black;
     }
 
+    .diff-wapper {
+      display: flex;
+      margin-bottom: 20px;
+      background-color: @white;
+
+      .diff-item {
+        width: 50%;
+
+        .item-list {
+          padding: 16px;
+
+
+          .title {
+            color: @light-grey;
+            font-size: 14px;
+            margin-bottom: 12px;
+
+            span {
+              padding-left: 4px;
+            }
+          }
+
+          .key-list {
+            display: flex;
+            align-items: baseline;
+            margin-bottom: 16px;
+
+            &:last-child {
+              margin-bottom: 0;
+            }
+
+            .language {
+              background-color: @language-bg;
+              width: 20px;
+              height: 20px;
+              line-height: 16px;
+              text-align: center;
+              color: @white;
+              font-size: 12px;
+              border-radius: 2px;
+              margin-right: 8px;
+            }
+
+            .name {
+              font-size: 16px;
+              color: @black;
+            }
+          }
+        }
+      }
+
+    }
+
     .diff-title {
       font-size: 16px;
       font-weight: bold;
       color: @black;
       margin: 16px 0;
-    }
-
-    .diff-item {
-      padding: 16px;
-      background-color: @white;
-      display: flex;
-
-      .item-list {
-        width: 50%;
-        padding-right: 16px;
-
-        .title {
-          color: @light-grey;
-          font-size: 14px;
-          margin-bottom: 12px;
-
-          span {
-            padding-left: 4px;
-          }
-        }
-
-        .key-list {
-          display: flex;
-          align-items: center;
-          margin-bottom: 16px;
-
-          &:last-child {
-            margin-bottom: 0;
-          }
-
-          .language {
-            background-color: @language-bg;
-            width: 20px;
-            height: 20px;
-            line-height: 16px;
-            text-align: center;
-            color: @white;
-            font-size: 12px;
-            border-radius: 2px;
-            margin-right: 8px;
-          }
-
-          .name {
-            font-size: 16px;
-            color: @black;
-          }
-        }
-      }
     }
   }
 
@@ -82,6 +87,7 @@
     }
 
     .operation {
+
       .title {
         display: flex;
         align-items: center;
@@ -89,6 +95,7 @@
         color: @light-grey;
         height: 32px;
         margin-bottom: 8px;
+        cursor: pointer;
 
         span {
           font-size: 12px;

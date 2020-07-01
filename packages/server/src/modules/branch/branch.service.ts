@@ -1,29 +1,50 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+/* eslint-disable no-shadow */
+/* eslint-disable @typescript-eslint/member-ordering */
+import { Injectable, BadRequestException, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Branch } from 'src/entities/Branch';
-import { Repository, DeleteResult } from 'typeorm';
+import { Repository, DeleteResult, Like } from 'typeorm';
 import { Project } from 'src/entities/Project';
 import { ConfigService } from '@ofm/nestjs-utils';
-import { Page } from 'src/vo/Page';
+import { BranchPage } from 'src/vo/Page';
 import { PageResult } from 'src/vo/PageResult';
 import { BranchMerge } from 'src/entities/BranchMerge';
+import { BranchKey } from 'src/entities/BranchKey';
 import { BranchBody } from 'src/vo/BranchBody';
 import { BranchVO } from 'src/vo/BranchVO';
 import { CompareVO } from 'src/vo/CompareVO';
-import { KeyVO } from 'src/vo/KeyVO';
 import { MergeDiffChangeKey } from 'src/entities/MergeDiffChangeKey';
-import { KeyValueVO } from 'src/vo/KeyValueVO';
 import { CompareBranchVO } from 'src/vo/CompareBranchVO';
+import { ErrorMessage, CommonConstant } from 'src/constant/constant';
+import { Key } from 'src/entities/Key';
+import { Keyname } from 'src/entities/Keyname';
+import { Keyvalue } from 'src/entities/Keyvalue';
+import { UUIDUtils } from 'src/utils/uuid';
+import { BranchCommit } from 'src/entities/BranchCommit';
+import { Namespace } from 'src/entities/Namespace';
+import { KeyService } from 'src/modules/key/key.service';
+import { KeyValueDetailVO } from 'src/vo/KeyValueDetailVO';
+import { CompareKeyVO } from 'src/vo/CompareKeyVO';
+import { ValueVO } from 'src/vo/ValueVO';
+import { CompareValueVO } from 'src/vo/CompareValueVO';
 
 @Injectable()
 export class BranchService {
   private constant: Map<string, string>;
   constructor(
+    @InjectRepository(Key) private readonly keyRepository: Repository<Key>,
+    @InjectRepository(Keyname) private readonly keynameRepository: Repository<Keyname>,
+    @InjectRepository(Keyvalue) private readonly keyvalueRepository: Repository<Keyvalue>,
     @InjectRepository(Branch) private readonly branchRepository: Repository<Branch>,
+    @InjectRepository(BranchKey) private readonly branchKeyRepository: Repository<BranchKey>,
     @InjectRepository(Project) private readonly projectRepository: Repository<Project>,
     @InjectRepository(BranchMerge) private readonly branchMergeRepository: Repository<BranchMerge>,
+    @InjectRepository(BranchCommit) private readonly branchCommitRepository: Repository<BranchCommit>,
     @InjectRepository(MergeDiffChangeKey) private readonly mergeDiffChangeKeyRepository: Repository<MergeDiffChangeKey>,
+    @InjectRepository(Namespace) private readonly namespaceRepository: Repository<Namespace>,
     private readonly config: ConfigService,
+    @Inject(forwardRef(() => KeyService))
+    private readonly keyService: KeyService,
   ) {
     this.constant = new Map([
       ['0', 'Open'],
@@ -31,7 +52,7 @@ export class BranchService {
       ['2', 'Refused'],
     ]);
   }
-  
+
   /**
    * 查询全部branch
    */
@@ -44,18 +65,173 @@ export class BranchService {
    * @param compareVO compareVO
    */
   async compare(compareVO: CompareVO): Promise<CompareBranchVO[]> {
+    let crosMerge = false;
+    if (compareVO.crosMerge !== undefined && compareVO.crosMerge) {
+      crosMerge = true;
+    }
     const ids = [compareVO.source, compareVO.destination];
     const branchs: Branch[] = await this.branchRepository.findByIds(ids);
-    if (branchs.length !== 2) {
-      throw new BadRequestException('branchId is not exist');
+    if (branchs !== null && branchs.length !== 2) {
+      throw new BadRequestException(ErrorMessage.BRANCH_NOT_EXIST);
     }
-    let source = new CompareBranchVO();
-    let destination = new CompareBranchVO();
-    source.id = compareVO.source;
-    source.keys = await this.getValueByBranchId(compareVO.source);
-    destination.id = compareVO.destination;
-    destination.keys = await this.getValueByBranchId(compareVO.destination);
-    return [source, destination];
+
+    // get source and target branch id
+    const sourceBranchId = compareVO.source;
+    const targetBranchId = compareVO.destination;
+
+    // By branch id, get the key corresponding to the branch and the name and value corresponding to the key
+    let sourceKeyList = await this.keyService.getKeyListByBranchId(sourceBranchId);
+    let targetKeyList = await this.keyService.getKeyListByBranchId(targetBranchId);
+
+    return await this.diffKey(sourceKeyList, targetKeyList, crosMerge);
+  }
+
+  /**
+   * When the actualId of the key is equal, compare the name and values of the key
+   * @param source Source branches all keys, key names and their translations in different languages
+   * @param target Target branches all keys, key names and their translations in different languages
+   * @param mergeId branch merge id
+   */
+  private async diffKey(
+    source: KeyValueDetailVO[],
+    target: KeyValueDetailVO[],
+    crosMerge: boolean,
+  ): Promise<CompareBranchVO[]> {
+    let result: CompareBranchVO[] = [];
+    for (let i = 0; i < source.length; i++) {
+      const sourceKey = source[i];
+      let targetKey = new KeyValueDetailVO();
+
+      let isExist = false;
+      let isDifferent = false;
+      let hasTarget = false;
+      let targetIndex = 0;
+      const compareBranchVO = new CompareBranchVO();
+      const sourceCompare = new CompareKeyVO();
+      const targetCompare = new CompareKeyVO();
+
+      if (target !== null && target.length > 0) {
+        hasTarget = true;
+        for (let j = 0; j < target.length; j++) {
+          targetIndex = j;
+          targetKey = target[j];
+          if (sourceKey.keyActualId === targetKey.keyActualId) {
+            isExist = true;
+            if (sourceKey.keyName !== targetKey.keyName) {
+              isDifferent = true;
+            } else if (!(await this.checkValueVO(sourceKey.valueList, targetKey.valueList))) {
+              isDifferent = true;
+            }
+            break;
+          }
+        }
+      }
+
+      /* When the name of the key is inconsistent or
+         when the same translation value of the key is different or
+         when only a certain branch is translated,
+         need to add diffkey data */
+      if (isDifferent || !isExist || !hasTarget) {
+        sourceCompare.keyId = sourceKey.keyId;
+        sourceCompare.keyname = sourceKey.keyName;
+        const sNamespace = await this.namespaceRepository.findOne(sourceKey.namespaceId);
+        if (sNamespace !== undefined && !sNamespace.delete) {
+          sourceCompare.namespaceName = sNamespace.name;
+        }
+        if (targetKey !== null) {
+          targetCompare.keyId = targetKey.keyId;
+          targetCompare.keyname = targetKey.keyName;
+          if (targetKey.namespaceId !== undefined) {
+            const tNamespace = await this.namespaceRepository.findOne(targetKey.namespaceId);
+            if (tNamespace !== undefined && !tNamespace.delete) {
+              targetCompare.namespaceName = tNamespace.name;
+            }
+          }
+        }
+        const sourceValueList: CompareValueVO[] = [];
+        if (sourceKey.valueList !== null && sourceKey.valueList.length > 0) {
+          sourceKey.valueList.forEach(v => {
+            const diffValue = new CompareValueVO();
+            diffValue.languageId = v.languageId;
+            diffValue.valueId = v.valueId;
+            diffValue.value = v.value;
+            diffValue.language = v.languageName;
+            sourceValueList.push(diffValue);
+          });
+        }
+        sourceCompare.valueList = sourceValueList;
+
+        const targetValueList: CompareValueVO[] = [];
+        if (hasTarget && targetKey.valueList !== null && targetKey.valueList.length > 0) {
+          targetKey.valueList.forEach(v => {
+            const diffValue = new CompareValueVO();
+            diffValue.languageId = v.languageId;
+            diffValue.valueId = v.valueId;
+            diffValue.value = v.value;
+            diffValue.language = v.languageName;
+            targetValueList.push(diffValue);
+          });
+        }
+        targetCompare.valueList = targetValueList;
+
+        compareBranchVO.source = sourceCompare;
+        compareBranchVO.target = targetCompare;
+        result.push(compareBranchVO);
+      }
+
+      // When source and target have the same key, delete both sides to reduce the number of cycles
+      if (isExist) {
+        source.splice(i, 1);
+        if (target.length > 0) {
+          target.splice(targetIndex, 1);
+        }
+        i--;
+      }
+    }
+
+    // When crosmerge is true, the branches need to be compared with each other
+    if (crosMerge) {
+      const crosMergeResult = await this.diffKey(target, source, false);
+      if (crosMergeResult !== null && crosMergeResult.length > 0) {
+        result = result.concat(crosMergeResult);
+      }
+    }
+    return result;
+  }
+
+  /**
+   * return true --> source === target / false source !== target
+   * @param source
+   * @param target
+   */
+  private async checkValueVO(source: ValueVO[], target: ValueVO[]): Promise<boolean> {
+    const sourceEmtpy = (source === null || source.length === 0) && target !== null && target.length > 0;
+    const targetEmpty = (target === null || target.length === 0) && source !== null && source.length > 0;
+    if (sourceEmtpy || targetEmpty) {
+      return false;
+    } else {
+      for (let i = 0; i < source.length; i++) {
+        const s = source[i];
+        let isExist = false;
+        let isDifferent = false;
+        for (let j = 0; j < target.length; j++) {
+          const t = target[j];
+          if (s.languageId === t.languageId) {
+            isExist = true;
+            if (s.value !== t.value) {
+              isDifferent = true;
+            }
+            break;
+          }
+        }
+        if (isDifferent || !isExist) {
+          return false;
+        } else {
+          return true;
+        }
+      }
+    }
+    return true;
   }
 
   /**
@@ -63,6 +239,7 @@ export class BranchService {
    * @param source source
    * @param destination destination
    */
+  // eslint-disable-next-line @typescript-eslint/member-ordering
   async getDiff(source: string, destination: string): Promise<string> {
     if (source === destination) {
       return destination;
@@ -71,7 +248,8 @@ export class BranchService {
       return '';
     }
     // eslint-disable-next-line prettier/prettier
-    const prefix = '<span style=\'color:blue\'>';
+    // eslint-disable-next-line @typescript-eslint/quotes
+    const prefix = "<span style='color:blue'>";
     const suffix = '</sapn>';
     if (source === '' && destination !== '') {
       return prefix + destination + suffix;
@@ -125,134 +303,48 @@ export class BranchService {
     }
     return result.toString().replace(/,/g, '');
   }
-
-  /**
-   * 查询branchId对应的key name & value
-   * @param branchId branchId
-   */
-  async getValueByBranchId(branchId: number): Promise<KeyVO[]> {
-    // 获取全部的branch
-    const branches: Branch[] = await this.getAllBranch(branchId);
-    // 判断对应的branchVO
-    const branchVOs: BranchVO[] = await this.calculateMerge(branches);
-    // 根据branchVO中merge参数不同查询不同的表并进行参数封装
-    let keyVOs: KeyVO[] = [];
-    for (let index = 0; index < branchVOs.length; index++) {
-      const b = branchVOs[index];
-      // 通过branchId查询keyIds
-      const keys = await this.findKeyIdsByBranchIds(b.id);
-      if (keys.length === 0) {
-        return keyVOs;
-      }
-      let keyIds = [];
-      keys.forEach(k => {
-        keyIds.push(k.key_id);
-      });
-      // 通过keyIds查询对应的name和value
-      const result: any[] = await this.findKeysByKeyIds('(' + keyIds.join(',') + ')');
-      let ids = new Set<number>();
-      result.map(r => {
-        ids.add(r.id);
-      });
-
-      ids.forEach(i => {
-        let keyVO = new KeyVO();
-        let values = [];
-        result.forEach(r => {
-          if (i === r.id) {
-            keyVO.name = r.name;
-            let keyValue = new KeyValueVO();
-            keyValue.value = r.value;
-            keyValue.language = r.language_name;
-            values.push(keyValue);
-          }
-        });
-        keyVO.values = values;
-        keyVOs.push(keyVO);
-      });
-    }
-    return keyVOs.sort((a, b) => a.name.localeCompare(b.name));
-  }
-
-  /**
-   * 通过传入的 branch id 查找其对应 project下的 master branch
-   * @param id branch id
-   */
-  async getAllBranch(id: number): Promise<Branch[]> {
-    const branch: Branch = await this.branchRepository.findOne({ id: id });
-    if (branch.master) {
-      return Array.of(branch);
-    }
-    const branches: Branch[] = await this.branchRepository.query(
-      `SELECT * FROM branch WHERE project_id = (SELECT project_id FROM branch WHERE id = '${id}') AND master=true`,
-    );
-    let result = [branch];
-    branches.forEach(a => {
-      let b = new Branch();
-      b.id = a.id;
-      b.master = a.master;
-      b.name = a.name;
-      b.projectId = a.projectId;
-      b.modifier = a.modifier;
-      b.modifyTime = a.modifyTime;
-      result.push(b);
-    });
-    return result;
-  }
   /**
    * 分页返回branchs
    * @param page page
    */
-  async findAllWithPage(page: Page): Promise<PageResult> {
+  async findAllWithPage(page: BranchPage): Promise<PageResult> {
     let pageResult = new PageResult();
     const start: number = (page.page - 1) * page.size;
-    const total: number = await this.branchRepository.count();
-    const data: Branch[] = await this.branchRepository
-      .createQueryBuilder('branch')
-      .orderBy('branch.modify_time')
-      .limit(page.size)
-      .offset(start)
-      .getMany();
-
+    let data: [Branch[], number] = [[], 0];
+    if (page.content === null || page.content === CommonConstant.STRING_BLANK) {
+      data = await this.branchRepository.findAndCount({
+        where: { projectId: page.projectId },
+        order: { name: 'ASC' },
+        skip: start,
+        take: page.size,
+      });
+    } else {
+      // 查询不区分大小写
+      data = await this.branchRepository.findAndCount({
+        where: { projectId: page.projectId, name: Like('%' + page.content + '%') },
+        order: { name: 'ASC' },
+        skip: start,
+        take: page.size,
+      });
+    }
     pageResult.size = page.size;
     pageResult.page = page.page;
-    pageResult.total = total;
-    pageResult.data = await this.calculateMerge(data);
+    pageResult.total = data[1];
+    if (pageResult.total > 0) {
+      pageResult.data = await this.calculateMerge(data[0], page.projectId);
+    } else {
+      pageResult.data = [];
+    }
     return pageResult;
-  }
-
-  /**
-   * 分页模糊查询
-   * @param pageSearch pageSearch
-   */
-  async findByCondition(page: Page): Promise<PageResult> {
-    const start: number = (page.page - 1) * page.size;
-    let result = new PageResult();
-    // 查询不区分大小写
-    const data: Branch[] = await this.branchRepository
-      .createQueryBuilder('branch')
-      .where('branch.name Like :name')
-      .setParameters({
-        name: '%' + page.content + '%',
-      })
-      .orderBy('branch.modify_time')
-      .limit(page.size)
-      .offset(start)
-      .getMany();
-    result.total = data.length;
-    result.page = page.page;
-    result.size = page.size;
-    result.data = await this.calculateMerge(data);
-    return result;
   }
 
   /**
    * 获取branch merge参数状态
    * @param data data
    */
-  async calculateMerge(data: Branch[]): Promise<BranchVO[]> {
+  private async calculateMerge(data: Branch[], projectId: number): Promise<BranchVO[]> {
     // merge table source & target 都不存在
-    const mergeResult: BranchMerge[] = await this.branchMergeRepository.find();
+    const mergeResult: BranchMerge[] = await this.branchMergeRepository.find({ where: { projectId } });
     // 获取全部的merge ids
     let ids: Set<number> = new Set();
     mergeResult.forEach(m => {
@@ -279,7 +371,7 @@ export class BranchService {
       let branchVO = new BranchVO();
       branchVO.id = d.id;
       branchVO.name = d.name;
-      branchVO.time = d.modifyTime.valueOf();
+      branchVO.time = d.modifyTime === null || d.modifyTime === undefined ? null : d.modifyTime.valueOf();
       // 默认是 0 -> open
       branchVO.merge = this.constant.get('0');
       map.forEach((x, y) => {
@@ -305,32 +397,119 @@ export class BranchService {
    * @param projectId
    */
   async findBranchByProjectIdAndKeyword(projectId: number, keyword: string): Promise<Branch[]> {
-    return await this.branchRepository
-      .createQueryBuilder('branch')
-      .where('branch.name Like :name and branch.project_id = :projectId')
-      .setParameters({
-        projectId,
-        name: '%' + keyword + '%',
-      })
-      .getMany();
+    return await this.branchRepository.find({ where: { name: Like('%' + keyword + '%'), projectId } });
   }
 
   /**
    * 保存branch,默认创建master
    * @param branchBody branchBody
    */
+  // eslint-disable-next-line @typescript-eslint/member-ordering
   async save(branchBody: BranchBody): Promise<void> {
     // 判断project_id 是否存在
     if ((await this.projectRepository.findOne({ id: branchBody.projectId })) === undefined) {
-      throw new BadRequestException('project_id is not exist');
+      throw new BadRequestException(ErrorMessage.PROJECT_NOT_EXIST);
     }
-    await this.branchRepository.save({
-      name: branchBody.name,
+    // 是否从其他branch复制，是否是master分支
+    let inheritBranch = false;
+    let isMaster = false;
+    // check branch exist?
+    if (branchBody.branchId !== null && branchBody.branchId !== undefined) {
+      const branch = await this.branchRepository.findOne({ id: branchBody.branchId });
+      if (branch === undefined) {
+        throw new BadRequestException(ErrorMessage.BRANCH_NOT_EXIST);
+      } else {
+        // 从其他分支复制
+        inheritBranch = true;
+        const masterBranch = await this.findMasterBranchByProjectId(branchBody.projectId);
+        if (masterBranch !== undefined) {
+          if (masterBranch.id === branchBody.branchId) {
+            // 复制的分支是主分支
+            isMaster = true;
+          }
+        }
+      }
+    }
+
+    // check branch name duplicate
+    const dupBranch = await this.branchRepository.find({
+      where: { name: branchBody.name.trim(), projectId: branchBody.projectId },
+    });
+    if (dupBranch !== null && dupBranch.length > 0) {
+      throw new BadRequestException(ErrorMessage.BRANCH_NAME_DUPLICATE);
+    }
+    const branch = await this.branchRepository.save({
+      name: branchBody.name.trim(),
       projectId: branchBody.projectId,
       master: false,
       modifier: this.config.get('constants', 'modifier'),
       modifyTime: new Date(),
     });
+
+    if (inheritBranch && !isMaster) {
+      const branchCommit = new BranchCommit();
+      const commitId = UUIDUtils.generateUUID();
+      branchCommit.branchId = branch.id;
+      branchCommit.commitId = commitId;
+      branchCommit.type = CommonConstant.COMMIT_TYPE_ADD;
+      branchCommit.commitTime = new Date();
+      await this.branchCommitRepository.save(branchCommit);
+
+      const branchKeyList = await this.branchKeyRepository.find({ where: { branchId: branch.id } });
+      const newBranchKeyList: BranchKey[] = [];
+      const keyIdList: number[] = [];
+      branchKeyList.forEach(bk => {
+        const branchKey = new BranchKey();
+        branchKey.keyId = bk.keyId;
+        branchKey.branchId = branch.id;
+        branchKey.delete = false;
+        newBranchKeyList.push(branchKey);
+        keyIdList.push(bk.keyId);
+      });
+      // add branch_key
+      await this.branchKeyRepository.save(newBranchKeyList);
+
+      if (keyIdList.length > 0) {
+        for (let i = 0; i < keyIdList.length; i++) {
+          const keyId = keyIdList[i];
+          const key = await this.keyRepository.findOne(keyId);
+          if (key !== undefined) {
+            let newKey = new Key();
+            newKey.actualId = key.actualId;
+            newKey.namespaceId = key.namespaceId;
+            newKey.delete = false;
+            newKey = await this.keyRepository.save(newKey);
+            const keyNameList = await this.keynameRepository.find({ where: { keyId } });
+            if (keyNameList !== null && keyNameList.length > 0) {
+            } else {
+              const keyname = keyNameList[0];
+              if (keyname !== undefined) {
+                let newKeyname = new Keyname();
+                newKeyname.keyId = newKey.id;
+                newKeyname.name = keyname.name;
+                newKeyname.commitId = commitId;
+                await this.keynameRepository.save(newKeyname);
+              }
+            }
+
+            const keyvalueList = await this.keyvalueRepository.find({ where: { keyId: key.id, latest: true } });
+            if (keyvalueList !== null && keyvalueList.length > 0) {
+              const newKeyvalueList: Keyvalue[] = [];
+              keyvalueList.forEach(kv => {
+                const newKv = new Keyvalue();
+                newKv.keyId = newKey.id;
+                newKv.languageId = kv.languageId;
+                newKv.value = kv.value;
+                newKv.latest = true;
+                newKv.commitId = commitId;
+                newKeyvalueList.push(newKv);
+              });
+              await this.keyvalueRepository.save(newKeyvalueList);
+            }
+          }
+        }
+      }
+    }
   }
 
   /**
@@ -382,10 +561,10 @@ export class BranchService {
    * 通过项目id查询master分支
    * @param projectId projectId
    */
-  async findMasterBranchByProjectId(projectId: number): Promise<Branch> | undefined{
+  async findMasterBranchByProjectId(projectId: number): Promise<Branch> | undefined {
     const branchList = await this.branchRepository.find({ projectId, master: true });
-    if (branchList === null){
-      return undefined
+    if (branchList === null) {
+      return undefined;
     } else {
       return branchList[0];
     }
@@ -395,6 +574,6 @@ export class BranchService {
    * 通过分支ID获取分支信息
    */
   async getBranchById(id: number): Promise<Branch> | undefined {
-    return await this.branchRepository.findOne({id: id});
+    return await this.branchRepository.findOne({ id: id });
   }
 }

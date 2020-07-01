@@ -6,4 +6,5 @@ export class NamespaceViewDetail {
   page: number;
   pageSize: number;
   condition: string;
+  branchId: number;
 }
