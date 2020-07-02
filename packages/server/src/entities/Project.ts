@@ -8,7 +8,7 @@ export class Project {
   @Column('character varying', { name: 'name', length: 255 })
   name: string;
 
-  @Column('character varying', { name: 'reference_language_id' })
+  @Column('integer', { name: 'reference_language_id' })
   referenceLanguageId: number;
 
   @Column('character varying', {

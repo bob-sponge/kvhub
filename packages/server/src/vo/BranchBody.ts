@@ -6,6 +6,6 @@ export class BranchBody {
   name: string;
   @IsNumber()
   projectId: number;
-  @IsNumber()
+
   branchId:number;
 }
