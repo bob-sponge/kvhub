@@ -5,7 +5,7 @@ import * as Api from '../../api/namespace';
 import EditKeyDrawer from './editKeyDrawer';
 import * as css from './styles/namespace.modules.less';
 import { ItemKey, ADD, LanguageItem, ConditionReq, DELETE } from './constant';
-import { Button, Select, Radio, Input, Pagination, Spin, message } from 'antd';
+import { Button, Select, Radio, Input, Pagination, Spin, message, Popconfirm, Modal } from 'antd';
 import { DeleteFilled, ArrowLeftOutlined, PlusOutlined } from '@ant-design/icons';
 
 const { Option } = Select;
@@ -18,14 +18,16 @@ const NamespaceView: React.FC = () => {
   const namespaceId = parseInt(paths[4]);
   const languageId = parseInt(paths[5]);
 
-  const [showDrawer, setShowDrawer] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [keys, setKeys] = useState<Array<any>>([]);
-  const [languages, setLanguages] = useState<Array<any>>([]);
-  const [branches, setBranches] = useState<Array<any>>([]);
+  const [total, setTotal] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
   const [mode, setMode] = useState<string>(ADD);
   const [keyItem, setKeyItem] = useState<any>(null);
-  const [total, setTotal] = useState(0);
+  const [keys, setKeys] = useState<Array<any>>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [languages, setLanguages] = useState<Array<any>>([]);
+  const [branches, setBranches] = useState<Array<any>>([]);
+  const [showDrawer, setShowDrawer] = useState<boolean>(false);
+  const [deleteKeyModal, setDeleteKeyModal] = useState<boolean>(false);
   const [filter, setFilter] = useState<ConditionReq>({
     namespaceId: namespaceId,
     referenceLanguageId: languageId,
@@ -104,6 +106,7 @@ const NamespaceView: React.FC = () => {
       filter.page = current === 0 ? 1 : current;
       filter.pageSize = pageSize;
       getList(filter);
+      setCurrentPage(current === 0 ? 1 : current);
     },
     [filter],
   );
@@ -113,6 +116,7 @@ const NamespaceView: React.FC = () => {
       filter.page = current;
       filter.pageSize = pageSize;
       getList(filter);
+      setCurrentPage(current);
     },
     [filter],
   );
@@ -126,15 +130,22 @@ const NamespaceView: React.FC = () => {
     setShowDrawer(true);
   }, []);
 
-  const editKeyValue = useCallback(async (flag: string, value: any, item: any) => {
+  const editKeyValue = useCallback((flag: string, value: any, item: any) => {
     setShowDrawer(value);
     setMode(flag);
     setKeyItem(item);
     if (flag === DELETE) {
-      await Api.deleteKey(item.keyId);
-      handleRefreshList();
+      setDeleteKeyModal(true);
+    } else {
+      setDeleteKeyModal(false);
     }
   }, []);
+
+  const deleteKey = useCallback(async () => {
+    await Api.deleteKey(keyItem.keyId);
+    handleRefreshList();
+    setDeleteKeyModal(false);
+  }, [keyItem]);
 
   const deletNamespace = useCallback(async () => {
     await Api.deleteNamespace(namespaceId);
@@ -163,9 +174,15 @@ const NamespaceView: React.FC = () => {
                 ))}
               </Select>
             )}
-            <Button onClick={deletNamespace} className={css.operationBtn} icon={<DeleteFilled />}>
-              Delete Namespace
-            </Button>
+            <Popconfirm
+              title="Are you sure delete this namespace?"
+              onConfirm={deletNamespace}
+              okText="Yes"
+              cancelText="No">
+              <Button className={css.operationBtn} icon={<DeleteFilled />}>
+                Delete Namespace
+              </Button>
+            </Popconfirm>
             <Button onClick={() => window.history.go(-1)} className={css.operationBtn} icon={<ArrowLeftOutlined />}>
               Back
             </Button>
@@ -220,13 +237,7 @@ const NamespaceView: React.FC = () => {
             })}
         </div>
         <div className={css.pagenation}>
-          <Pagination
-            showSizeChanger
-            onChange={onPageChange}
-            onShowSizeChange={onShowSizeChange}
-            defaultCurrent={1}
-            total={total}
-          />
+          <Pagination onChange={onPageChange} onShowSizeChange={onShowSizeChange} current={currentPage} total={total} />
         </div>
         {showDrawer && (
           <EditKeyDrawer
@@ -243,6 +254,14 @@ const NamespaceView: React.FC = () => {
             }}
           />
         )}
+        <Modal
+          visible={deleteKeyModal}
+          onOk={deleteKey}
+          onCancel={() => setDeleteKeyModal(false)}
+          okText="ok"
+          cancelText="cancle">
+          Are you sure delete the key?
+        </Modal>
       </Container>
     </Spin>
   );

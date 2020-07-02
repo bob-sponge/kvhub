@@ -105,6 +105,7 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
               id: lang.id,
               value: ele.value,
               name: lang.name,
+              referenceLanguage: lang.referenceLanguage,
             };
             editLanguages.push(obj);
           }
@@ -218,6 +219,9 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
                             <span>{ele.name}</span>
                             {ele.referenceLanguage && <span className={css.refLanguage}>(Reference Language)</span>}
                           </div>
+                        }
+                        rules={
+                          ele.referenceLanguage ? [{ required: true, message: 'Please enter reference language' }] : []
                         }>
                         <TextArea />
                       </Form.Item>
@@ -241,8 +245,13 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
                             <div>
                               <span className={css.label}>{ele.name}</span>
                               <span>{ele.name}</span>
-                              {index === 0 && <span className={css.refLanguage}>(Reference Language)</span>}
+                              {ele.referenceLanguage && <span className={css.refLanguage}>(Reference Language)</span>}
                             </div>
+                          }
+                          rules={
+                            ele.referenceLanguage
+                              ? [{ required: true, message: 'Please enter reference language' }]
+                              : []
                           }>
                           <TextArea value={ele.value} />
                         </Form.Item>
