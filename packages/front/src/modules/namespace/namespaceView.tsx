@@ -236,8 +236,15 @@ const NamespaceView: React.FC = () => {
               );
             })}
         </div>
-        <div className={css.pagenation}>
-          <Pagination onChange={onPageChange} onShowSizeChange={onShowSizeChange} current={currentPage} total={total} />
+        <div className={css.pagination}>
+          <Pagination
+            showSizeChanger={true}
+            onChange={onPageChange}
+            onShowSizeChange={onShowSizeChange}
+            current={currentPage}
+            total={total}
+          />
+          <div className={css.total}>{`Total ${total}`}</div>
         </div>
         {showDrawer && (
           <EditKeyDrawer
