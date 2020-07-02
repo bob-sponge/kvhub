@@ -81,7 +81,7 @@ const Languages = (props: LanguagesProps) => {
                     );
                   })}
               </Select>
-              <Button type="primary" onClick={changeModal}>
+              <Button type="primary" onClick={() => changeModal()}>
                 {'Add Language'}
               </Button>
             </div>
@@ -103,7 +103,7 @@ const Languages = (props: LanguagesProps) => {
           </div>
         </div>
       </div>
-      {visible && <AddNewLanguage visible={visible} changeModal={changeModal} />}
+      <AddNewLanguage visible={visible} changeModal={changeModal} />
     </ContainerMenu>
   );
 };

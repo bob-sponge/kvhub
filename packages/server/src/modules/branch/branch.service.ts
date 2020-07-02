@@ -517,9 +517,9 @@ export class BranchService {
    * @param id id
    */
   async deleteBranch(id: number): Promise<void> {
-    const branch = await this.branchRepository.findOne(id);
-    if (branch === undefined) {
-      throw new BadRequestException(ErrorMessage.BRANCH_NOT_EXIST);
+    const branches: Branch[] = await this.branchRepository.query(`SELECT * FROM branch WHERE branch.master = true AND branch.id = ${id}`);
+    if (branches.length !== 0) {
+      throw new BadRequestException('can not delete master branch');
     }
     const result: DeleteResult = await this.branchRepository.delete({ id: id });
     if (result.affected.toString() !== '1') {
