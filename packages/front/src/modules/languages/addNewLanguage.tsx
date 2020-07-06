@@ -44,13 +44,17 @@ const AddNewLanguage = ({ visible, changeModal }: InjectedProps) => {
 
   const addLanguage = () => {
     form.validateFields().then(values => {
-      window.console.log(values);
       if (values && !values.outOfDate) {
-        changeModal({
+        closeModal({
           languageId: values.Language,
         });
       }
     });
+  };
+
+  const closeModal = (detail?: any) => {
+    form.resetFields();
+    changeModal(detail);
   };
 
   const renderFooter = () => {
@@ -59,7 +63,7 @@ const AddNewLanguage = ({ visible, changeModal }: InjectedProps) => {
         style={{
           textAlign: 'right',
         }}>
-        <Button onClick={() => changeModal()} style={{ marginRight: 8 }}>
+        <Button onClick={() => closeModal()} style={{ marginRight: 8 }}>
           Cancel
         </Button>
         <Button icon={<CheckOutlined />} onClick={() => addLanguage()} type="primary">
@@ -74,7 +78,7 @@ const AddNewLanguage = ({ visible, changeModal }: InjectedProps) => {
       title="Add New Language"
       placement="right"
       width={590}
-      onClose={() => changeModal()}
+      onClose={() => closeModal()}
       visible={visible}
       destroyOnClose={true}
       closable={true}

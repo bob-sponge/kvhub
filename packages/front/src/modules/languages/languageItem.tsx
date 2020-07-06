@@ -22,7 +22,7 @@ const LanguageItem = ({ item, index, projectView, branchId, pid }: any) => {
   const namespaceSave = async () => {
     form.validateFields().then(async values => {
       if (values && !values.outOfDate) {
-        const detail = { name: values.name, projectId: pid, type: 'private' };
+        const detail = { name: values.name.trim(), projectId: pid, type: 'private' };
         const res = await Api.namespaceSaveApi(detail);
         projectView(branchId);
         setVisible(false);
