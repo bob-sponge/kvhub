@@ -38,7 +38,8 @@ export class KeyService {
 
   async getKeyWithBranchIdAndNamespaceId(branchId: number, namespaceId: number): Promise<Key[]> {
     return await this.keyRepository.query(
-      ' select k.* from key k left join branch_key bk ' +
+      ' select k.id,k.actual_id "actualId",k.namespace_id "namespaceId",k.modifier,k.modify_time "modifyTime",k.delete' +
+        ' from key k left join branch_key bk ' +
         ' on k.id = bk.key_id where bk.delete = false and k.delete = false ' +
         ' and bk.branch_id = ' +
         branchId +

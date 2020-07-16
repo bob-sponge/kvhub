@@ -3,7 +3,7 @@
 import { Injectable, BadRequestException, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Branch } from 'src/entities/Branch';
-import { Repository, DeleteResult, Like } from 'typeorm';
+import { Repository, DeleteResult, Like, In } from 'typeorm';
 import { Project } from 'src/entities/Project';
 import { ConfigService } from '@ofm/nestjs-utils';
 import { BranchPage } from 'src/vo/Page';
@@ -49,7 +49,6 @@ export class BranchService {
     this.constant = new Map([
       ['0', 'Open'],
       ['1', 'Merged'],
-      ['2', 'Refused'],
     ]);
   }
 
@@ -344,7 +343,9 @@ export class BranchService {
    */
   private async calculateMerge(data: Branch[], projectId: number): Promise<BranchVO[]> {
     // merge table source & target 都不存在
-    const mergeResult: BranchMerge[] = await this.branchMergeRepository.find({ where: { projectId } });
+    const mergeResult: BranchMerge[] = await this.branchMergeRepository.find({
+      where: { projectId, type: In(['0', '3']) },
+    });
     // 获取全部的merge ids
     let ids: Set<number> = new Set();
     mergeResult.forEach(m => {
@@ -376,7 +377,10 @@ export class BranchService {
       branchVO.merge = this.constant.get('0');
       map.forEach((x, y) => {
         if (y === d.id) {
-          branchVO.merge = this.constant.get(x.type);
+          branchVO.merge =
+            x.type === CommonConstant.MERGE_TYPE_MERGED || x.type === CommonConstant.MERGE_TYPE_REFUSED
+              ? this.constant.get('0')
+              : this.constant.get('1');
         }
       });
       branchVOs.push(branchVO);
@@ -517,9 +521,26 @@ export class BranchService {
    * @param id id
    */
   async deleteBranch(id: number): Promise<void> {
-    const branches: Branch[] = await this.branchRepository.query(`SELECT * FROM branch WHERE branch.master = true AND branch.id = ${id}`);
+    const branches: Branch[] = await this.branchRepository.query(
+      `SELECT * FROM branch WHERE branch.master = true AND branch.id = ${id}`,
+    );
     if (branches.length !== 0) {
       throw new BadRequestException('can not delete master branch');
+    }
+    const existBranchMerge = await this.branchMergeRepository.find({
+      where: [
+        {
+          sourceBranchId: id,
+          type: In([CommonConstant.MERGE_TYPE_CREATED, CommonConstant.MERGE_TYPE_MERGING]),
+        },
+        {
+          targetBranchId: id,
+          type: In([CommonConstant.MERGE_TYPE_CREATED, CommonConstant.MERGE_TYPE_MERGING]),
+        },
+      ],
+    });
+    if (existBranchMerge !== null && existBranchMerge.length > 0) {
+      throw new BadRequestException(ErrorMessage.BRANCH_IS_MERGING);
     }
     const result: DeleteResult = await this.branchRepository.delete({ id: id });
     if (result.affected.toString() !== '1') {
