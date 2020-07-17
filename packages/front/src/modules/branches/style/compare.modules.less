@@ -10,16 +10,26 @@
       color: @black;
     }
 
-    .diff-wapper {
-      display: flex;
+    .diff-panel {
       margin-bottom: 20px;
       background-color: @white;
+
+      .namespace {
+        padding: 8px 0 0 16px;
+        color: #627279;
+        font-size: 14px;
+        font-weight: bold;
+      }
+    }
+
+    .diff-wapper {
+      display: flex;
 
       .diff-item {
         width: 50%;
 
         .item-list {
-          padding: 16px;
+          padding: 8px 0 0 16px;
 
 
           .title {
@@ -36,10 +46,6 @@
             display: flex;
             align-items: baseline;
             margin-bottom: 16px;
-
-            &:last-child {
-              margin-bottom: 0;
-            }
 
             .language {
               background-color: @language-bg;
@@ -87,6 +93,9 @@
     }
 
     .operation {
+      &.transform {
+        transform: rotate(180deg);
+      }
 
       .title {
         display: flex;

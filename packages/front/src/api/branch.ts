@@ -6,12 +6,20 @@ const branchListAddress = `${prefix}/list`;
 const deleteBranchAddress = `${prefix}/delete`;
 const createBranchAddress = `${prefix}/save`;
 const branchAllAddress = `${prefix}/all`;
+const createMergeAddress = '/branchMerge/save';
+const createMregeRequestAddress = '/branchMerge/diffkey/generate';
 
 // 某分支详情
 export const branchDetailApi = (id: any) => ajax.get(`${prefix}/${id}`);
 
 // 分支比较
 export const branchCompareApi = (params: any) => ajax.post(compareAddress, params);
+
+//创建merge请求
+export const createMergeApi = (params: any) => ajax.post(createMergeAddress, params);
+
+// 创建mergerequest
+export const createMergeRequestApi = (id: number) => ajax.get(`${createMregeRequestAddress}/${id}`);
 
 // 分支列表
 export const branchListApi = (id: any) => ajax.get(`${branchListAddress}/${id}`);

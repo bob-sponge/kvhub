@@ -1,34 +1,31 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import * as css from '../style/compare.modules.less';
 import { KeyOutlined } from '@ant-design/icons';
-import Diff from './diff';
+import CompareDiff from './compareDiff';
 
 interface DiffProps {
   diffData: any;
+  isChange: boolean;
 }
 
 const DiffItem: React.SFC<DiffProps> = (props: DiffProps) => {
-  const { diffData } = props;
-  const [source, setSource] = useState<any[]>([]);
-  const [desination, setDesination] = useState<any[]>([]);
-  useEffect(() => {
-    setSource(diffData.source.keys);
-    setDesination(diffData.target.keys);
-  }, [diffData]);
+  const { diffData, isChange } = props;
+  const { source, target } = diffData;
 
   return (
-    <div className={css.diffWapper}>
-      <div className={css.diffItem}>
-        {source &&
-          source.length > 0 &&
-          source.map((item: any, i: number) => {
-            return (
-              <div className={css.itemList} key={i}>
-                <div className={css.title}>
-                  <KeyOutlined />
-                  <span>{item.name}</span>
-                </div>
-                {item.values.map((list: any, index: number) => {
+    <div className={css.diffPanel}>
+      <div className={css.namespace}>{isChange ? target.namespaceName : source.namespaceName}</div>
+      <div className={css.diffWapper}>
+        <div className={css.diffItem}>
+          {source && source.keyname && (
+            <div className={css.itemList}>
+              <div className={css.title}>
+                <KeyOutlined />
+                <span>{source.keyname}</span>
+              </div>
+              {source.valueList &&
+                source.valueList.length > 0 &&
+                source.valueList.map((list: any, index: number) => {
                   return (
                     <div className={css.keyList} key={index}>
                       <div className={css.language}>{list.language}</div>
@@ -36,33 +33,36 @@ const DiffItem: React.SFC<DiffProps> = (props: DiffProps) => {
                     </div>
                   );
                 })}
+            </div>
+          )}
+        </div>
+        <div className={css.diffItem}>
+          {target && target.keyname && (
+            <div className={css.itemList}>
+              <div className={css.title}>
+                <KeyOutlined />
+                <span>{target.keyname}</span>
               </div>
-            );
-          })}
-      </div>
-      <div className={css.diffItem}>
-        {desination &&
-          desination.length > 0 &&
-          desination.map((item: any, i: number) => {
-            return (
-              <div className={css.itemList} key={i}>
-                <div className={css.title}>
-                  <KeyOutlined />
-                  <span>{item.name}</span>
-                </div>
-                {item.values.map((list: any, index: number) => {
+              {target.valueList &&
+                target.valueList.length > 0 &&
+                target.valueList.map((list: any, index: number) => {
+                  const sourceIndex = source.valueList.findIndex((item: any) => item.languageId === list.languageId);
                   return (
                     <div className={css.keyList} key={index}>
                       <div className={css.language}>{list.language}</div>
                       <div className={css.name}>
-                        <Diff orignal={source[i].values[index].value} target={list.value} />
+                        {sourceIndex !== -1 ? (
+                          <CompareDiff orignal={source.valueList[index].value} target={list.value} />
+                        ) : (
+                          <CompareDiff orignal={''} target={list.value} />
+                        )}
                       </div>
                     </div>
                   );
                 })}
-              </div>
-            );
-          })}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

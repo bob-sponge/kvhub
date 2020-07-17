@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import * as css from '../style/compare.modules.less';
-import { Select, Col, Row, Button, Form } from 'antd';
+import { Select, Col, Row, Button, Form, Spin } from 'antd';
 import { SwapOutlined, PlusOutlined } from '@ant-design/icons';
 import DiffItem from './diffItem';
 import * as Api from '../../../api/branch';
+import clsx from 'clsx';
 
 interface CompareProjectProps {
   id: any;
@@ -16,6 +17,8 @@ const CompareProject: React.SFC<CompareProjectProps> = (props: CompareProjectPro
   const [detail, setDetail] = useState<any>(null);
   const [branchList, setBranchList] = useState<any>([]);
   const [diffData, setDiffData] = useState<any>([]);
+  const [isChange, setIsChange] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
 
   const getBranchDetail = useCallback(async () => {
     if (id) {
@@ -38,8 +41,10 @@ const CompareProject: React.SFC<CompareProjectProps> = (props: CompareProjectPro
   }, [getBranchDetail]);
 
   const getBranchList = async (projectId: number) => {
+    setLoading(true);
     let result = await Api.branchListApi(projectId);
     const { success, data } = result;
+    setLoading(false);
     if (success && data) {
       setBranchList(data);
     }
@@ -51,7 +56,7 @@ const CompareProject: React.SFC<CompareProjectProps> = (props: CompareProjectPro
     }
   }, [detail]);
 
-  const onCreateMerge = () => {
+  const onCompare = () => {
     form.validateFields().then(values => {
       if (values && !values.outOfDate) {
         getDiffData(values);
@@ -59,23 +64,56 @@ const CompareProject: React.SFC<CompareProjectProps> = (props: CompareProjectPro
     });
   };
 
+  const onCreateMerge = useCallback(() => {
+    form.validateFields().then(values => {
+      if (values && !values.outOfDate) {
+        let params = {
+          sourceBranchId: values.source,
+          targetBranchId: values.destination,
+          crosMerge: isChange,
+          projectId: detail.projectId,
+        };
+        getCreateMerge(params);
+      }
+    });
+  }, [detail]);
+
+  const getCreateMerge = async (params: any) => {
+    setLoading(true);
+    let result = await Api.createMergeApi(params);
+    const { success, data } = result;
+    setLoading(false);
+    if (success && data) {
+      getCreatMergeQuest(data);
+    }
+  };
+
+  const getCreatMergeQuest = async (dataId: number) => {
+    setLoading(true);
+    let result = await Api.createMergeRequestApi(dataId);
+    const { success, data } = result;
+    setLoading(false);
+    if (success && data) {
+      window.console.log(data);
+    }
+  };
+
   const getDiffData = async (params: any) => {
+    setLoading(true);
     let result = await Api.branchCompareApi(params);
     const { success, data } = result;
+    setLoading(false);
     if (success && data) {
       setDiffData(data);
     }
   };
 
   const handleChange = () => {
-    const oldSource = form.getFieldValue('source');
-    const targetSource = form.getFieldValue('destination');
-    form.setFieldsValue({ source: targetSource });
-    form.setFieldsValue({ destination: oldSource });
+    setIsChange(!isChange);
   };
 
   return (
-    <>
+    <Spin spinning={loading}>
       <div className={css.comparePanel}>
         <Form form={form} name="basic" layout="vertical" initialValues={{ remember: true }}>
           <Row>
@@ -103,8 +141,9 @@ const CompareProject: React.SFC<CompareProjectProps> = (props: CompareProjectPro
                   <SwapOutlined />
                   <span>Exchange</span>
                 </div>
-                <div className={css.content}>
-                  <div className={css.circle} />
+                <div className={clsx(css.content, isChange && css.transform)}>
+                  {!isChange && <div className={css.circle} />}
+                  {isChange && <div className={css.trangle} style={{ transform: 'rotate(180deg)' }} />}
                   <div className={css.square} />
                   <div className={css.trangle} />
                 </div>
@@ -131,18 +170,23 @@ const CompareProject: React.SFC<CompareProjectProps> = (props: CompareProjectPro
           </Row>
         </Form>
         <div className={css.createMerge}>
+          <Button type="primary" icon={<PlusOutlined />} onClick={onCompare} style={{ marginRight: 16 }}>
+            Compare
+          </Button>
           <Button type="primary" icon={<PlusOutlined />} onClick={onCreateMerge}>
             Create Merge Request
           </Button>
         </div>
       </div>
-      {diffData && diffData.length !== 0 && (
-        <>
-          <div className={css.diffTitle}>Diff ({diffData.length})</div>
-          <DiffItem diffData={diffData} />
-        </>
-      )}
-    </>
+      <>
+        <div className={css.diffTitle}>Diff ({diffData.length})</div>
+        {diffData &&
+          diffData.length > 0 &&
+          diffData.map((item: any) => {
+            return <DiffItem diffData={item} isChange={isChange} />;
+          })}
+      </>
+    </Spin>
   );
 };
 
