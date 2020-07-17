@@ -125,6 +125,22 @@ export class NamespaceService {
     const logger = Log4js.getLogger();
     logger.level = 'INFO';
 
+    // 增加分支是否存在merge的验证
+    const existBranchMerge = await this.branchMergeRepository.find({
+      where: [
+        {
+          sourceBranchId: branchId,
+          type: In([CommonConstant.MERGE_TYPE_CREATED, CommonConstant.MERGE_TYPE_MERGING]),
+        },
+        {
+          targetBranchId: branchId,
+          type: In([CommonConstant.MERGE_TYPE_CREATED, CommonConstant.MERGE_TYPE_MERGING]),
+        },
+      ],
+    });
+    if (existBranchMerge !== null && existBranchMerge.length > 0) {
+      throw new BadRequestException(ErrorMessage.BRANCH_IS_MERGING);
+    }
     // 开启事务
     // const connection = getConnection();
     // const queryRunner = connection.createQueryRunner();

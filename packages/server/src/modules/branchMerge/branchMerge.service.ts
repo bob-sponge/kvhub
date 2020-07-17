@@ -274,24 +274,28 @@ export class BranchMergeService {
       if (branch === undefined) {
         throw new BadRequestException(ErrorMessage.BRANCH_NOT_EXIST);
       } else {
-        const existBranchMerge = await this.branchMergeRepository.find({
-          where: [
-            {
-              sourceBranchId: id,
-              type: In([CommonConstant.MERGE_TYPE_CREATED, CommonConstant.MERGE_TYPE_MERGING]),
-            },
-            {
-              targetBranchId: id,
-              type: In([CommonConstant.MERGE_TYPE_CREATED, CommonConstant.MERGE_TYPE_MERGING]),
-            },
-          ],
-        });
-        if (existBranchMerge !== null && existBranchMerge.length > 0) {
-          throw new BadRequestException(ErrorMessage.BRANCH_IS_MERGING);
-        }
+        await this.checkExistBranchMerge(id);
       }
     } else {
       throw new BadRequestException(ErrorMessage.BRANCH_NOT_CHOOSE);
+    }
+  }
+
+  async checkExistBranchMerge(branchId:number){
+    const existBranchMerge = await this.branchMergeRepository.find({
+      where: [
+        {
+          sourceBranchId: branchId,
+          type: In([CommonConstant.MERGE_TYPE_CREATED, CommonConstant.MERGE_TYPE_MERGING]),
+        },
+        {
+          targetBranchId: branchId,
+          type: In([CommonConstant.MERGE_TYPE_CREATED, CommonConstant.MERGE_TYPE_MERGING]),
+        },
+      ],
+    });
+    if (existBranchMerge !== null && existBranchMerge.length > 0) {
+      throw new BadRequestException(ErrorMessage.BRANCH_IS_MERGING);
     }
   }
 
