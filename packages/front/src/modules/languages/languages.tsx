@@ -81,7 +81,7 @@ const Languages = (props: LanguagesProps) => {
                     );
                   })}
               </Select>
-              <Button type="primary" onClick={changeModal}>
+              <Button type="primary" onClick={() => changeModal()}>
                 {'Add Language'}
               </Button>
             </div>
@@ -90,13 +90,20 @@ const Languages = (props: LanguagesProps) => {
             {languageList &&
               languageList.map((item: any, index) => {
                 return (
-                  <LanguageItem branchId={branchId} item={item} index={index} key={item.id} projectView={projectView} />
+                  <LanguageItem
+                    pid={match.params.projectId}
+                    branchId={branchId}
+                    item={item}
+                    index={index}
+                    key={item.id}
+                    projectView={projectView}
+                  />
                 );
               })}
           </div>
         </div>
       </div>
-      {visible && <AddNewLanguage visible={visible} changeModal={changeModal} />}
+      <AddNewLanguage visible={visible} changeModal={changeModal} />
     </ContainerMenu>
   );
 };

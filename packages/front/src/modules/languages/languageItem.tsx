@@ -1,26 +1,35 @@
 import React, { useState } from 'react';
 import * as css from './styles/languageItem.modules.less';
-import { Button, Progress, Popover, Input, message, Popconfirm } from 'antd';
-import { doneColor, processColor, toThousands, getPercent } from './constant';
+import { Button, Progress, Popover, Input, message, Popconfirm, Form } from 'antd';
+import { doneColor, processColor, toThousands, getPercent, Rule } from './constant';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import * as Api from '../../api/languages';
 import { history } from '@ofm/history';
 
-const LanguageItem = ({ item, index, projectView, branchId }: any) => {
+const LanguageItem = ({ item, index, projectView, branchId, pid }: any) => {
+  const [form] = Form.useForm();
+
   const [visible, setVisible] = useState(false);
-  const [addNamespaceName, setAddNamespaceName] = useState('');
+  // const [addNamespaceName, setAddNamespaceName] = useState('');
 
   const handleVisibleChange = (isShow: boolean) => {
     setVisible(isShow);
+    if (!isShow) {
+      form.resetFields();
+    }
   };
 
   const namespaceSave = async () => {
-    const detail = { name: addNamespaceName, projectId: item.id, type: 'private' };
-    const res = await Api.namespaceSaveApi(detail);
-    projectView(branchId);
-    setVisible(false);
-    setAddNamespaceName('');
-    message.success(res && res.data);
+    form.validateFields().then(async values => {
+      if (values && !values.outOfDate) {
+        const detail = { name: values.name.trim(), projectId: pid, type: 'private' };
+        const res = await Api.namespaceSaveApi(detail);
+        projectView(branchId);
+        setVisible(false);
+        form.resetFields();
+        message.success(res && res.data);
+      }
+    });
   };
 
   const progressRender = (size: string, translatedKeys: number, totalKeys: number) => {
@@ -61,13 +70,16 @@ const LanguageItem = ({ item, index, projectView, branchId }: any) => {
   const AddNamespace = (
     <div className={css.addNamespace}>
       <p className={css.title}>{'Add New Namespace'}</p>
-      <Input
-        placeholder={'Namespace Name'}
-        value={addNamespaceName}
-        onChange={e => {
-          setAddNamespaceName(e.target.value);
-        }}
-      />
+      <Form form={form} name="basic" layout="horizontal">
+        <Form.Item label="name" name="name" rules={Rule()}>
+          <Input
+          // value={addNamespaceName}
+          // onChange={e => {
+          //   setAddNamespaceName(e.target.value);
+          // }}
+          />
+        </Form.Item>
+      </Form>
       <div className={css.buttonList}>
         <Button onClick={() => handleVisibleChange(false)}>{'Discard'}</Button>
         <Button type="primary" onClick={namespaceSave}>
@@ -77,8 +89,9 @@ const LanguageItem = ({ item, index, projectView, branchId }: any) => {
     </div>
   );
 
-  const handleJump = (id: number, languageId: number) => {
-    history.push(`/namespace/${id}/${languageId}`);
+  const handleJump = (id: number, languageId: number, name: string) => {
+    const path = window.location.pathname.split('/');
+    history.push(`/namespace/${name}/${path[2]}/${id}/${languageId}`);
   };
 
   return (
@@ -115,8 +128,10 @@ const LanguageItem = ({ item, index, projectView, branchId }: any) => {
                 <div
                   className={css.languageNamespacesProgressItem}
                   key={item.id}
-                  onClick={() => handleJump(detail.id, item.languageId)}>
-                  <p className={css.languageNamespacesProgressTitle}>{detail.name}</p>
+                  onClick={() => handleJump(detail.id, item.languageId, detail.name)}>
+                  <p style={{ WebkitBoxOrient: 'vertical' }} className={css.languageNamespacesProgressTitle}>
+                    {detail.name}
+                  </p>
                   {progressRender('small', detail.translatedKeys, detail.totalKeys)}
                 </div>
               );

@@ -38,7 +38,8 @@ export class KeyService {
 
   async getKeyWithBranchIdAndNamespaceId(branchId: number, namespaceId: number): Promise<Key[]> {
     return await this.keyRepository.query(
-      ' select k.* from key k left join branch_key bk ' +
+      ' select k.id,k.actual_id "actualId",k.namespace_id "namespaceId",k.modifier,k.modify_time "modifyTime",k.delete' +
+        ' from key k left join branch_key bk ' +
         ' on k.id = bk.key_id where bk.delete = false and k.delete = false ' +
         ' and bk.branch_id = ' +
         branchId +
@@ -211,10 +212,10 @@ export class KeyService {
             const v = value[j];
             const language = await this.languageRepository.findOne(v.languageId);
             let languageName = CommonConstant.STRING_BLANK;
-            if (language !== undefined ){
+            if (language !== undefined) {
               languageName = language.name;
             }
-            valueList.push({ valueId: v.id, value: v.value, languageId: v.languageId,languageName });
+            valueList.push({ valueId: v.id, value: v.value, languageId: v.languageId, languageName });
           }
           detail.valueList = valueList;
         } else {

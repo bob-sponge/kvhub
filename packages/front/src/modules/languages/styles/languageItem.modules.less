@@ -73,6 +73,12 @@
       font-family: SiemensSans-Bold;
       color: #22313d;
       margin: 10px 0 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: normal;
+      word-break: break-all;
     }
   }
 }
@@ -83,7 +89,17 @@
 
 .add-namespace {
   width: 336px;
-  height: 116px;
+  height: 132px;
+
+  :global {
+    .ant-form-item {
+      margin-bottom: 38px;
+    }
+
+    .ant-form-item-with-help {
+      margin-bottom: 0;
+    }
+  }
 
   .title {
     font-family: SiemensSans-Bold;

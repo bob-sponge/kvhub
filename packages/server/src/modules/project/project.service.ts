@@ -208,7 +208,7 @@ export class ProjectService {
       let totalTranferKeys: number = 0;
       vo.id = p.id;
       vo.languageName = p.languageName;
-      vo.languageId = p.id;
+      vo.languageId = p.languageId;
       for (let j = 0; j < namespaceList.length; j++) {
         const n = namespaceList[j];
         let namespaceVO = new NamespaceVO();
@@ -236,7 +236,7 @@ export class ProjectService {
               }
             }
             if (branchKeyList.length > 0) {
-              keyList.push(branchKeyList);
+              keyList = keyList.concat(branchKeyList);
             }
           } else {
             keyList = masterKeyList;
@@ -246,7 +246,9 @@ export class ProjectService {
         }
         if(keyList !== null && keyList.length > 0){
           const keyIdList = [];
-          keyList.map(key => keyIdList.push(key.id));
+          for(let k=0;k<keyList.length;k++){
+            keyIdList.push(keyList[k].id);
+          }
           namespaceVO.translatedKeys = await this.keyValueRepository.count({
             keyId: In(keyIdList),
             languageId: p.languageId,

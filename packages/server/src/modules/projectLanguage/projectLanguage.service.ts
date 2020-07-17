@@ -17,7 +17,7 @@ export class ProjectLanguageService {
 
   async save(projectLanguage: ProjectLanguage): Promise<void> {
     if (projectLanguage !== null) {
-      if (projectLanguage.id !== null) {
+      if (projectLanguage.id !== null && projectLanguage.id !== undefined) {
         const exist = await this.projectLanguageRepository.find({
           where: { id: Not(projectLanguage.id), languageId: projectLanguage.languageId, delete: false },
         });
@@ -26,7 +26,7 @@ export class ProjectLanguageService {
         }
       } else {
         const exist = await this.projectLanguageRepository.find({
-          where: { languageId: projectLanguage.languageId, delete: false },
+          where: { projectId:projectLanguage.projectId,languageId: projectLanguage.languageId, delete: false },
         });
 
         if (exist !== null && exist.length > 0) {

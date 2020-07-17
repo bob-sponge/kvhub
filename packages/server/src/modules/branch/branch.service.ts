@@ -1,7 +1,9 @@
-import { Injectable, BadRequestException,Inject,forwardRef } from '@nestjs/common';
+/* eslint-disable no-shadow */
+/* eslint-disable @typescript-eslint/member-ordering */
+import { Injectable, BadRequestException, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Branch } from 'src/entities/Branch';
-import { Repository, DeleteResult, Like } from 'typeorm';
+import { Repository, DeleteResult, Like, In } from 'typeorm';
 import { Project } from 'src/entities/Project';
 import { ConfigService } from '@ofm/nestjs-utils';
 import { BranchPage } from 'src/vo/Page';
@@ -42,12 +44,11 @@ export class BranchService {
     @InjectRepository(Namespace) private readonly namespaceRepository: Repository<Namespace>,
     private readonly config: ConfigService,
     @Inject(forwardRef(() => KeyService))
-    private readonly keyService:KeyService
+    private readonly keyService: KeyService,
   ) {
     this.constant = new Map([
       ['0', 'Open'],
       ['1', 'Merged'],
-      ['2', 'Refused'],
     ]);
   }
 
@@ -81,7 +82,7 @@ export class BranchService {
     let sourceKeyList = await this.keyService.getKeyListByBranchId(sourceBranchId);
     let targetKeyList = await this.keyService.getKeyListByBranchId(targetBranchId);
 
-    return await this.diffKey(sourceKeyList,targetKeyList,crosMerge);
+    return await this.diffKey(sourceKeyList, targetKeyList, crosMerge);
   }
 
   /**
@@ -90,8 +91,12 @@ export class BranchService {
    * @param target Target branches all keys, key names and their translations in different languages
    * @param mergeId branch merge id
    */
-  private async diffKey(source: KeyValueDetailVO[], target: KeyValueDetailVO[], crosMerge: boolean) :Promise<CompareBranchVO[]> {
-    let result : CompareBranchVO[] = [];
+  private async diffKey(
+    source: KeyValueDetailVO[],
+    target: KeyValueDetailVO[],
+    crosMerge: boolean,
+  ): Promise<CompareBranchVO[]> {
+    let result: CompareBranchVO[] = [];
     for (let i = 0; i < source.length; i++) {
       const sourceKey = source[i];
       let targetKey = new KeyValueDetailVO();
@@ -129,16 +134,16 @@ export class BranchService {
         sourceCompare.keyId = sourceKey.keyId;
         sourceCompare.keyname = sourceKey.keyName;
         const sNamespace = await this.namespaceRepository.findOne(sourceKey.namespaceId);
-        if (sNamespace !== undefined && !sNamespace.delete){
-          sourceCompare.namespaceName = sNamespace.name
+        if (sNamespace !== undefined && !sNamespace.delete) {
+          sourceCompare.namespaceName = sNamespace.name;
         }
-        if (targetKey !== null ){
+        if (targetKey !== null) {
           targetCompare.keyId = targetKey.keyId;
           targetCompare.keyname = targetKey.keyName;
-          if (targetKey.namespaceId !== undefined){
+          if (targetKey.namespaceId !== undefined) {
             const tNamespace = await this.namespaceRepository.findOne(targetKey.namespaceId);
-            if (tNamespace !== undefined && !tNamespace.delete){
-              targetCompare.namespaceName = tNamespace.name
+            if (tNamespace !== undefined && !tNamespace.delete) {
+              targetCompare.namespaceName = tNamespace.name;
             }
           }
         }
@@ -186,7 +191,7 @@ export class BranchService {
     // When crosmerge is true, the branches need to be compared with each other
     if (crosMerge) {
       const crosMergeResult = await this.diffKey(target, source, false);
-      if (crosMergeResult !== null && crosMergeResult.length > 0){
+      if (crosMergeResult !== null && crosMergeResult.length > 0) {
         result = result.concat(crosMergeResult);
       }
     }
@@ -233,6 +238,7 @@ export class BranchService {
    * @param source source
    * @param destination destination
    */
+  // eslint-disable-next-line @typescript-eslint/member-ordering
   async getDiff(source: string, destination: string): Promise<string> {
     if (source === destination) {
       return destination;
@@ -241,6 +247,7 @@ export class BranchService {
       return '';
     }
     // eslint-disable-next-line prettier/prettier
+    // eslint-disable-next-line @typescript-eslint/quotes
     const prefix = "<span style='color:blue'>";
     const suffix = '</sapn>';
     if (source === '' && destination !== '') {
@@ -336,7 +343,9 @@ export class BranchService {
    */
   private async calculateMerge(data: Branch[], projectId: number): Promise<BranchVO[]> {
     // merge table source & target 都不存在
-    const mergeResult: BranchMerge[] = await this.branchMergeRepository.find({ where: { projectId } });
+    const mergeResult: BranchMerge[] = await this.branchMergeRepository.find({
+      where: { projectId, type: In(['0', '3']) },
+    });
     // 获取全部的merge ids
     let ids: Set<number> = new Set();
     mergeResult.forEach(m => {
@@ -368,7 +377,10 @@ export class BranchService {
       branchVO.merge = this.constant.get('0');
       map.forEach((x, y) => {
         if (y === d.id) {
-          branchVO.merge = this.constant.get(x.type);
+          branchVO.merge =
+            x.type === CommonConstant.MERGE_TYPE_MERGED || x.type === CommonConstant.MERGE_TYPE_REFUSED
+              ? this.constant.get('0')
+              : this.constant.get('1');
         }
       });
       branchVOs.push(branchVO);
@@ -396,6 +408,7 @@ export class BranchService {
    * 保存branch,默认创建master
    * @param branchBody branchBody
    */
+  // eslint-disable-next-line @typescript-eslint/member-ordering
   async save(branchBody: BranchBody): Promise<void> {
     // 判断project_id 是否存在
     if ((await this.projectRepository.findOne({ id: branchBody.projectId })) === undefined) {
@@ -508,9 +521,26 @@ export class BranchService {
    * @param id id
    */
   async deleteBranch(id: number): Promise<void> {
-    const branch = await this.branchRepository.findOne(id);
-    if (branch === undefined) {
-      throw new BadRequestException(ErrorMessage.BRANCH_NOT_EXIST);
+    const branches: Branch[] = await this.branchRepository.query(
+      `SELECT * FROM branch WHERE branch.master = true AND branch.id = ${id}`,
+    );
+    if (branches.length !== 0) {
+      throw new BadRequestException('can not delete master branch');
+    }
+    const existBranchMerge = await this.branchMergeRepository.find({
+      where: [
+        {
+          sourceBranchId: id,
+          type: In([CommonConstant.MERGE_TYPE_CREATED, CommonConstant.MERGE_TYPE_MERGING]),
+        },
+        {
+          targetBranchId: id,
+          type: In([CommonConstant.MERGE_TYPE_CREATED, CommonConstant.MERGE_TYPE_MERGING]),
+        },
+      ],
+    });
+    if (existBranchMerge !== null && existBranchMerge.length > 0) {
+      throw new BadRequestException(ErrorMessage.BRANCH_IS_MERGING);
     }
     const result: DeleteResult = await this.branchRepository.delete({ id: id });
     if (result.affected.toString() !== '1') {

@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Drawer, Form, Button, Select } from 'antd';
-import { CloseOutlined } from '@ant-design/icons';
+import { CheckOutlined } from '@ant-design/icons';
 import { languagesAllApi } from '../../api/languages';
 import * as css from './styles/addNewLanguage.modules.less';
 
@@ -44,60 +44,70 @@ const AddNewLanguage = ({ visible, changeModal }: InjectedProps) => {
 
   const addLanguage = () => {
     form.validateFields().then(values => {
-      window.console.log(values);
-      if (values && values.Language) {
-        changeModal({
+      if (values && !values.outOfDate) {
+        closeModal({
           languageId: values.Language,
         });
       }
     });
   };
 
+  const closeModal = (detail?: any) => {
+    form.resetFields();
+    changeModal(detail);
+  };
+
+  const renderFooter = () => {
+    return (
+      <div
+        style={{
+          textAlign: 'right',
+        }}>
+        <Button onClick={() => closeModal()} style={{ marginRight: 8 }}>
+          Cancel
+        </Button>
+        <Button icon={<CheckOutlined />} onClick={() => addLanguage()} type="primary">
+          Submit
+        </Button>
+      </div>
+    );
+  };
+
   return (
-    <>
-      <Drawer
-        title="Add New Language"
-        width={590}
-        onClose={() => changeModal()}
-        visible={visible}
-        bodyStyle={{ paddingBottom: 80 }}
-        headerStyle={{ display: 'none' }}
-        footer={
-          <div
-            style={{
-              textAlign: 'right',
-            }}>
-            <Button onClick={() => changeModal()} style={{ marginRight: 8 }}>
-              Cancel
-            </Button>
-            <Button onClick={() => addLanguage()} type="primary">
-              Submit
-            </Button>
-          </div>
-        }>
-        <Form layout="vertical" form={form} className={css.main}>
-          <div className={css.title}>
+    <Drawer
+      title="Add New Language"
+      placement="right"
+      width={590}
+      onClose={() => closeModal()}
+      visible={visible}
+      destroyOnClose={true}
+      closable={true}
+      // bodyStyle={{ paddingBottom: 80 }}
+      // headerStyle={{ display: 'none' }}
+      footer={renderFooter()}>
+      <Form layout="vertical" form={form} className={css.main}>
+        {/* <div className={css.title}>
             <p>{'Add New Language'}</p>
             <CloseOutlined className={css.icon} />
-          </div>
-          <Form.Item name="Language" label="Language" rules={[{ required: true, message: 'Please select language' }]}>
-            <Select placeholder="Please select language">
-              {languageList &&
-                languageList.map((item: any) => {
-                  return (
-                    <Option key={item.id} value={item.id}>
-                      {item.name}
-                    </Option>
-                  );
-                })}
-            </Select>
-          </Form.Item>
+          </div> */}
+        <Form.Item name="Language" label="Language" rules={[{ required: true, message: 'Please select language' }]}>
+          <Select placeholder="Please select language">
+            {languageList &&
+              languageList.map((item: any) => {
+                return (
+                  <Option key={item.id} value={item.id}>
+                    {item.name}
+                  </Option>
+                );
+              })}
+          </Select>
+        </Form.Item>
 
-          {/* <div className={css.title}>
+        {/* <div className={css.title}>
             <p>{'Namespace'}</p>
           </div> */}
 
-          {/* {namespaceList &&
+        {/* {namespaceList &&
             namespaceList.map((item: any, index) => {
               return (
                 <Form.Item name={item.key} label={item.name} key={item.key}>
@@ -110,13 +120,12 @@ const AddNewLanguage = ({ visible, changeModal }: InjectedProps) => {
                 </Form.Item>
               );
             })} */}
-        </Form>
-        {/* <Button onClick={addNamespaceList}>
+      </Form>
+      {/* <Button onClick={addNamespaceList}>
           <PlusOutlined />
           {'Add Namespace'}
         </Button> */}
-      </Drawer>
-    </>
+    </Drawer>
   );
 };
 

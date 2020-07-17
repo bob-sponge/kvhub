@@ -34,3 +34,17 @@ export const getPercent = (num: number, total: number) => {
     };
   }
 };
+
+export const Rule = () => {
+  return [
+    { required: true, message: 'Please input Namespace Name!' },
+    {
+      validator: (_rule: any, value: any) => {
+        if ((value && value.length <= 20) || !value) {
+          return Promise.resolve();
+        }
+        return Promise.reject('Name can contain at most 20 characters');
+      },
+    },
+  ];
+};
