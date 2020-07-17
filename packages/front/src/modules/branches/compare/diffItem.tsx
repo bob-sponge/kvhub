@@ -52,9 +52,9 @@ const DiffItem: React.SFC<DiffProps> = (props: DiffProps) => {
                       <div className={css.language}>{list.language}</div>
                       <div className={css.name}>
                         {sourceIndex !== -1 ? (
-                          <CompareDiff orignal={source.valueList[index].value} target={list.value} />
+                          <CompareDiff source={source.valueList[index].value} target={list.value} />
                         ) : (
-                          <CompareDiff orignal={''} target={list.value} />
+                          <CompareDiff source={''} target={list.value} />
                         )}
                       </div>
                     </div>
