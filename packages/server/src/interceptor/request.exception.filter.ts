@@ -7,7 +7,7 @@ export class BadRequestExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse();
     const status = HttpStatus.OK;
     const message = exception.response.message;
-    response.status(exception.status).json({
+    response.status(status).json({
       statusCode: status,
       data: Array.isArray(message) ? message[0] : message,
       success: false,
