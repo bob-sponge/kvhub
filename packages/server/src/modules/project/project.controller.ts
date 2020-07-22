@@ -33,4 +33,9 @@ export class ProjectController {
   async projectView(@Param('id') id: number, @Param('branchId') branchId: number): Promise<ResponseBody> {
     return ResponseBody.okWithData(await this.projectService.getProjectView(id, branchId));
   }
+
+  @Get('view/:id')
+  async projectInfo(@Param('id') id:number ):Promise<ResponseBody>{
+    return ResponseBody.okWithData(await this.projectService.projectInfo(id))
+  }
 }

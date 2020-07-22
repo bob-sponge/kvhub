@@ -58,6 +58,10 @@ export class ProjectService {
     return await this.consolidateData(projectBranchs, projectLanguages, keysMap);
   }
 
+  async projectInfo(id:number):Promise<Project>{
+    return await this.projectRepository.findOne(id);
+  }
+
   /**
    * 首页添加project
    * @param projectVO projectVO
