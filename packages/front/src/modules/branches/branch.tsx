@@ -7,6 +7,8 @@ import { columns } from './tableConfig';
 import AddorEditBranch from './addOrEditBranch';
 import { history } from '@ofm/history';
 import * as Api from '../../api/branch';
+import { projectDetailApi } from '../../api/index';
+
 const { Search } = Input;
 
 interface BranchProps {
@@ -25,11 +27,42 @@ const Branches: React.SFC<BranchProps> = (props: BranchProps) => {
     content: '',
     projectId: NaN,
   });
+  const [navs, setNavs] = useState<any[]>([]);
+  const [projectDetail, setProjectDetail] = useState<any>({});
+
+  const getProjectDetail = async (id: any) => {
+    setLoading(true);
+    let result = await projectDetailApi(id);
+    setLoading(false);
+    const { success, data } = result;
+    if (success && data) {
+      setProjectDetail(data);
+    }
+  };
+
+  useEffect(() => {
+    const { name } = projectDetail;
+    setNavs([
+      {
+        name: 'Home',
+        url: '/',
+      },
+      {
+        name: 'Project Dashboard',
+        url: '/dashboard',
+      },
+      {
+        name,
+        url: '',
+      },
+    ]);
+  }, [projectDetail]);
 
   useEffect(() => {
     const projectid = match.params.projectId;
     filter.projectId = Number(projectid);
     setFilter({ ...filter });
+    getProjectDetail(projectid);
   }, [match]);
 
   useEffect(() => {
@@ -90,7 +123,7 @@ const Branches: React.SFC<BranchProps> = (props: BranchProps) => {
   };
 
   return (
-    <ContainerMenu match={match}>
+    <ContainerMenu match={match} navs={navs}>
       <div className={css.branchWapper}>
         <div className={css.basicTitle}>
           <div className={css.title}>Branches</div>
@@ -112,7 +145,7 @@ const Branches: React.SFC<BranchProps> = (props: BranchProps) => {
               columns={columns(onCompare, onDelete)}
               dataSource={branchList}
               pagination={{
-                position: 'bottomRight',
+                position: ['bottomRight'],
                 showSizeChanger: true,
                 showTotal: showTotal,
                 pageSizeOptions: ['10', '20', '50'],

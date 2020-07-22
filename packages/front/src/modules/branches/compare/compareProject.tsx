@@ -7,38 +7,23 @@ import * as Api from '../../../api/branch';
 import clsx from 'clsx';
 
 interface CompareProjectProps {
-  id: any;
   match?: any;
+  detail: any;
 }
 
 const CompareProject: React.SFC<CompareProjectProps> = (props: CompareProjectProps) => {
-  const { id } = props;
   const [form] = Form.useForm();
-  const [detail, setDetail] = useState<any>(null);
+  const { detail } = props;
   const [branchList, setBranchList] = useState<any>([]);
   const [diffData, setDiffData] = useState<any>([]);
   const [isChange, setIsChange] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
-
-  const getBranchDetail = useCallback(async () => {
-    if (id) {
-      let result = await Api.branchDetailApi(id);
-      const { success, data } = result;
-      if (success) {
-        setDetail(data);
-      }
-    }
-  }, [id]);
 
   useEffect(() => {
     if (detail && detail.projectId) {
       getBranchList(detail.projectId);
     }
   }, [detail]);
-
-  useEffect(() => {
-    getBranchDetail();
-  }, [getBranchDetail]);
 
   const getBranchList = async (projectId: number) => {
     setLoading(true);

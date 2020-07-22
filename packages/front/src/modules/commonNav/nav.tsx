@@ -1,20 +1,40 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Breadcrumb } from 'antd';
 import { HomeOutlined } from '@ant-design/icons';
+const Item = Breadcrumb.Item;
 
-const Nav: React.SFC = () => {
-  return (
-    <Breadcrumb style={{ margin: '16px 24px' }}>
-      <Breadcrumb.Item href="">
-        <HomeOutlined />
-        <span>Home</span>
-      </Breadcrumb.Item>
-      <Breadcrumb.Item href="">
-        <span>Application List</span>
-      </Breadcrumb.Item>
-      <Breadcrumb.Item>Application</Breadcrumb.Item>
-    </Breadcrumb>
-  );
+interface NavProps {
+  navs: any[];
+}
+
+const Nav: React.SFC<NavProps> = (props: NavProps) => {
+  const { navs } = props;
+
+  const getNavs = useCallback(() => {
+    return (
+      navs &&
+      navs.length > 0 &&
+      navs.map((item: any, index: number) => {
+        if (index === navs.length - 1) {
+          return (
+            <Item>
+              {index === 0 && <HomeOutlined />}
+              <span>{item.name}</span>
+            </Item>
+          );
+        } else {
+          return (
+            <Item href={item.url}>
+              {index === 0 && <HomeOutlined />}
+              <span>{item.name}</span>
+            </Item>
+          );
+        }
+      })
+    );
+  }, [navs]);
+
+  return <Breadcrumb style={{ margin: '16px 24px' }}>{getNavs()}</Breadcrumb>;
 };
 
 export default Nav;

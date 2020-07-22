@@ -12,9 +12,20 @@ const Dashboard: React.SFC = () => {
   const [visible, setVisible] = useState<boolean>(false);
   const [projectList, setProjectList] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [navs, setNavs] = useState<any[]>([]);
 
   useEffect(() => {
     getProjectAll();
+    setNavs([
+      {
+        name: 'Home',
+        url: '/',
+      },
+      {
+        name: 'Project Dashboard',
+        url: '',
+      },
+    ]);
   }, []);
 
   const getProjectAll = async () => {
@@ -37,7 +48,7 @@ const Dashboard: React.SFC = () => {
 
   return (
     <Spin spinning={loading}>
-      <Container>
+      <Container navs={navs}>
         <div>
           <div className={css.dashboardTitle}>
             <div className={css.title}>Project Dashboard</div>

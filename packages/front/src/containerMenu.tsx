@@ -6,10 +6,11 @@ import SideBar from './modules/siderBar';
 interface ContainerProps {
   children?: React.ReactNode;
   match: any;
+  navs: any[];
 }
 
 const ContainerMenu: React.SFC<ContainerProps> = (props: ContainerProps) => {
-  const { match } = props;
+  const { match, navs } = props;
 
   return (
     <div>
@@ -17,7 +18,7 @@ const ContainerMenu: React.SFC<ContainerProps> = (props: ContainerProps) => {
       <div className="container_menu">
         <SideBar match={match} />
         <div className="wapper">
-          <Navs />
+          <Navs navs={navs} />
           {props.children}
         </div>
       </div>
