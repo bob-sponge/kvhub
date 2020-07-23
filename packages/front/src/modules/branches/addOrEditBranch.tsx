@@ -9,19 +9,23 @@ interface AddOrEditProjectProps {
   setVisible: Function;
   getBranch: Function;
   filter: any;
+  match: any;
 }
 
 const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProjectProps) => {
-  const { visible, setVisible, filter, getBranch } = props;
+  const { visible, setVisible, filter, getBranch, match } = props;
   const [form] = Form.useForm();
   const [project, setProject] = useState<any[]>([]);
+  const [branchList, setBranchList] = useState<any[]>([]);
   const onClose = () => {
     setVisible(false);
   };
 
   useEffect(() => {
-    getProject();
-  }, []);
+    if (visible) {
+      getProject();
+    }
+  }, [visible]);
 
   const getProject = async () => {
     let result = await Api.projectAllApi();
@@ -30,6 +34,27 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
       setProject(data);
     }
   };
+  useEffect(() => {
+    if (visible && match) {
+      const projectid = Number(match.params.projectId);
+      getBranchList(projectid);
+    }
+  }, [match, visible]);
+
+  const getBranchList = async (projectId: number) => {
+    let result = await Api.branchListApi(projectId);
+    const { success, data } = result;
+    if (success && data) {
+      setBranchList(data);
+    }
+  };
+
+  useEffect(() => {
+    if (visible && project && project.length > 0) {
+      const projectid = Number(match.params.projectId);
+      form.setFieldsValue({ projectId: projectid });
+    }
+  }, [visible, match, project]);
 
   const handleAdd = () => {
     form.validateFields().then(values => {
@@ -74,10 +99,23 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
       footer={renderFooter()}>
       <Form form={form} name="basic" layout="vertical" initialValues={{ remember: true }}>
         <Form.Item label="project" name="projectId" rules={[{ required: true, message: 'Please select project!' }]}>
-          <Select>
+          <Select disabled={true}>
             {project &&
               project.length > 0 &&
               project.map(item => {
+                return (
+                  <Select.Option key={item.id} value={item.id}>
+                    {item.name}
+                  </Select.Option>
+                );
+              })}
+          </Select>
+        </Form.Item>
+        <Form.Item label="branch" name="branchId">
+          <Select>
+            {branchList &&
+              branchList.length > 0 &&
+              branchList.map(item => {
                 return (
                   <Select.Option key={item.id} value={item.id}>
                     {item.name}

@@ -159,7 +159,7 @@ const Branches: React.SFC<BranchProps> = (props: BranchProps) => {
           </div>
         </Spin>
       </div>
-      <AddorEditBranch visible={visible} setVisible={setVisible} getBranch={getBranch} filter={filter} />
+      <AddorEditBranch visible={visible} setVisible={setVisible} getBranch={getBranch} filter={filter} match={match} />
     </ContainerMenu>
   );
 };

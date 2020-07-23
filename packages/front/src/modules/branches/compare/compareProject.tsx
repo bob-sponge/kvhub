@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import * as css from '../style/compare.modules.less';
-import { Select, Col, Row, Button, Form, Spin } from 'antd';
+import { Select, Col, Row, Button, Form, Spin, message } from 'antd';
 import { SwapOutlined, PlusOutlined } from '@ant-design/icons';
 import DiffItem from './diffItem';
 import * as Api from '../../../api/branch';
 import clsx from 'clsx';
+import { history as browserHistory } from '@ofm/history';
 
 interface CompareProjectProps {
   match?: any;
@@ -79,7 +80,8 @@ const CompareProject: React.SFC<CompareProjectProps> = (props: CompareProjectPro
     const { success, data } = result;
     setLoading(false);
     if (success && data) {
-      window.console.log(data);
+      message.success(data);
+      browserHistory.push(`/mergeRequest/detail/${dataId}`);
     }
   };
 
