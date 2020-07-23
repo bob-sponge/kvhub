@@ -45,7 +45,10 @@ const CompareProject: React.SFC<CompareProjectProps> = (props: CompareProjectPro
   const onCompare = () => {
     form.validateFields().then(values => {
       if (values && !values.outOfDate) {
-        getDiffData(values);
+        let params = Object.assign({}, values, {
+          crosMerge: isChange,
+        });
+        getDiffData(params);
       }
     });
   };
