@@ -459,7 +459,7 @@ export class BranchService {
       branchCommit.commitTime = new Date();
       await this.branchCommitRepository.save(branchCommit);
 
-      const branchKeyList = await this.branchKeyRepository.find({ where: { branchId: branch.id } });
+      const branchKeyList = await this.branchKeyRepository.find({ where: { branchId: branchBody.branchId } });
       const newBranchKeyList: BranchKey[] = [];
       const keyIdList: number[] = [];
       branchKeyList.forEach(bk => {
