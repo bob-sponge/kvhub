@@ -1,5 +1,7 @@
+/* eslint-disable no-unused-expressions */
 import { Controller, Post, Body, Get, Param, Delete } from '@nestjs/common';
 import { NamespaceService } from './namespace.service';
+import { BranchService } from '../branch/branch.service';
 import { ResponseBody } from 'src/vo/ResponseBody';
 import { Namespace } from 'src/entities/Namespace';
 import { NamespaceViewDetail } from 'src/vo/NamespaceViewDetail';
@@ -7,7 +9,7 @@ import * as Log4js from 'log4js';
 
 @Controller('namespace')
 export class NamespaceController {
-  constructor(private readonly namespaceService: NamespaceService) {}
+  constructor(private readonly namespaceService: NamespaceService, private readonly branchService: BranchService) {}
 
   @Post('/save')
   async save(@Body() vo: Namespace): Promise<ResponseBody> {
@@ -74,9 +76,74 @@ export class NamespaceController {
    */
   @Post('/view/keys')
   async view(@Body() namespaceViewDetail: NamespaceViewDetail): Promise<ResponseBody> {
-    // todo namespaceViewDetail中应该增加param branchid
-    const namespaceKey = await this.namespaceService.getKeysByCondition(namespaceViewDetail);
-    return ResponseBody.okWithData(namespaceKey);
+    // 此处需要做 merge, merge的作用是合并 master分支的kv做展示
+    // 合并方案：
+    // 1.如果是master分支，直接获取此分支的kv
+    // 2.如果是 其他分支，需要和 master 合并， 并排序
+    // 3.为了处理合并，不能在数据库分页，需代码端分页
+    //
+    const logger = Log4js.getLogger();
+    logger.level = 'INFO';
+    const page = namespaceViewDetail.page;
+    const pageSize = namespaceViewDetail.pageSize;
+    const branchId = namespaceViewDetail.branchId;
+    const branch = await this.branchService.getBranchById(branchId);
+    const offset = (page - 1) * pageSize;
+    logger.info(`page: ${page}, page size: ${pageSize}, branchID: ${branchId}, branch: ${branch}`);
+    if (branch.master) {
+      const namespaceKey = await this.namespaceService.getKeysByCondition(namespaceViewDetail);
+      return ResponseBody.okWithData(namespaceKey);
+    } else {
+      // 获取 master 分支 所有的 kv
+      const project = await this.namespaceService.findProject(namespaceViewDetail.namespaceId);
+      const projectId = project[0].id;
+      const masterBranch = await this.branchService.findMasterBranchByProjectId(projectId);
+      const masterBranchId = masterBranch.id;
+      const masterViewDetail = JSON.parse(JSON.stringify(namespaceViewDetail));
+      masterViewDetail.branchId = masterBranchId;
+      // master 分支 key
+      const namespaceMasterBranchKey = await this.namespaceService.getAllKeysByCondition(masterViewDetail);
+      // 查询分支k v
+      const namespaceNoMasterBranchKey = await this.namespaceService.getAllKeysByCondition(namespaceViewDetail);
+      if (namespaceNoMasterBranchKey.length === 0) {
+        const totalNum = namespaceMasterBranchKey.length;
+        const retKV = namespaceMasterBranchKey.sort((i, j) => i.keyName - j.keyName).slice(offset, offset + pageSize);
+        const namespaceKey = {
+          keys: retKV,
+          totalNum,
+        };
+        return ResponseBody.okWithData(namespaceKey);
+      } else {
+        // 合并操作
+        let noMasterKeySet = new Set();
+        namespaceNoMasterBranchKey.forEach(i => {
+          noMasterKeySet.add(i.keyName);
+        });
+        const tmpBk = namespaceMasterBranchKey.filter(m => {
+          // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+          return noMasterKeySet.has(m.keyName) !== true;
+        });
+        let finalAllKv = tmpBk.concat(namespaceNoMasterBranchKey);
+        finalAllKv.sort((i, j) => {
+          const r1 = i.keyName.toUpperCase();
+          const r2 = j.keyName.toUpperCase();
+          if (r1 < r2) {
+            return -1;
+          }
+          if (r1 > r2) {
+            return 1;
+          }
+          return 0;
+        });
+        const totalNum = finalAllKv.length;
+        const retKV = finalAllKv.slice(offset, offset + pageSize);
+        const namespaceKey = {
+          keys: retKV,
+          totalNum,
+        };
+        return ResponseBody.okWithData(namespaceKey);
+      }
+    }
   }
   /**
    * @description 获取命名空间所有语言

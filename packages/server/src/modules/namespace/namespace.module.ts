@@ -6,11 +6,15 @@ import { Namespace } from 'src/entities/Namespace';
 import { Keyvalue } from 'src/entities/Keyvalue';
 import { Key } from 'src/entities/Key';
 import { BranchKey } from 'src/entities/BranchKey';
+import { MergeDiffChangeKey } from 'src/entities/MergeDiffChangeKey';
 import { Keyname } from 'src/entities/Keyname';
 import { Branch } from 'src/entities/Branch';
 import { BranchCommit } from 'src/entities/BranchCommit';
 import { BranchMerge } from 'src/entities/BranchMerge';
 import { Project } from 'src/entities/Project';
+import { BranchService } from '../branch/branch.service';
+import { KeyService } from '../key/key.service';
+import { Language } from 'src/entities/Language';
 
 @Module({
   imports: [
@@ -24,10 +28,12 @@ import { Project } from 'src/entities/Project';
       BranchCommit,
       BranchMerge,
       Project,
+      MergeDiffChangeKey,
+      Language,
     ]),
   ],
   controllers: [NamespaceController],
-  providers: [NamespaceService],
+  providers: [NamespaceService, BranchService, KeyService],
   exports: [NamespaceService],
 })
 export class NamespaceModule {}
