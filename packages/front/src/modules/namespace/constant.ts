@@ -227,25 +227,3 @@ export interface KeyName {
   keyId: number;
   keyName: string;
 }
-
-export const testData = {
-  keyName: {
-    id: 16,
-    keyId: 13,
-    name: 'h2w',
-  },
-  value: [
-    {
-      id: 21,
-      value: 'hao2',
-      keyId: 13,
-      languageId: 1,
-    },
-    {
-      id: 22,
-      value: '好2',
-      keyId: 13,
-      languageId: 2,
-    },
-  ],
-};

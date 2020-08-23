@@ -9,6 +9,7 @@ import Branches from './modules/branches';
 import MergeRequest from './modules/mergeRequest';
 import MergeDetail from './modules/mergeRequest/mergeDetail/main';
 import Compare from './modules/branches/compare/compare';
+import Login from './login';
 
 export function App() {
   React.useEffect(() => {
@@ -36,6 +37,7 @@ const BasicRoute = () => (
       <Route exact path="/mergeRequest/:projectId" component={MergeRequest} />
       <Route exact path="/mergeRequest/detail/:branchMergeId" component={MergeDetail} />
       <Route exact path="/branch/compare/:id" component={Compare} />
+      <Route exact path="/login" component={Login} />
       <Redirect from={'/'} strict={true} to={'/dashboard'} />
     </Switch>
   </Router>

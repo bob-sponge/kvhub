@@ -4,7 +4,7 @@ import Navs from './modules/commonNav';
 
 interface ContainerProps {
   children?: React.ReactNode;
-  navs: any[];
+  navs?: any;
 }
 
 const Container: React.SFC<ContainerProps> = (props: ContainerProps) => {
