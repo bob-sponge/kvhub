@@ -23,12 +23,13 @@ import { KeyModule } from './modules/key/key.module';
 import { NamespaceModule } from './modules/namespace/namespace.module';
 import { BranchMergeModule } from './modules/branchMerge/branchMerge.module';
 import { MergeDiffValue } from './entities/MergeDiffValue';
+import { UserModule } from './modules/user/user.module';
 
 @Module({
   imports: [
     ConfigModule.register({ dir: '/packages/server/config' }),
     TypeOrmModule.forRootAsync({
-      imports: [ConfigModule, BranchModule, KeyModule, ProjectModule, LanguagesModule, NamespaceModule, BranchMergeModule],
+      imports: [ConfigModule, BranchModule, KeyModule, ProjectModule, LanguagesModule, NamespaceModule, BranchMergeModule, UserModule],
       inject: [ConfigService],
       useFactory: async (config: ConfigService) =>
         ({

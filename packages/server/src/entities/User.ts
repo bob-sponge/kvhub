@@ -8,6 +8,9 @@ export class User {
   @Column('character varying', { name: 'name', length: 255 })
   name: string;
 
+  @Column('character varying', { name: 'password', nullable: true, length: 255 })
+  password: string;
+
   @Column('character varying', {
     name: 'department',
     nullable: true,
@@ -20,4 +23,7 @@ export class User {
 
   @Column('character varying', { name: 'admin', length: 255 })
   admin: string;
+
+  @Column({ name: 'last_time', nullable: true })
+  lastTime: Date | null;
 }
