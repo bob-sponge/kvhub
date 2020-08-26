@@ -76,6 +76,9 @@ ajax.interceptors.request.use(
 // trasform axiosResponse to ajaxResponse
 ajax.interceptors.response.use(response => {
   let data = response.data;
+  // if (data && (data.sessionTimeout || !sessionStorage.getItem('username'))) {
+  //   window.location.replace('/');
+  // }
   if (data.success !== undefined && (data.success === false || data.success === null) && !!data.data) {
     addErrorList(data.data);
   }

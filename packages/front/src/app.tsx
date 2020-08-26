@@ -30,6 +30,8 @@ export function App() {
 const BasicRoute = () => (
   <Router history={history}>
     <Switch>
+      <Route exact path="/login" component={Login} />
+      <Route exact path="/" component={Login} />
       <Route exact path="/namespace/:name/:projectId/:namespaceId/:languageId" component={NamespaceView} />
       <Route exact path="/languages/:projectId" component={Languages} />
       <Route exact path="/dashboard" component={Dashboard} />
@@ -37,8 +39,7 @@ const BasicRoute = () => (
       <Route exact path="/mergeRequest/:projectId" component={MergeRequest} />
       <Route exact path="/mergeRequest/detail/:branchMergeId" component={MergeDetail} />
       <Route exact path="/branch/compare/:id" component={Compare} />
-      <Route exact path="/login" component={Login} />
-      <Redirect from={'/'} strict={true} to={'/dashboard'} />
+      <Redirect from={'/'} to={'/dashboard'} />
     </Switch>
   </Router>
 );
