@@ -1,15 +1,18 @@
 /* eslint-disable no-unused-expressions */
-import { Controller, Post, Body, Get, Param, Delete } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Delete, UseGuards } from '@nestjs/common';
 import { NamespaceService } from './namespace.service';
 import { BranchService } from '../branch/branch.service';
 import { ResponseBody } from 'src/vo/ResponseBody';
 import { Namespace } from 'src/entities/Namespace';
 import { NamespaceViewDetail } from 'src/vo/NamespaceViewDetail';
 import * as Log4js from 'log4js';
+import { Permission } from 'src/permission/permission.decorator';
+import { PermissionGuard } from 'src/permission/permission.guard';
 
 @Controller('namespace')
+@UseGuards(PermissionGuard)
 export class NamespaceController {
-  constructor(private readonly namespaceService: NamespaceService, private readonly branchService: BranchService) {}
+  constructor(private readonly namespaceService: NamespaceService, private readonly branchService: BranchService) { }
 
   @Post('/save')
   async save(@Body() vo: Namespace): Promise<ResponseBody> {
@@ -324,6 +327,7 @@ export class NamespaceController {
       }
    */
   @Delete('/view/key/:keyId')
+  @Permission('delete')
   async deleteKey(@Param('keyId') keyId: number) {
     let msg = '';
     try {

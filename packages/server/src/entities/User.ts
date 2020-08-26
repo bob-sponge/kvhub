@@ -21,8 +21,11 @@ export class User {
   @Column('character varying', { name: 'type', nullable: true, length: 255 })
   type: string | null;
 
-  @Column('character varying', { name: 'admin', length: 255 })
-  admin: string;
+  @Column({ name: 'admin', default: 1, nullable: true })
+  admin: number;
+
+  @Column({ name: 'permission', nullable: true, length: 255 })
+  permission: string;
 
   @Column({ name: 'last_time', nullable: true })
   lastTime: Date | null;

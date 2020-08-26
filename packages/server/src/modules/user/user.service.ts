@@ -42,7 +42,7 @@ export class UserService {
     if (id == null || null == await this.userRepository.findOne({ id: id })) {
       throw new BadRequestException(ErrorMessage.USER_NOT_EXIST);
     }
-    await this.userRepository.createQueryBuilder('user').update(User).set({ admin: '0' }).execute();
+    await this.userRepository.createQueryBuilder('user').update(User).set({ admin: 0 }).execute();
     return ErrorMessage.SET_AS_ADMIN_SUCCESS;
   }
 }

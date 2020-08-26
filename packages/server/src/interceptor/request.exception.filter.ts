@@ -1,6 +1,6 @@
-import { ExceptionFilter, Catch, BadRequestException, ArgumentsHost, HttpCode, HttpStatus } from '@nestjs/common';
+import { ExceptionFilter, Catch, BadRequestException, ArgumentsHost, HttpCode, HttpStatus, UnauthorizedException } from '@nestjs/common';
 
-@Catch(BadRequestException)
+@Catch(BadRequestException, UnauthorizedException)
 export class BadRequestExceptionFilter implements ExceptionFilter {
   catch(exception: any, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
