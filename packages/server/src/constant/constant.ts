@@ -50,4 +50,12 @@ export class ErrorMessage {
 
   // project
   static PROJECT_NOT_EXIST = 'Project is not exist or has deleted!';
+
+  // user
+  static PLEASE_LOGIN_FIRST = 'Please Login First!';
+  static USER_NOT_EXIST = 'Logged In User Not Exist!';
+  static OLD_PASSWORD_ERROR = 'Old Password Error!';
+  static RESET_PASSWORD_SUCCESS = 'Reset Password Success!';
+  static DELETE_USER_SUCCESS = 'Delete User Success!';
+  static SET_AS_ADMIN_SUCCESS = 'Set As Admin Success!';
 }
