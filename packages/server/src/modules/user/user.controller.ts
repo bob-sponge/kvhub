@@ -32,4 +32,15 @@ export class UserController {
   async setAsAdmin(@Param('id') id: number): Promise<ResponseBody> {
     return ResponseBody.okWithMsg(await this.userService.setAsAdmin(id));
   }
+
+  @Get('/login')
+  async login(@Session() session): Promise<ResponseBody> {
+    session.user = {
+      id: 1,
+      name: 'admin',
+      admin: 0,
+      permission: 'query,delete,set,reset,merge'
+    }
+    return ResponseBody.okWithMsg('Login success!');
+  }
 }
