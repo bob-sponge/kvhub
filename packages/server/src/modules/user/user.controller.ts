@@ -9,10 +9,10 @@ import { Permission } from 'src/permission/permission.decorator';
 export class UserController {
   constructor(private readonly userService: UserService) { }
 
-  @Get('/query')
+  @Post('/query')
   @Permission('query')
-  async queryAll(): Promise<ResponseBody> {
-    return ResponseBody.okWithData(await this.userService.query());
+  async queryAll(@Body() body: any): Promise<ResponseBody> {
+    return ResponseBody.okWithData(await this.userService.query(body));
   }
 
   @Post('/reset')

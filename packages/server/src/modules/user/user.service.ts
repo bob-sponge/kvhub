@@ -8,8 +8,19 @@ import { ErrorMessage } from 'src/constant/constant';
 export class UserService {
   constructor(@InjectRepository(User) private readonly userRepository: Repository<User>) { }
 
-  async query(): Promise<User[]> {
-    return await this.userRepository.find();
+  async query(body: any): Promise<any> {
+    const pageNo = body.pageNo;
+    const pageSize = body.pageSize;
+    if (pageNo < 1 || pageSize < 0) {
+      throw new BadRequestException(ErrorMessage.PAGE_PARAM_ERROR);
+    }
+    const total = await this.userRepository.count();
+    const start = (pageNo - 1) * pageSize;
+    const data = await this.userRepository.query(`SELECT * FROM public.\"user\" offset ${start} limit ${pageSize}`);
+    return {
+      total: total,
+      rows: data
+    }
   }
 
   async reset(@Session() session, body: any): Promise<string> {
