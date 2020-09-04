@@ -27,10 +27,10 @@ export class UserController {
     return ResponseBody.okWithMsg(await this.userService.delete(id))
   }
 
-  @Get('/admin/:id')
+  @Get('/set/:id/:level')
   @Permission('set')
-  async setAsAdmin(@Param('id') id: number): Promise<ResponseBody> {
-    return ResponseBody.okWithMsg(await this.userService.setAsAdmin(id));
+  async set(@Session() session, @Param('id') id: number, @Param('level') level: number): Promise<ResponseBody> {
+    return ResponseBody.okWithMsg(await this.userService.set(session, id, level));
   }
 
   @Get('/login')

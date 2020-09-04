@@ -24,6 +24,7 @@ export class UserService {
   }
 
   async reset(@Session() session, body: any): Promise<string> {
+    if (session.user.admin != 0) { throw new BadRequestException(ErrorMessage.MUST_ADMIN); }
     const oldPass = body.oldPass;
     const newPass = body.newPass;
     const userId = body.userId;
@@ -31,14 +32,10 @@ export class UserService {
     if (null == userId || null == (user = await this.userRepository.findOne({ id: userId }))) {
       throw new BadRequestException(ErrorMessage.USER_NOT_EXIST);
     }
-    if (user.admin !== 0) {
-      throw new BadRequestException(ErrorMessage.MUST_ADMIN);
-    }
     if (user.password !== oldPass) {
       throw new BadRequestException(ErrorMessage.OLD_PASSWORD_ERROR);
     }
     user.password = newPass;
-    user.id = userId;
     await this.userRepository.save(user);
     return ErrorMessage.RESET_PASSWORD_SUCCESS;
   }
@@ -51,11 +48,24 @@ export class UserService {
     return ErrorMessage.DELETE_USER_SUCCESS;
   }
 
-  async setAsAdmin(id: number): Promise<string> {
+  async set(@Session() session, id: number, level: number): Promise<string> {
+    if (session.user.admin != 0) {
+      throw new BadRequestException(ErrorMessage.MUST_ADMIN);
+    }
+    let user: User;
+    if (id == null || null == (user = await this.userRepository.findOne({ id: id }))) {
+      throw new BadRequestException(ErrorMessage.USER_NOT_EXIST);
+    }
+    user.admin = level;
+    await this.userRepository.save(user);
+    return level == 0 ? ErrorMessage.SET_AS_ADMIN_SUCCESS : ErrorMessage.SET_AS_GENERAL_SUCCESS;
+  }
+
+  async setAsGeneral(id: number): Promise<string> {
     if (id == null || null == await this.userRepository.findOne({ id: id })) {
       throw new BadRequestException(ErrorMessage.USER_NOT_EXIST);
     }
-    await this.userRepository.createQueryBuilder('user').update(User).set({ admin: 0 }).execute();
+    await this.userRepository.createQueryBuilder('user').update(User).set({ admin: 1 }).execute();
     return ErrorMessage.SET_AS_ADMIN_SUCCESS;
   }
 }
