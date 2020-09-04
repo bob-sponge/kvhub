@@ -2,6 +2,8 @@ import React, { useCallback, useState } from 'react';
 import { Input, Form, Button } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import * as css from '../src/style/login.modules.less';
+import * as Api from './api/login';
+import { history } from '@ofm/history';
 const titleLogo = require('./resource/logo_smz.png');
 const i18nLogo = require('./resource/logo-i18n.png');
 
@@ -15,9 +17,18 @@ const Login: React.FC<LoginProps> = () => {
     form.validateFields().then(async (values: any) => {
       // eslint-disable-next-line no-console
       console.log(values);
-      setErrorTips(true);
+      getLogin();
     });
   }, []);
+
+  const getLogin = async () => {
+    let result = await Api.loginApi();
+    const { success } = result;
+    if (success) {
+      history.push('/dashboard');
+    }
+    setErrorTips(true);
+  };
 
   const handleChange = (type: string) => {
     setErrorTips(false);

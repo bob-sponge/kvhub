@@ -10,6 +10,7 @@ import MergeRequest from './modules/mergeRequest';
 import MergeDetail from './modules/mergeRequest/mergeDetail/main';
 import Compare from './modules/branches/compare/compare';
 import Login from './login';
+import User from './modules/user';
 
 export function App() {
   React.useEffect(() => {
@@ -31,6 +32,7 @@ const BasicRoute = () => (
   <Router history={history}>
     <Switch>
       <Route exact path="/login" component={Login} />
+      <Route exact path="/user" component={User} />
       <Route exact path="/" component={Login} />
       <Route exact path="/namespace/:name/:projectId/:namespaceId/:languageId" component={NamespaceView} />
       <Route exact path="/languages/:projectId" component={Languages} />

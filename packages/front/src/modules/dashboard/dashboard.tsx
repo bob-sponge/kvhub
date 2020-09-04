@@ -22,7 +22,7 @@ const Dashboard: React.SFC = () => {
         url: '/',
       },
       {
-        name: 'Project Dashboard',
+        name: 'User Management',
         url: '',
       },
     ]);
