@@ -58,4 +58,7 @@ export class ErrorMessage {
   static RESET_PASSWORD_SUCCESS = 'Reset Password Success!';
   static DELETE_USER_SUCCESS = 'Delete User Success!';
   static SET_AS_ADMIN_SUCCESS = 'Set As Admin Success!';
+  static PAGE_PARAM_ERROR = 'Page Param Error!';
+  static NO_PERMISSION = 'No Permission!';
+  static MUST_ADMIN = 'Only Administrator Can Modify!';
 }

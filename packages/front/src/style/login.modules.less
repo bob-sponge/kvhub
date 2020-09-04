@@ -1,3 +1,10 @@
+.logo {
+  position: fixed;
+  left: 200px;
+  top: 21px;
+  height: 48px;
+}
+
 .login-page {
   display: flex;
   justify-content: center;
@@ -13,6 +20,12 @@
   .login-form {
 
     :global {
+
+      .ant-form-item {
+        margin-bottom: unset;
+        min-height: 78px;
+      }
+
       .ant-input-affix-wrapper {
         height: 42px;
         width: 272px;
@@ -20,7 +33,61 @@
       .ant-btn-primary {
         height: 44px;
         width: 272px;
+        background: #43BDE0;
+        border-color: #43BDE0;
+      }
+      .ant-form-item-has-error .ant-form-item-explain, .ant-form-item-has-error .ant-form-item-split {
+        color: #F52875;
+        width: 272px;
+      }
+
+      .ant-form-item-has-error .ant-input, .ant-form-item-has-error .ant-input-affix-wrapper,
+      .ant-form-item-has-error .ant-input:hover, .ant-form-item-has-error .ant-input-affix-wrapper:hover {
+        border-top: unset;
+        border-left: unset;
+        border-right: unset;
+        border-width: 2px;
       }
     }
+
+    .i18n {
+      text-align: center;
+      width: 272px;
+      &-logo {
+        height: 60px;
+        margin-bottom: 10px;
+      }
+    }
+
+    .label {
+      text-align: center;
+      width: 272px;
+      height: 16px;
+      font-size: 10px;
+      font-family: SiemensSans-Roman, SiemensSans;
+      font-weight: normal;
+      color: #FFFFFF;
+      line-height: 16px;
+      letter-spacing: 4px;
+      margin-bottom: 40px;
+      opacity: 0.3;
+    }
+
+    .api-tips {
+      width: 272px;
+      color: #F52875;
+      position: absolute;
+      bottom: -10px;
+    }
+
+    .login-btn {
+      margin-top: 16px;
+    }
+  }
+  .footer {
+    position: fixed;
+    color: #ffffff;
+    bottom: 10px;
+    opacity: 0.3;
   }
 }

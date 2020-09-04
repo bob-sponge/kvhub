@@ -9,10 +9,10 @@ import { Permission } from 'src/permission/permission.decorator';
 export class UserController {
   constructor(private readonly userService: UserService) { }
 
-  @Get('/query')
+  @Post('/query')
   @Permission('query')
-  async queryAll(): Promise<ResponseBody> {
-    return ResponseBody.okWithData(await this.userService.query());
+  async queryAll(@Body() body: any): Promise<ResponseBody> {
+    return ResponseBody.okWithData(await this.userService.query(body));
   }
 
   @Post('/reset')
@@ -31,5 +31,16 @@ export class UserController {
   @Permission('set')
   async setAsAdmin(@Param('id') id: number): Promise<ResponseBody> {
     return ResponseBody.okWithMsg(await this.userService.setAsAdmin(id));
+  }
+
+  @Get('/login')
+  async login(@Session() session): Promise<ResponseBody> {
+    session.user = {
+      id: 1,
+      name: 'admin',
+      admin: 0,
+      permission: 'query,delete,set,reset,merge'
+    }
+    return ResponseBody.okWithMsg('Login success!');
   }
 }
