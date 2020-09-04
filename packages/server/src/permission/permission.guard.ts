@@ -28,7 +28,7 @@ export class PermissionGuard implements CanActivate {
     if (user != null && user.admin === 0 && hadPermission()) {
       return true;
     } else {
-      throw new UnauthorizedException('No Permission');
+      throw new UnauthorizedException(ErrorMessage.NO_PERMISSION);
     }
   }
 }

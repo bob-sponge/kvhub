@@ -26,17 +26,19 @@ export class UserService {
   async reset(@Session() session, body: any): Promise<string> {
     const oldPass = body.oldPass;
     const newPass = body.newPass;
-    if (session.user == null) {
-      throw new BadRequestException(ErrorMessage.PLEASE_LOGIN_FIRST);
-    }
-    const user: User = await this.userRepository.findOne({ id: session.user.id });
-    if (user == null) {
+    const userId = body.userId;
+    let user: User;
+    if (null == userId || null == (user = await this.userRepository.findOne({ id: userId }))) {
       throw new BadRequestException(ErrorMessage.USER_NOT_EXIST);
+    }
+    if (user.admin !== 0) {
+      throw new BadRequestException(ErrorMessage.MUST_ADMIN);
     }
     if (user.password !== oldPass) {
       throw new BadRequestException(ErrorMessage.OLD_PASSWORD_ERROR);
     }
     user.password = newPass;
+    user.id = userId;
     await this.userRepository.save(user);
     return ErrorMessage.RESET_PASSWORD_SUCCESS;
   }
