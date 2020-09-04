@@ -2,6 +2,8 @@ import React, { useCallback } from 'react';
 import { Input, Form, Button } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import * as css from '../src/style/login.modules.less';
+import * as Api from './api/login';
+import { history } from '@ofm/history';
 
 interface LoginProps {}
 
@@ -12,8 +14,17 @@ const Login: React.FC<LoginProps> = () => {
     form.validateFields().then(async (values: any) => {
       // eslint-disable-next-line no-console
       console.log(values);
+      getLogin();
     });
   }, []);
+
+  const getLogin = async () => {
+    let result = await Api.loginApi();
+    const { success } = result;
+    if (success) {
+      history.push('/dashboard');
+    }
+  };
 
   return (
     <>
