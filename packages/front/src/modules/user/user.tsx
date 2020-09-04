@@ -21,22 +21,25 @@ const User: React.SFC<UserProps> = (_props: UserProps) => {
   const [resetPwd, setResetPwd] = useState<any>({});
 
   useEffect(() => {
-    getUser();
     setNavs([
       {
         name: 'Home',
         url: '/',
       },
       {
-        name: 'Project Dashboard',
+        name: 'User Management',
         url: '',
       },
     ]);
   }, []);
 
-  const getUser = async () => {
+  useEffect(() => {
+    getUser(filter);
+  }, [filter]);
+
+  const getUser = async (filters: any) => {
     setLoading(true);
-    let result = await Api.getUserApi(filter);
+    let result = await Api.getUserApi(filters);
     setLoading(false);
     const { success, data } = result;
     if (success && data) {
@@ -47,17 +50,22 @@ const User: React.SFC<UserProps> = (_props: UserProps) => {
   };
 
   const setAdmin = (rowData: any) => {
-    setUser(rowData.id);
+    setUser(rowData);
   };
 
-  const setUser = async (id: any) => {
-    let result = await Api.setAdminApi(id);
-    const { success, data } = result;
-    if (success) {
-      message.success(data);
-      getUser();
-    }
-  };
+  const setUser = useCallback(
+    async (rowData: any) => {
+      const { id, admin } = rowData;
+      let level = admin === 0 ? 1 : 0;
+      let result = await Api.setRoleApi(id, level);
+      const { success, data } = result;
+      if (success) {
+        message.success(data);
+        getUser(filter);
+      }
+    },
+    [filter],
+  );
 
   const showTotal = () => {
     return `Total ${total} items`;
@@ -78,17 +86,20 @@ const User: React.SFC<UserProps> = (_props: UserProps) => {
     deleteUser(rowData.id);
   };
 
-  const deleteUser = async (id: any) => {
-    let result = await Api.delUserApi(id);
-    const { success, data } = result;
-    if (success) {
-      message.success(data);
-      getUser();
-    }
-  };
+  const deleteUser = useCallback(
+    async (id: any) => {
+      let result = await Api.delUserApi(id);
+      const { success, data } = result;
+      if (success) {
+        message.success(data);
+        getUser(filter);
+      }
+    },
+    [filter],
+  );
 
   const onReset = (params: any) => {
-    resetPwd.id = params.id;
+    resetPwd.userId = params.id;
     setResetPwd({ ...resetPwd });
     setVisible(true);
   };
@@ -96,6 +107,7 @@ const User: React.SFC<UserProps> = (_props: UserProps) => {
   const handleCancel = () => {
     setVisible(false);
     setResetPwd({});
+    form.resetFields();
   };
 
   const handleOk = useCallback(() => {
@@ -112,6 +124,7 @@ const User: React.SFC<UserProps> = (_props: UserProps) => {
     const { success, data } = result;
     if (success) {
       message.success(data);
+      handleCancel();
     }
   };
 
