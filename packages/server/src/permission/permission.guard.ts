@@ -25,7 +25,7 @@ export class PermissionGuard implements CanActivate {
       pers = user.permission.split(',');
     }
     let hadPermission = () => pers.some((x) => permissions.includes(x));
-    if (user != null && user.admin === 0 && hadPermission()) {
+    if (user != null && hadPermission()) {
       return true;
     } else {
       throw new UnauthorizedException(ErrorMessage.NO_PERMISSION);
