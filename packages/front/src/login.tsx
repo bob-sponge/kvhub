@@ -4,6 +4,8 @@ import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import * as css from '../src/style/login.modules.less';
 import * as Api from './api/login';
 import { history } from '@ofm/history';
+const titleLogo = require('./resource/logo_smz.png');
+const i18nLogo = require('./resource/logo-i18n.png');
 
 interface LoginProps {}
 
