@@ -17,9 +17,6 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
   const [form] = Form.useForm();
   const [project, setProject] = useState<any[]>([]);
   const [branchList, setBranchList] = useState<any[]>([]);
-  const onClose = () => {
-    setVisible(false);
-  };
 
   useEffect(() => {
     if (visible) {
@@ -46,6 +43,8 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
     const { success, data } = result;
     if (success && data) {
       setBranchList(data);
+      let selectBranch = data.filter((item: any) => item.master)[0];
+      form.setFieldsValue({ branchId: selectBranch.id });
     }
   };
 
@@ -71,19 +70,31 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
       setVisible(false);
       message.success(data);
       getBranch(filter);
-      form.resetFields();
+      onClose();
     }
   };
 
   const renderFooter = () => {
     return (
       <div className={css.drawerFooter}>
-        <Button onClick={() => setVisible(false)}>Cancel</Button>
+        <Button onClick={() => onClose()}>Cancel</Button>
         <Button icon={<CheckOutlined />} type="primary" onClick={handleAdd}>
           Submit
         </Button>
       </div>
     );
+  };
+
+  const onClose = () => {
+    setVisible(false);
+    form.resetFields();
+  };
+
+  const checkBranchName = (_rule: any, value: any) => {
+    if (value && value.length <= 100) {
+      return Promise.resolve();
+    }
+    return Promise.reject('Branch name can contain at most 100 characters');
   };
 
   return (
@@ -124,7 +135,10 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
               })}
           </Select>
         </Form.Item>
-        <Form.Item label="Branch Name" name="name" rules={[{ required: true, message: 'Please input Branch Name!' }]}>
+        <Form.Item
+          label="Branch Name"
+          name="name"
+          rules={[{ required: true, message: 'Please input Branch Name!' }, { validator: checkBranchName }]}>
           <Input />
         </Form.Item>
       </Form>

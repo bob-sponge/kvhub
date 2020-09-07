@@ -7,6 +7,7 @@ import { PlusOutlined } from '@ant-design/icons';
 import { columns } from './tableConfig';
 import AddOrEdit from './addOrEdit';
 import * as Api from '../../api/mergeRequest';
+import { projectDetailApi } from '../../api';
 
 const { Search } = Input;
 
@@ -20,6 +21,40 @@ const MergeRequest = (props: MergeRequestProps) => {
   const [visible, setVisible] = useState<boolean>(false);
   const [mergeRequestList, setMergeRequestList] = useState<any[]>([]);
   const [filter, setFilter] = useState('');
+
+  const [navs, setNavs] = useState<any[]>([]);
+  const [projectDetail, setProjectDetail] = useState<any>({});
+
+  const getProjectDetail = async (id: any) => {
+    let result = await projectDetailApi(id);
+    const { success, data } = result;
+    if (success && data) {
+      setProjectDetail(data);
+    }
+  };
+
+  useEffect(() => {
+    const projectid = match.params.projectId;
+    getProjectDetail(projectid);
+  }, [match]);
+
+  useEffect(() => {
+    const { name } = projectDetail;
+    setNavs([
+      {
+        name: 'Home',
+        url: '/',
+      },
+      {
+        name: 'Project Dashboard',
+        url: '/dashboard',
+      },
+      {
+        name,
+        url: '',
+      },
+    ]);
+  }, [projectDetail]);
 
   useEffect(() => {
     getMergeRequest();
@@ -53,7 +88,7 @@ const MergeRequest = (props: MergeRequestProps) => {
   };
 
   return (
-    <ContainerMenu match={match}>
+    <ContainerMenu match={match} navs={navs}>
       <div className={css.mergeWapper}>
         <div className={css.basicTitle}>
           <div className={css.title}>Merge Request</div>

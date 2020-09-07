@@ -1,7 +1,7 @@
 import React from 'react';
 import moment from 'moment';
 import * as css from './style/index.modules.less';
-import { Popconfirm } from 'antd';
+import { Popconfirm, Tooltip } from 'antd';
 
 export const dataSource = [
   {
@@ -48,6 +48,18 @@ export const columns = (onCompare: Function, onDelete: Function) => {
       title: 'Branch Name',
       dataIndex: 'name',
       key: 'name',
+      render: (text: any) => {
+        return (
+          <Tooltip placement="top" title={text}>
+            <div style={{ display: 'inline-block' }}>
+              <span className={css.blockText} style={{ WebkitBoxOrient: 'vertical' }}>
+                {text}
+              </span>
+            </div>
+          </Tooltip>
+        );
+      },
+      width: '50%',
     },
     {
       title: 'Updated',
@@ -56,15 +68,18 @@ export const columns = (onCompare: Function, onDelete: Function) => {
       render: (text: any) => {
         return moment(text).format('YYYY/MM/DD HH:mm:ss');
       },
+      width: '15%',
     },
     {
       title: 'Merge Request',
       dataIndex: 'merge',
       key: 'merge',
+      width: '15%',
     },
     {
       title: 'Opeartion',
       key: 'operation',
+      width: '20%',
       render: (_text: any, record: any) => (
         <div className={css.operation}>
           <span onClick={() => onCompare(record)}>Compare</span>
