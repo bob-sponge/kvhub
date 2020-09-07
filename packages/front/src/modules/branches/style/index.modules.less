@@ -2,7 +2,7 @@
 
 .branch {
   &-wapper {
-    margin: 0 24px;
+    margin: 0 24px 24px 24px;
 
     .basic-title {
       display: flex;
@@ -39,4 +39,16 @@
 
 .highlight{
   color: #43BDE0;
+}
+
+.block-text{
+  display: -webkit-box;
+  overflow: hidden;
+  /* autoprefixer: ignore next */
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-height: 1.5;
+  text-overflow: ellipsis;
+  white-space: pre-line;
+  word-break: break-word;
 }

@@ -78,11 +78,11 @@ const Merge = (props: ContainerProps) => {
         </div>
         <div className={css.diffTitle}>
           {`Diff(${diffList && diffList.length})`}
-          <span>{'Please select the results you want to merge'}</span>
+          <span className={css.select}>{'Please select the results you want to merge'}</span>
         </div>
         {diffList &&
           diffList.map((item, index) => {
-            return <DiffItem item={item} key={index} />;
+            return <DiffItem diffData={item} key={index} />;
           })}
       </div>
     </Container>

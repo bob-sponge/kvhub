@@ -60,9 +60,9 @@ const Branches: React.SFC<BranchProps> = (props: BranchProps) => {
 
   useEffect(() => {
     const projectid = match.params.projectId;
+    getProjectDetail(projectid);
     filter.projectId = Number(projectid);
     setFilter({ ...filter });
-    getProjectDetail(projectid);
   }, [match]);
 
   useEffect(() => {
