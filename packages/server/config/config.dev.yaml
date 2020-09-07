@@ -1,5 +1,5 @@
 database:
-  host: 10.192.30.203
+  host: 127.0.0.1
   #host: localhost
   port: 5432
   username: postgres
@@ -9,3 +9,6 @@ constants:
   modifier: admin
   project_type: i18n
   branch_name: master
+
+sync:
+  path: E:\tighub\kvhub\packages\server\config\all_kv.json

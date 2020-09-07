@@ -2,13 +2,13 @@
   {
     "name": "default",
     "type": "postgres",
-    "host": "10.192.30.203",
+    "host": "127.0.0.1",
     "port": 5432,
     "username": "postgres",
     "password": "123456",
     "database": "i18n",
     "schema": "public",
-    "synchronize": false,
+    "synchronize": true,
     "entities": ["packages/server/src/entities/*.ts"],
     "migrations": ["migration/*.ts"],
     "cli": {

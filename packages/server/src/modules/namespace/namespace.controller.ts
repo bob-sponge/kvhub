@@ -12,7 +12,7 @@ import { PermissionGuard } from 'src/permission/permission.guard';
 @Controller('namespace')
 @UseGuards(PermissionGuard)
 export class NamespaceController {
-  constructor(private readonly namespaceService: NamespaceService, private readonly branchService: BranchService) { }
+  constructor(private readonly namespaceService: NamespaceService, private readonly branchService: BranchService) {}
 
   @Post('/save')
   async save(@Body() vo: Namespace): Promise<ResponseBody> {
@@ -268,7 +268,7 @@ export class NamespaceController {
     // 如果key id 有值，则为修改，否则为增加
     let msg = '';
     try {
-      await this.namespaceService.editKeyValue(branchId, namespaceId, keyId, keyName, data);
+      await this.namespaceService.editKeyValue(branchId, namespaceId, keyId, keyName, data, 'lw', new Date());
     } catch (error) {
       msg = error.message;
       return ResponseBody.error(msg, 500);
@@ -424,5 +424,17 @@ export class NamespaceController {
       return ResponseBody.error(msg, 500);
     }
     return ResponseBody.okWithData(data);
+  }
+
+  @Get('/sync_old_data/old_ns_id/:onid/new_ns_id/:nnid/:ckcode')
+  async syncOldData(@Param('onid') onid: number, @Param('nnid') nnid: number, @Param('ckcode') ckcode: number) {
+    // 需要传入老数据的 namespace id 和新工程的 namespace id
+    let data = '';
+    try {
+      data = await this.namespaceService.syncOldData(onid, nnid, ckcode);
+    } catch (error) {
+      return ResponseBody.error(error.message, 500);
+    }
+    return ResponseBody.okWithMsg(data);
   }
 }

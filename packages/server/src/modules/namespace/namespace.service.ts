@@ -1,6 +1,6 @@
 /* eslint-disable max-len */
 /* eslint-disable no-multi-str */
-import { Injectable, BadRequestException, Logger } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Namespace } from 'src/entities/Namespace';
 import { Repository, In } from 'typeorm';
@@ -16,7 +16,9 @@ import { BranchCommit } from 'src/entities/BranchCommit';
 import { BranchMerge } from 'src/entities/BranchMerge';
 import { Project } from 'src/entities/Project';
 import { CommonConstant, ErrorMessage } from 'src/constant/constant';
-import { query } from 'express';
+import * as fs from 'fs';
+import { ConfigService } from '@ofm/nestjs-utils';
+import { Language } from 'src/entities/Language';
 
 @Injectable()
 export class NamespaceService {
@@ -39,6 +41,7 @@ export class NamespaceService {
     private readonly branchMergeRepository: Repository<BranchMerge>,
     @InjectRepository(Project)
     private readonly projectRepository: Repository<Project>,
+    private readonly config: ConfigService,
   ) {}
 
   async deleteNamespace(namespaceId: number) {
@@ -122,7 +125,15 @@ export class NamespaceService {
     }
   }
 
-  async editKeyValue(branchId: any, namespaceId: any, keyId: any, keyName: any, data: any) {
+  async editKeyValue(
+    branchId: any,
+    namespaceId: any,
+    keyId: any,
+    keyName: any,
+    data: any,
+    modifier: any,
+    modifyTime: any,
+  ) {
     const logger = Log4js.getLogger();
     logger.level = 'INFO';
 
@@ -176,9 +187,9 @@ export class NamespaceService {
         }
         // 插入key 表, 获取 key id.
         const keyEntity = new Key();
-        keyEntity.modifier = 'lw'; // TODO: <@liuwang> 根据会话获取当前用户
+        keyEntity.modifier = modifier;
         keyEntity.namespaceId = namespaceId;
-        keyEntity.modifyTime = new Date();
+        keyEntity.modifyTime = modifyTime;
         keyEntity.delete = false;
         keyEntity.actualId = 0;
         const insertKey = await this.keyRepository.insert(keyEntity);
@@ -189,7 +200,7 @@ export class NamespaceService {
         branchCommit.type = CommonConstant.COMMIT_TYPE_ADD;
         branchCommit.commitId = commitId;
         branchCommit.branchId = branchId;
-        branchCommit.commitTime = new Date();
+        branchCommit.commitTime = modifyTime;
         await this.branchCommitRepository.save(branchCommit);
         // 处理其他的关联表
         // 插入 key branch 表
@@ -201,8 +212,8 @@ export class NamespaceService {
         // 插入keyName 表,
         const keyNameEntity = new Keyname();
         keyNameEntity.keyId = keyEntityId;
-        keyNameEntity.modifier = 'lw';
-        keyNameEntity.modifyTime = new Date();
+        keyNameEntity.modifier = modifier;
+        keyNameEntity.modifyTime = modifyTime;
         keyNameEntity.name = keyName;
         keyNameEntity.commitId = commitId;
         // throw new Error('test transaction.');
@@ -224,8 +235,8 @@ export class NamespaceService {
             keyValueEntity.commitId = commitId;
             keyValueEntity.languageId = languageId;
             keyValueEntity.latest = true;
-            keyValueEntity.modifier = 'lw'; // todo modifier ??
-            keyValueEntity.midifyTime = new Date();
+            keyValueEntity.modifier = modifier;
+            keyValueEntity.midifyTime = modifyTime;
             keyValueEntitys.push(keyValueEntity);
           }
         });
@@ -236,7 +247,7 @@ export class NamespaceService {
         branchCommit.type = CommonConstant.COMMIT_TYPE_CHANGE;
         branchCommit.commitId = commitId;
         branchCommit.branchId = branchId;
-        branchCommit.commitTime = new Date();
+        branchCommit.commitTime = modifyTime;
         await this.branchCommitRepository.save(branchCommit);
         // 根据 key id 查询比较
         const keyNameInfo = await this.keyRepository.query(`select * from keyname where key_id = ${keyId}`);
@@ -260,8 +271,8 @@ export class NamespaceService {
             keyValueEntity.commitId = commitId;
             keyValueEntity.languageId = languageId;
             keyValueEntity.latest = true;
-            keyValueEntity.modifier = 'lw'; // todo modifier ??
-            keyValueEntity.midifyTime = new Date();
+            keyValueEntity.modifier = modifier;
+            keyValueEntity.midifyTime = modifyTime;
             keyValueEntitys.push(keyValueEntity);
           }
         });
@@ -751,6 +762,78 @@ export class NamespaceService {
       keyName: keyNameTrue,
       value: keyValue,
     };
+    return result;
+  }
+
+  async getDefaultBranchIdByNsid(nnid: number): Promise<Branch> {
+    const query = `select * from branch where project_id =(SELECT project_id from namespace where id = ${nnid})`;
+    const result: Branch = await this.namespaceRepository.query(query);
+    return result[0];
+  }
+
+  async syncOldData(onid: number, nnid: number, ckcode: number): Promise<string> {
+    /**
+     * 1.ckcode： 用于接口调用校验
+     * 2.onid: 老的数据的namespace id, 获取json 中的数据，根据 onid 筛选
+     * 3.nnid: 新的数据的 namespace id, 需要根据此id 获取 branch id, 此id在页面创建 namespace的时候会创建
+     */
+    const logger = Log4js.getLogger();
+    logger.level = 'INFO';
+    onid = Number.parseInt(onid.toString());
+    if (ckcode.toString() !== '123321') {
+      throw ErrorMessage.NO_PERMISSION;
+    }
+    const syncDataPath = this.config.get('sync', 'path');
+    let records = [];
+    if (fs.existsSync(syncDataPath)) {
+      const allKv = JSON.parse(fs.readFileSync(syncDataPath, 'utf8'));
+      records = allKv.RECORDS;
+      logger.info(`find all item count is ${records.length}`);
+    } else {
+      logger.error(`not find file, file path is ${syncDataPath}`);
+      throw ErrorMessage.KEY_NOT_EXIST;
+    }
+    // 根据传入的 namespace id 过滤数据
+    const filterRecords = records.filter(item => item.namespaceId === onid);
+    logger.info(`find filter item count is ${filterRecords.length}`);
+    // 组装入库数据
+    const branch: Branch = await this.getDefaultBranchIdByNsid(nnid);
+    const branchId = branch.id;
+    logger.info(`branch id is ${branchId}`);
+    // const modifier = 'system_sync_admin';
+    // const modifyTime = new Date().toUTCString();
+    // 获取 language id 对应map
+    const languages: Language[] = await this.getAllLanguage();
+    const languageMap = new Map();
+    languages.forEach(item => {
+      languageMap.set(item.name, item.id);
+    });
+    let handleRecords = new Map();
+    filterRecords.forEach(item => {
+      const key = item.key;
+      const value = item.value;
+      const language = item.language;
+      const languageId = languageMap.get(language);
+      if (handleRecords.has(key)) {
+        const a = handleRecords.get(key);
+        a.push({ value, languageId });
+        handleRecords.set(key, a);
+      } else {
+        handleRecords.set(key, [{ value, languageId }]);
+      }
+    });
+    handleRecords.forEach(async (v, k) => {
+      try {
+        await this.editKeyValue(branchId, nnid, null, k, v, 'lw', new Date());
+      } catch (error) {
+        logger.error(`sync old data error, details : ${error}`);
+      }
+    });
+    return 'sync success';
+  }
+  async getAllLanguage(): Promise<Language[]> {
+    const query = 'select * from language';
+    const result: Language[] = await this.namespaceRepository.query(query);
     return result;
   }
 }
