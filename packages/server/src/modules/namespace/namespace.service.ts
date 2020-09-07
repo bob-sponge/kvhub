@@ -310,33 +310,89 @@ export class NamespaceService {
     /* todo
         Every time change keyvalue, you need to set the latest for the previous version of keyvalue to false,
         and the newest keyvalue is true, and commit the branch-commit record*/
-    const branchCommit = new BranchCommit();
-    branchCommit.type = CommonConstant.COMMIT_TYPE_CHANGE;
-    branchCommit.commitId = UUIDUtils.generateUUID();
-    branchCommit.branchId = branchId;
-    branchCommit.commitTime = new Date();
-    await this.branchCommitRepository.save(branchCommit);
 
-    if (valueId !== undefined && valueId !== null) {
-      const value = await this.keyvalueRepository.findOne(valueId);
-      if (value !== undefined) {
-        if (!value.latest) {
-          throw new BadRequestException(ErrorMessage.VALUE_CHANGED);
-        } else {
-          value.latest = false;
-          value.midifyTime = new Date();
-          await this.keyvalueRepository.save(value);
+    // 需要处理， 保证在A 分支创建的key， 在B分支修改，必须重新生成key, key 与分支对应关系为 key : branch = 1 ：1
+    const branchKeyByKeyId = await this.branchKeyRepository.query(`select * from branch_key where key_id = ${keyId}`);
+    const namespaceByKeyId = await this.keyRepository.findByIds([branchKeyByKeyId[0].id]);
+    const keynameByKeyId = await this.keynameRepository.query(`select * from keyname where key_id = ${keyId}`);
+    const keyName = keynameByKeyId[0].name;
+    const namespaceId = namespaceByKeyId[0].namespaceId;
+    if (branchKeyByKeyId[0].branch_id !== branchId) {
+      const commitId = UUIDUtils.generateUUID();
+      // 重新生成key
+      // 插入key 表, 获取 key id.
+      const keyEntity = new Key();
+      keyEntity.modifier = 'lw';
+      keyEntity.namespaceId = namespaceId;
+      keyEntity.modifyTime = new Date();
+      keyEntity.delete = false;
+      keyEntity.actualId = 0;
+      const insertKey = await this.keyRepository.insert(keyEntity);
+      const keyEntityId = insertKey.raw[0].id;
+      logger.info(`insert key id: ${keyEntityId}`);
+      // 插入branch commit
+      const branchCommit = new BranchCommit();
+      branchCommit.type = CommonConstant.COMMIT_TYPE_ADD;
+      branchCommit.commitId = commitId;
+      branchCommit.branchId = branchId;
+      branchCommit.commitTime = new Date();
+      await this.branchCommitRepository.save(branchCommit);
+      // 处理其他的关联表
+      // 插入 key branch 表
+      const branchKeyEntity = new BranchKey();
+      branchKeyEntity.branchId = branchId;
+      branchKeyEntity.keyId = keyEntityId;
+      branchKeyEntity.delete = false;
+      await this.branchKeyRepository.insert(branchKeyEntity);
+      // 插入keyName 表,
+      const keyNameEntity = new Keyname();
+      keyNameEntity.keyId = keyEntityId;
+      keyNameEntity.modifier = 'lw';
+      keyNameEntity.modifyTime = new Date();
+      keyNameEntity.name = keyName;
+      keyNameEntity.commitId = commitId;
+      // throw new Error('test transaction.');
+      const insertKeyName = await this.keynameRepository.insert(keyNameEntity);
+      const keyNameId = insertKeyName.raw[0].id;
+      logger.info(`insert key name id: ${keyNameId}`);
+      this.keyRepository.query(`update key set actual_id=${keyNameId} where id=${keyEntityId}`);
+      // 插入key Value 表,
+      const newValue = new Keyvalue();
+      newValue.keyId = keyId;
+      newValue.languageId = languageId;
+      newValue.value = keyvalue;
+      newValue.latest = true;
+      newValue.commitId = branchCommit.commitId;
+      return await this.keyvalueRepository.insert(newValue);
+    } else {
+      const branchCommit = new BranchCommit();
+      branchCommit.type = CommonConstant.COMMIT_TYPE_CHANGE;
+      branchCommit.commitId = UUIDUtils.generateUUID();
+      branchCommit.branchId = branchId;
+      branchCommit.commitTime = new Date();
+      await this.branchCommitRepository.save(branchCommit);
+
+      if (valueId !== undefined && valueId !== null) {
+        const value = await this.keyvalueRepository.findOne(valueId);
+        if (value !== undefined) {
+          if (!value.latest) {
+            throw new BadRequestException(ErrorMessage.VALUE_CHANGED);
+          } else {
+            value.latest = false;
+            value.midifyTime = new Date();
+            await this.keyvalueRepository.save(value);
+          }
         }
       }
-    }
 
-    const newValue = new Keyvalue();
-    newValue.keyId = keyId;
-    newValue.languageId = languageId;
-    newValue.value = keyvalue;
-    newValue.latest = true;
-    newValue.commitId = branchCommit.commitId;
-    return await this.keyvalueRepository.insert(newValue);
+      const newValue = new Keyvalue();
+      newValue.keyId = keyId;
+      newValue.languageId = languageId;
+      newValue.value = keyvalue;
+      newValue.latest = true;
+      newValue.commitId = branchCommit.commitId;
+      return await this.keyvalueRepository.insert(newValue);
+    }
   }
 
   async getNamespaceLanguage(id: number) {
