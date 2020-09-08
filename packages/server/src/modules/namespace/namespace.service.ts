@@ -736,47 +736,45 @@ export class NamespaceService {
     const logger = Log4js.getLogger();
     logger.level = 'INFO';
     const query = `
-    SELECT * from (
     SELECT *
     FROM (
-      SELECT kkk.keyId AS keyId, kkk.keyNameId AS keyNameId, kkk.keyName AS keyName, kkk.id AS valueId, kkk.language_id AS languageId
-        , kkk.value AS keyValue, kkk.actualId AS actualId
-      FROM (
+      SELECT keyid, keynameid, keyname, valueid, languageid
+        , keyvalue, actualid
+      FROM ((
         SELECT *
         FROM (
-          SELECT kkn.keyid AS keyId, kkn.id AS keyNameId, kkn.name AS keyName, kkn.actualid AS actualId
-          FROM ((
-            SELECT *
-            FROM (
-              SELECT k.id AS keyid, k.actual_id AS actualid
-              FROM key k
-              WHERE k.delete = 'f'
-                AND namespace_id = ${namespaceId}
-            ) kt
-              JOIN (
-                SELECT key_id
-                FROM branch_key
-                WHERE branch_id = ${branchId}
-              ) bk
-              ON kt.keyid = bk.key_id
-          ) kbt
-            JOIN keyname kn ON kbt.keyid = kn.key_id) kkn
-          WHERE kkn.name LIKE '%${searchCondition}%'
-        ) kknt
-          LEFT JOIN (
-            SELECT *
-            FROM keyvalue
-            WHERE language_id = ${targetLanguageId} and latest = true
-          ) kv
-          ON kknt.keyid = kv.key_id
-      ) kkk
-    ) kkkt where actualId=keyNameId
-    ) ret
+          SELECT k.id AS keyid, k.actual_id AS actualid
+          FROM key k
+          WHERE k.delete = 'f'
+            AND namespace_id = ${namespaceId}
+        ) s1
+          JOIN (
+            SELECT key_id
+            FROM branch_key
+            WHERE branch_id = ${branchId}
+          ) s2
+          ON s1.keyid = s2.key_id
+          JOIN (
+            SELECT kn.id AS keynameid, key_id, kn.name AS keyname
+            FROM keyname kn
+            WHERE name LIKE '%${searchCondition}%'
+          ) s3
+          ON s2.key_id = s3.key_id) s4
+          JOIN (
+            SELECT kv.id AS valueid, kv.language_id AS languageid, key_id, kv.value AS keyvalue
+            FROM keyvalue kv
+            WHERE language_id = ${targetLanguageId}
+              AND latest = true
+          ) s5
+          ON s4.keyid = s5.key_id
+      ) s6
+      WHERE keynameid = actualid
+    ) s7
     ${statusCondition}
     ORDER BY keyName ASC
     ${pageCondition}
-    `;
-    logger.info(`query is ${query}`);
+    `
+    logger.info(`getNamespaceTargetLanguageKeys is ${query}`);
     return await this.namespaceRepository.query(query);
   }
   async findAll(): Promise<Namespace[]> {
