@@ -211,8 +211,17 @@ export class NamespaceController {
   ): Promise<ResponseBody> {
     const value = keyvalue.keyvalue;
     const valueId = keyvalue.valueId;
-    const data = await (await this.namespaceService.editKeyValueOnlanguage(branchId, languageId, keyId, value, valueId))
-      .raw;
+    const data = await (
+      await this.namespaceService.editKeyValueOnlanguage(
+        branchId,
+        languageId,
+        keyId,
+        value,
+        valueId,
+        'modifier',
+        new Date(),
+      )
+    ).raw;
     return ResponseBody.okWithData(data);
   }
 
@@ -304,7 +313,7 @@ export class NamespaceController {
     let res: any;
     let msg = '';
     try {
-      res = await this.namespaceService.editKeyname(keyId, keyName);
+      res = await this.namespaceService.editKeyname(keyId, keyName, 'modifier', new Date());
     } catch (error) {
       msg = error.message;
       return ResponseBody.error(msg, 500);
@@ -327,12 +336,12 @@ export class NamespaceController {
       }
    */
   @Delete('/view/key/:keyId')
-  @Permission('delete')
+  //@Permission('delete')
   async deleteKey(@Param('keyId') keyId: number) {
     let msg = '';
     try {
       // todo before delete key record,will verify the relationship between Branch and key
-      await this.namespaceService.deleteKey(keyId);
+      await this.namespaceService.deleteKey(keyId, 'modifier');
     } catch (error) {
       msg = error.message;
       return ResponseBody.error(msg, 500);
@@ -358,7 +367,7 @@ export class NamespaceController {
   async deleteNamespace(@Param('namespaceId') namespaceId: number) {
     let msg = '';
     try {
-      await this.namespaceService.deleteNamespace(namespaceId);
+      await this.namespaceService.deleteNamespace(namespaceId, 'modifier');
     } catch (error) {
       msg = error.message;
       return ResponseBody.error(msg, 500);

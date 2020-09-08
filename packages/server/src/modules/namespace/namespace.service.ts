@@ -44,28 +44,26 @@ export class NamespaceService {
     private readonly config: ConfigService,
   ) {}
 
-  async deleteNamespace(namespaceId: number) {
+  async deleteNamespace(namespaceId: number, modifier: any) {
     const logger = Log4js.getLogger();
     logger.level = 'INFO';
-    const modifier = 'lw';
-    const modifyTime = new Date().toUTCString(); // TODO: 时间不一致
+    const modifyTime = new Date().toLocaleString();
     const q = `update namespace set delete=true, modifier='${modifier}', modify_time='${modifyTime}' where id=${namespaceId}`;
     logger.info(`q: ${q}`);
     await this.namespaceRepository.query(q);
   }
 
-  async deleteKey(keyId: number) {
+  async deleteKey(keyId: number, modifier: any) {
     // todo
     const logger = Log4js.getLogger();
     logger.level = 'INFO';
-    const modifier = 'lw';
-    const modifyTime = new Date().toUTCString();
+    const modifyTime = new Date().toLocaleString();
     const q = `update key set delete=true, modifier='${modifier}', modify_time='${modifyTime}' where id=${keyId}`;
     logger.info(`q: ${q}`);
     await this.keyRepository.query(q);
   }
 
-  async editKeyname(keyId: any, keyName: any) {
+  async editKeyname(keyId: any, keyName: any, modifier: any, modifyTime: any) {
     const logger = Log4js.getLogger();
     logger.level = 'INFO';
 
@@ -84,8 +82,8 @@ export class NamespaceService {
       const commitId = UUIDUtils.generateUUID();
       const keyNameEntity = new Keyname();
       keyNameEntity.keyId = keyId;
-      keyNameEntity.modifier = 'lw'; // todo modifier ??
-      keyNameEntity.modifyTime = new Date();
+      keyNameEntity.modifier = modifier;
+      keyNameEntity.modifyTime = modifyTime;
       keyNameEntity.name = keyName.trim();
       keyNameEntity.commitId = commitId;
       const insertKeyName = await this.keynameRepository.insert(keyNameEntity);
@@ -108,8 +106,8 @@ export class NamespaceService {
         keyValueEntity.commitId = commitId;
         keyValueEntity.languageId = languageId;
         keyValueEntity.latest = true;
-        keyValueEntity.modifier = 'lw';
-        keyValueEntity.midifyTime = new Date();
+        keyValueEntity.modifier = modifier;
+        keyValueEntity.midifyTime = modifyTime;
         keyValueEntitys.push(keyValueEntity);
       });
       await this.keyvalueRepository.insert(keyValueEntitys);
@@ -291,6 +289,8 @@ export class NamespaceService {
     keyId: number,
     keyvalue: string,
     valueId: number | undefined,
+    modifier: any,
+    modifyTime: any,
   ) {
     const logger = Log4js.getLogger();
     logger.level = 'INFO';
@@ -323,9 +323,9 @@ export class NamespaceService {
       // 重新生成key
       // 插入key 表, 获取 key id.
       const keyEntity = new Key();
-      keyEntity.modifier = 'lw';
+      keyEntity.modifier = modifier;
       keyEntity.namespaceId = namespaceId;
-      keyEntity.modifyTime = new Date();
+      keyEntity.modifyTime = modifyTime;
       keyEntity.delete = false;
       keyEntity.actualId = 0;
       const insertKey = await this.keyRepository.insert(keyEntity);
@@ -336,7 +336,7 @@ export class NamespaceService {
       branchCommit.type = CommonConstant.COMMIT_TYPE_ADD;
       branchCommit.commitId = commitId;
       branchCommit.branchId = branchId;
-      branchCommit.commitTime = new Date();
+      branchCommit.commitTime = modifyTime;
       await this.branchCommitRepository.save(branchCommit);
       // 处理其他的关联表
       // 插入 key branch 表
@@ -348,8 +348,8 @@ export class NamespaceService {
       // 插入keyName 表,
       const keyNameEntity = new Keyname();
       keyNameEntity.keyId = keyEntityId;
-      keyNameEntity.modifier = 'lw';
-      keyNameEntity.modifyTime = new Date();
+      keyNameEntity.modifier = modifier;
+      keyNameEntity.modifyTime = modifyTime;
       keyNameEntity.name = keyName;
       keyNameEntity.commitId = commitId;
       // throw new Error('test transaction.');
@@ -360,34 +360,34 @@ export class NamespaceService {
       // 插入key Value 表,修改的是该语言下的，直接用新值插入，如果老的key 下面还有其他语言的，也需要用之前的值插入
       const data = await this.keyvalueRepository.query(`select * from keyvalue where key_id = ${keyId}`);
       let keyValueEntitys = [];
+      const keyValueEntity = new Keyvalue();
+      if (keyvalue === null || keyvalue === '' || keyvalue === undefined) {
+        keyValueEntity.value = ' ';
+      }
+      keyValueEntity.keyId = keyEntityId;
+      keyValueEntity.languageId = languageId;
+      keyValueEntity.value = keyvalue;
+      keyValueEntity.latest = true;
+      keyValueEntity.commitId = branchCommit.commitId;
+      keyValueEntity.modifier = modifier;
+      keyValueEntity.midifyTime = modifyTime;
+      keyValueEntitys.push(keyValueEntity);
       data.forEach(d => {
+        const keyValueEntity1 = new Keyvalue();
         const dlanguageId = d.language_id;
-        const keyValueEntity = new Keyvalue();
-        if (dlanguageId === languageId) {
-          if (keyvalue === null || keyvalue === '' || keyvalue === undefined) {
-            keyValueEntity.value = ' ';
-          }
-          keyValueEntity.keyId = keyEntityId;
-          keyValueEntity.languageId = dlanguageId;
-          keyValueEntity.value = keyvalue;
-          keyValueEntity.latest = true;
-          keyValueEntity.commitId = branchCommit.commitId;
-          keyValueEntity.modifier = 'lw';
-          keyValueEntity.midifyTime = new Date();
-          keyValueEntitys.push(keyValueEntity);
-        } else {
+        if (dlanguageId !== languageId) {
           const value = d.value;
           if (value === null || value === '' || value === undefined) {
-            keyValueEntity.value = ' ';
+            keyValueEntity1.value = ' ';
           } else {
-            keyValueEntity.value = value;
-            keyValueEntity.keyId = keyEntityId;
-            keyValueEntity.commitId = commitId;
-            keyValueEntity.languageId = dlanguageId;
-            keyValueEntity.latest = true;
-            keyValueEntity.modifier = 'lw';
-            keyValueEntity.midifyTime = new Date();
-            keyValueEntitys.push(keyValueEntity);
+            keyValueEntity1.value = value;
+            keyValueEntity1.keyId = keyEntityId;
+            keyValueEntity1.commitId = commitId;
+            keyValueEntity1.languageId = dlanguageId;
+            keyValueEntity1.latest = true;
+            keyValueEntity1.modifier = modifier;
+            keyValueEntity1.midifyTime = modifyTime;
+            keyValueEntitys.push(keyValueEntity1);
           }
         }
       });
@@ -397,7 +397,7 @@ export class NamespaceService {
       branchCommit.type = CommonConstant.COMMIT_TYPE_CHANGE;
       branchCommit.commitId = UUIDUtils.generateUUID();
       branchCommit.branchId = branchId;
-      branchCommit.commitTime = new Date();
+      branchCommit.commitTime = modifyTime;
       await this.branchCommitRepository.save(branchCommit);
 
       if (valueId !== undefined && valueId !== null) {
@@ -407,7 +407,7 @@ export class NamespaceService {
             throw new BadRequestException(ErrorMessage.VALUE_CHANGED);
           } else {
             value.latest = false;
-            value.midifyTime = new Date();
+            value.midifyTime = modifyTime;
             await this.keyvalueRepository.save(value);
           }
         }
@@ -595,6 +595,10 @@ export class NamespaceService {
         }
       }
     }
+    // 返回结果添加 branch id
+    retNsKey.forEach(item => {
+      item.branchId = branchId;
+    });
     const result = {
       keys: retNsKey,
       totalNum,
@@ -651,6 +655,7 @@ export class NamespaceService {
           keyName: kn,
           refreLanguageValue: targetLanguageValue,
           targetLanguageValue,
+          branchId,
         };
         retNsKey.push(value);
       }
@@ -711,6 +716,7 @@ export class NamespaceService {
             keyName: kn,
             refreLanguageValue,
             targetLanguageValue,
+            branchId,
           };
           retNsKey.push(value);
         }
@@ -885,7 +891,7 @@ export class NamespaceService {
     const branchId = branch.id;
     logger.info(`branch id is ${branchId}`);
     // const modifier = 'system_sync_admin';
-    // const modifyTime = new Date().toUTCString();
+    // const modifyTime = modifyTime.toUTCString();
     // 获取 language id 对应map
     const languages: Language[] = await this.getAllLanguage();
     const languageMap = new Map();
@@ -908,7 +914,7 @@ export class NamespaceService {
     });
     handleRecords.forEach(async (v, k) => {
       try {
-        await this.editKeyValue(branchId, nnid, null, k, v, 'lw', new Date());
+        await this.editKeyValue(branchId, nnid, null, k, v, 'system_admin_sync', new Date());
       } catch (error) {
         logger.error(`sync old data error, details : ${error}`);
       }
