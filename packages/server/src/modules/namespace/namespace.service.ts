@@ -295,7 +295,8 @@ export class NamespaceService {
     const logger = Log4js.getLogger();
     logger.level = 'INFO';
     logger.info(languageId, keyId, keyvalue);
-
+    languageId = Number.parseInt(languageId.toString());
+    branchId = Number.parseInt(branchId.toString());
     // check branch is or not merging status
     const branchMergeList: BranchMerge[] = await this.branchMergeRepository.find({
       where: [
@@ -356,14 +357,41 @@ export class NamespaceService {
       const keyNameId = insertKeyName.raw[0].id;
       logger.info(`insert key name id: ${keyNameId}`);
       this.keyRepository.query(`update key set actual_id=${keyNameId} where id=${keyEntityId}`);
-      // 插入key Value 表,
-      const newValue = new Keyvalue();
-      newValue.keyId = keyId;
-      newValue.languageId = languageId;
-      newValue.value = keyvalue;
-      newValue.latest = true;
-      newValue.commitId = branchCommit.commitId;
-      return await this.keyvalueRepository.insert(newValue);
+      // 插入key Value 表,修改的是该语言下的，直接用新值插入，如果老的key 下面还有其他语言的，也需要用之前的值插入
+      const data = await this.keyvalueRepository.query(`select * from keyvalue where key_id = ${keyId}`);
+      let keyValueEntitys = [];
+      data.forEach(d => {
+        const dlanguageId = d.language_id;
+        const keyValueEntity = new Keyvalue();
+        if (dlanguageId === languageId) {
+          if (keyvalue === null || keyvalue === '' || keyvalue === undefined) {
+            keyValueEntity.value = ' ';
+          }
+          keyValueEntity.keyId = keyEntityId;
+          keyValueEntity.languageId = dlanguageId;
+          keyValueEntity.value = keyvalue;
+          keyValueEntity.latest = true;
+          keyValueEntity.commitId = branchCommit.commitId;
+          keyValueEntity.modifier = 'lw';
+          keyValueEntity.midifyTime = new Date();
+          keyValueEntitys.push(keyValueEntity);
+        } else {
+          const value = d.value;
+          if (value === null || value === '' || value === undefined) {
+            keyValueEntity.value = ' ';
+          } else {
+            keyValueEntity.value = value;
+            keyValueEntity.keyId = keyEntityId;
+            keyValueEntity.commitId = commitId;
+            keyValueEntity.languageId = dlanguageId;
+            keyValueEntity.latest = true;
+            keyValueEntity.modifier = 'lw';
+            keyValueEntity.midifyTime = new Date();
+            keyValueEntitys.push(keyValueEntity);
+          }
+        }
+      });
+      return await this.keyvalueRepository.insert(keyValueEntitys);
     } else {
       const branchCommit = new BranchCommit();
       branchCommit.type = CommonConstant.COMMIT_TYPE_CHANGE;
