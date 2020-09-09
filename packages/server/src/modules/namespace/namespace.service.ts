@@ -157,6 +157,9 @@ export class NamespaceService {
     // await queryRunner.connect();
     // await queryRunner.startTransaction();
     const commitId = UUIDUtils.generateUUID();
+    keyName = keyName === null || keyName === undefined ? '' : keyName;
+    // eslint-disable-next-line @typescript-eslint/quotes
+    const zyKeyName = keyName.replace("'", "\\'");
     try {
       if (keyId === '' || keyId === null) {
         // 新增
@@ -171,13 +174,13 @@ export class NamespaceService {
               WHERE id IN (
                   SELECT key_id
                   FROM keyname
-                  WHERE name = '${keyName}' and namespace_id = '${namespaceId}'
+                  WHERE name = '${zyKeyName}' and namespace_id = '${namespaceId}'
                 )
                 AND delete IS false
             )
             AND delete IS false)
         `;
-        logger.info(`sameKeyName: ${sameKeyName}`);
+        // logger.info(`sameKeyName: ${sameKeyName}`);
         const sameNameValid = await this.keyRepository.query(sameKeyName);
         const branchName = await this.branchRepository.query(`SELECT name FROM branch WHERE id = ${branchId}`);
         if (sameNameValid.length > 0) {
@@ -192,7 +195,7 @@ export class NamespaceService {
         keyEntity.actualId = 0;
         const insertKey = await this.keyRepository.insert(keyEntity);
         const keyEntityId = insertKey.raw[0].id;
-        logger.info(`insert key id: ${keyEntityId}`);
+        // logger.info(`insert key id: ${keyEntityId}`);
         // 插入branch commit
         const branchCommit = new BranchCommit();
         branchCommit.type = CommonConstant.COMMIT_TYPE_ADD;
@@ -217,7 +220,7 @@ export class NamespaceService {
         // throw new Error('test transaction.');
         const insertKeyName = await this.keynameRepository.insert(keyNameEntity);
         const keyNameId = insertKeyName.raw[0].id;
-        logger.info(`insert key name id: ${keyNameId}`);
+        // logger.info(`insert key name id: ${keyNameId}`);
         this.keyRepository.query(`update key set actual_id=${keyNameId} where id=${keyEntityId}`);
         // 插入key Value 表,
         let keyValueEntitys = [];
@@ -276,10 +279,11 @@ export class NamespaceService {
         });
         await this.keyvalueRepository.insert(keyValueEntitys);
       }
+      logger.info(`sync key name: ${keyName} done.`);
       //await queryRunner.commitTransaction();
     } catch (error) {
       //await queryRunner.rollbackTransaction();
-      throw new Error(error.message);
+      throw new Error(`err message: ${error.message}, keyname is ${keyName}, data is ${JSON.stringify(data)}`);
     }
   }
 
@@ -353,7 +357,7 @@ export class NamespaceService {
       keyNameEntity.name = keyName;
       keyNameEntity.commitId = commitId;
       // throw new Error('test transaction.');
-      const insertKeyName = await this.keynameRepository.insert(keyNameEntity);
+      const insertKeyName = await this.keynameRepository.insert([keyNameEntity]);
       const keyNameId = insertKeyName.raw[0].id;
       logger.info(`insert key name id: ${keyNameId}`);
       this.keyRepository.query(`update key set actual_id=${keyNameId} where id=${keyEntityId}`);
@@ -472,7 +476,9 @@ export class NamespaceService {
     const targetLanguageId = namespaceViewDetail.targetLanguageId;
     const page = namespaceViewDetail.page;
     const pageSize = namespaceViewDetail.pageSize;
-    const condition = namespaceViewDetail.condition;
+    let condition = namespaceViewDetail.condition;
+    // eslint-disable-next-line @typescript-eslint/quotes
+    condition = condition.replace("'", "\\'");
     const keyTranslateProgressStatus = namespaceViewDetail.KeyTranslateProgressStatus;
     const branchId = namespaceViewDetail.branchId;
     const offset = (page - 1) * pageSize;
@@ -558,7 +564,7 @@ export class NamespaceService {
             ) kv
             ON kntt.keyId = kv.key_id
         ) kkk`;
-        logger.info(`query2 is ${query2}`);
+        // logger.info(`query2 is ${query2}`);
         const namespaceRefKeys: any[] = await this.namespaceRepository.query(query2);
         const map = new Map();
         for (const namespaceRefKey of namespaceRefKeys) {
@@ -612,7 +618,10 @@ export class NamespaceService {
     const namespaceId = namespaceViewDetail.namespaceId;
     const referenceLanguageId = namespaceViewDetail.referenceLanguageId;
     const targetLanguageId = namespaceViewDetail.targetLanguageId;
-    const condition = namespaceViewDetail.condition;
+    let condition = namespaceViewDetail.condition;
+    // 需要处理 condition 中包含 ' 的情况
+    // eslint-disable-next-line @typescript-eslint/quotes
+    condition = condition.replace("'", "\\'");
     const keyTranslateProgressStatus = namespaceViewDetail.KeyTranslateProgressStatus;
     const branchId = namespaceViewDetail.branchId;
     let statusCondition = '';
@@ -684,7 +693,7 @@ export class NamespaceService {
             ) kv
             ON kntt.keyId = kv.key_id
         ) kkk`;
-        logger.info(`query2 is ${query2}`);
+        // logger.info(`query2 is ${query2}`);
         const namespaceRefKeys: any[] = await this.namespaceRepository.query(query2);
         const map = new Map();
         for (const namespaceRefKey of namespaceRefKeys) {
@@ -760,7 +769,7 @@ export class NamespaceService {
             WHERE name LIKE '%${searchCondition}%'
           ) s3
           ON s2.key_id = s3.key_id) s4
-          JOIN (
+          LEFT JOIN (
             SELECT kv.id AS valueid, kv.language_id AS languageid, key_id, kv.value AS keyvalue
             FROM keyvalue kv
             WHERE language_id = ${targetLanguageId}
@@ -773,8 +782,8 @@ export class NamespaceService {
     ${statusCondition}
     ORDER BY keyName ASC
     ${pageCondition}
-    `
-    logger.info(`getNamespaceTargetLanguageKeys is ${query}`);
+    `;
+    // logger.info(`getNamespaceTargetLanguageKeys is ${query}`);
     return await this.namespaceRepository.query(query);
   }
   async findAll(): Promise<Namespace[]> {
@@ -876,18 +885,18 @@ export class NamespaceService {
     if (fs.existsSync(syncDataPath)) {
       const allKv = JSON.parse(fs.readFileSync(syncDataPath, 'utf8'));
       records = allKv.RECORDS;
-      logger.info(`find all item count is ${records.length}`);
+      logger.info(`sync: find all item count is ${records.length}`);
     } else {
-      logger.error(`not find file, file path is ${syncDataPath}`);
+      logger.error(`sync: not find file, file path is ${syncDataPath}`);
       throw ErrorMessage.KEY_NOT_EXIST;
     }
     // 根据传入的 namespace id 过滤数据
     const filterRecords = records.filter(item => item.namespaceId === onid);
-    logger.info(`find filter item count is ${filterRecords.length}`);
+    logger.info(`sync: find filter item count is ${filterRecords.length}`);
     // 组装入库数据
     const branch: Branch = await this.getDefaultBranchIdByNsid(nnid);
     const branchId = branch.id;
-    logger.info(`branch id is ${branchId}`);
+    logger.info(`sync: branch id is ${branchId}`);
     // const modifier = 'system_sync_admin';
     // const modifyTime = modifyTime.toUTCString();
     // 获取 language id 对应map
@@ -910,13 +919,24 @@ export class NamespaceService {
         handleRecords.set(key, [{ value, languageId }]);
       }
     });
+
+    // for (const [k, v] of handleRecords) {
+    //   try {
+    //     logger.info(`start to sync key name: ${k}`);
+    //     await this.editKeyValue(branchId, nnid, null, k, v, 'system_admin_sync', new Date());
+    //   } catch (error) {
+    //     logger.error(`sync old data error, details : ${error}`);
+    //   }
+    // }
     handleRecords.forEach(async (v, k) => {
       try {
+        logger.info(`start to sync key name: ${k}`);
         await this.editKeyValue(branchId, nnid, null, k, v, 'system_admin_sync', new Date());
       } catch (error) {
         logger.error(`sync old data error, details : ${error}`);
       }
     });
+    logger.info(`sync old namespace: ${onid} to new namespace: ${nnid} successful!`);
     return 'sync success';
   }
   async getAllLanguage(): Promise<Language[]> {
