@@ -92,7 +92,7 @@ export class NamespaceController {
     const branchId = namespaceViewDetail.branchId;
     const branch = await this.branchService.getBranchById(branchId);
     const offset = (page - 1) * pageSize;
-    logger.info(`page: ${page}, page size: ${pageSize}, branchID: ${branchId}, branch: ${branch}`);
+    logger.info(`page: ${page}, page size: ${pageSize}, branchID: ${branchId}`);
     if (branch.master) {
       const namespaceKey = await this.namespaceService.getKeysByCondition(namespaceViewDetail);
       return ResponseBody.okWithData(namespaceKey);
@@ -108,9 +108,20 @@ export class NamespaceController {
       const namespaceMasterBranchKey = await this.namespaceService.getAllKeysByCondition(masterViewDetail);
       // 查询分支k v
       const namespaceNoMasterBranchKey = await this.namespaceService.getAllKeysByCondition(namespaceViewDetail);
+      const allBranchViewDetail = JSON.parse(JSON.stringify(namespaceViewDetail));
+      allBranchViewDetail.KeyTranslateProgressStatus = 'all';
+      // 解决 在 unfinish 条件下 非 master 分支翻译完成，master 分支翻译未完成时，非 master 分支不显示该key
+      const namespaceAllNoMasterBranchKey = await this.namespaceService.getAllKeysByCondition(allBranchViewDetail);
+      const namespaceAllNoMasterBranchKeyName = [];
+      namespaceAllNoMasterBranchKey.forEach(item => {
+        namespaceAllNoMasterBranchKeyName.push(item.keyName);
+      });
       if (namespaceNoMasterBranchKey.length === 0) {
         const totalNum = namespaceMasterBranchKey.length;
-        const retKV = namespaceMasterBranchKey.sort((i, j) => i.keyName - j.keyName).slice(offset, offset + pageSize);
+        const namespaceBranchKey = namespaceMasterBranchKey.filter(
+          item => namespaceAllNoMasterBranchKeyName.includes(item.keyName) === false,
+        );
+        const retKV = namespaceBranchKey.sort((i, j) => i.keyName - j.keyName).slice(offset, offset + pageSize);
         const namespaceKey = {
           keys: retKV,
           totalNum,

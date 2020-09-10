@@ -312,13 +312,14 @@ export class NamespaceService {
       throw new BadRequestException(ErrorMessage.BRANCH_IS_MERGING);
     }
 
-    /* todo
-        Every time change keyvalue, you need to set the latest for the previous version of keyvalue to false,
-        and the newest keyvalue is true, and commit the branch-commit record*/
+    // 保存的 value 不能为空字符串
+    if (keyvalue.trim() === '') {
+      throw new BadRequestException(ErrorMessage.VALUE_NOT_BLANK);
+    }
 
     // 需要处理， 保证在A 分支创建的key， 在B分支修改，必须重新生成key, key 与分支对应关系为 key : branch = 1 ：1
     const branchKeyByKeyId = await this.branchKeyRepository.query(`select * from branch_key where key_id = ${keyId}`);
-    const namespaceByKeyId = await this.keyRepository.findByIds([branchKeyByKeyId[0].id]);
+    const namespaceByKeyId = await this.keyRepository.findByIds([keyId]);
     const keynameByKeyId = await this.keynameRepository.query(`select * from keyname where key_id = ${keyId}`);
     const keyName = keynameByKeyId[0].name;
     const namespaceId = namespaceByKeyId[0].namespaceId;

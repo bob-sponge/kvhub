@@ -62,4 +62,5 @@ export class ErrorMessage {
   static PAGE_PARAM_ERROR = 'Page Param Error!';
   static NO_PERMISSION = 'No Permission!';
   static MUST_ADMIN = 'Only Administrator Can Modify!';
+  static VALUE_NOT_BLANK = 'value is not blank!';
 }
