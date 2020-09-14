@@ -77,6 +77,7 @@ export class NamespaceService {
       if (keyNameInfo.filter(a => a.name === keyName.trim()).length > 0) {
         throw new Error(`Key id get name is equals key name ${keyName}`);
       }
+      const oldKeyNameId = keyNameInfo[0].id;
       // key 表不动，key name 增加，key value 增加
       // todo branch commit record
       const commitId = UUIDUtils.generateUUID();
@@ -86,6 +87,7 @@ export class NamespaceService {
       keyNameEntity.modifyTime = modifyTime;
       keyNameEntity.name = keyName.trim();
       keyNameEntity.commitId = commitId;
+      keyNameEntity.latest = true;
       const insertKeyName = await this.keynameRepository.insert(keyNameEntity);
       const keyNameId = insertKeyName.raw[0].id;
       logger.info(`insert key name id: ${keyNameId}`);
@@ -93,6 +95,7 @@ export class NamespaceService {
       const keyvalueInfo = await this.keyvalueRepository.query(
         `select * from keyvalue where key_id = ${keyId} and latest is true`,
       );
+      await this.keynameRepository.query(`UPDATE keyname SET latest = false WHERE id = ${oldKeyNameId}`);
       // 更新 value 表的 latest 为false
       await this.keyvalueRepository.query(`UPDATE keyvalue SET latest = false WHERE key_id = ${keyId}`);
       // 插入key Value 表,
@@ -112,7 +115,7 @@ export class NamespaceService {
       });
       await this.keyvalueRepository.insert(keyValueEntitys);
       // 更新 key 表actual id 为 key name id
-      this.keyRepository.query(`update key set actual_id=${keyNameId} where id=${keyId}`);
+      // this.keyRepository.query(`update key set actual_id=${keyNameId} where id=${keyId}`);
 
       const reskeynameInfo = this.keynameRepository.query(`select * from keyname where id = ${keyNameId}`);
       //await queryRunner.commitTransaction();
@@ -195,6 +198,8 @@ export class NamespaceService {
         keyEntity.actualId = 0;
         const insertKey = await this.keyRepository.insert(keyEntity);
         const keyEntityId = insertKey.raw[0].id;
+        // 更新 actual id 为 keyid
+        this.keyRepository.query(`update key set actual_id=${keyEntityId} where id=${keyEntityId}`);
         // logger.info(`insert key id: ${keyEntityId}`);
         // 插入branch commit
         const branchCommit = new BranchCommit();
@@ -218,10 +223,11 @@ export class NamespaceService {
         keyNameEntity.name = keyName;
         keyNameEntity.commitId = commitId;
         // throw new Error('test transaction.');
-        const insertKeyName = await this.keynameRepository.insert(keyNameEntity);
-        const keyNameId = insertKeyName.raw[0].id;
+        await this.keynameRepository.insert(keyNameEntity);
+        // const insertKeyName = await this.keynameRepository.insert(keyNameEntity);
+        // const keyNameId = insertKeyName.raw[0].id;
         // logger.info(`insert key name id: ${keyNameId}`);
-        this.keyRepository.query(`update key set actual_id=${keyNameId} where id=${keyEntityId}`);
+        // this.keyRepository.query(`update key set actual_id=${keyNameId} where id=${keyEntityId}`);
         // 插入key Value 表,
         let keyValueEntitys = [];
         data.forEach(d => {
@@ -332,7 +338,7 @@ export class NamespaceService {
       keyEntity.namespaceId = namespaceId;
       keyEntity.modifyTime = modifyTime;
       keyEntity.delete = false;
-      keyEntity.actualId = 0;
+      keyEntity.actualId = keyId;
       const insertKey = await this.keyRepository.insert(keyEntity);
       const keyEntityId = insertKey.raw[0].id;
       logger.info(`insert key id: ${keyEntityId}`);
@@ -361,7 +367,7 @@ export class NamespaceService {
       const insertKeyName = await this.keynameRepository.insert([keyNameEntity]);
       const keyNameId = insertKeyName.raw[0].id;
       logger.info(`insert key name id: ${keyNameId}`);
-      this.keyRepository.query(`update key set actual_id=${keyNameId} where id=${keyEntityId}`);
+      // this.keyRepository.query(`update key set actual_id=${keyNameId} where id=${keyEntityId}`);
       // 插入key Value 表,修改的是该语言下的，直接用新值插入，如果老的key 下面还有其他语言的，也需要用之前的值插入
       const data = await this.keyvalueRepository.query(`select * from keyvalue where key_id = ${keyId}`);
       let keyValueEntitys = [];
@@ -424,6 +430,8 @@ export class NamespaceService {
       newValue.value = keyvalue;
       newValue.latest = true;
       newValue.commitId = branchCommit.commitId;
+      newValue.modifier = modifier;
+      newValue.midifyTime = modifyTime;
       return await this.keyvalueRepository.insert(newValue);
     }
   }
@@ -767,7 +775,7 @@ export class NamespaceService {
           JOIN (
             SELECT kn.id AS keynameid, key_id, kn.name AS keyname
             FROM keyname kn
-            WHERE name LIKE '%${searchCondition}%'
+            WHERE name LIKE '%${searchCondition}%' and latest = true
           ) s3
           ON s2.key_id = s3.key_id) s4
           LEFT JOIN (
@@ -778,13 +786,13 @@ export class NamespaceService {
           ) s5
           ON s4.keyid = s5.key_id
       ) s6
-      WHERE keynameid = actualid
+      -- WHERE keynameid = actualid
     ) s7
     ${statusCondition}
     ORDER BY keyName ASC
     ${pageCondition}
     `;
-    // logger.info(`getNamespaceTargetLanguageKeys is ${query}`);
+    logger.info(`getNamespaceTargetLanguageKeys is ${query}`);
     return await this.namespaceRepository.query(query);
   }
   async findAll(): Promise<Namespace[]> {

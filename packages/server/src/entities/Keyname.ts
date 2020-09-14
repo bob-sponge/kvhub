@@ -26,4 +26,7 @@ export class Keyname {
 
   @Column('character varying', { name: 'commit_id', length: 255 })
   commitId: string;
+
+  @Column('boolean', { name: 'latest', nullable: true })
+  latest: boolean | null;
 }

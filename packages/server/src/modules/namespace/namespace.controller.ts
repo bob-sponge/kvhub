@@ -288,7 +288,7 @@ export class NamespaceController {
     // 如果key id 有值，则为修改，否则为增加
     let msg = '';
     try {
-      await this.namespaceService.editKeyValue(branchId, namespaceId, keyId, keyName, data, 'lw', new Date());
+      await this.namespaceService.editKeyValue(branchId, namespaceId, keyId, keyName, data, 'modifier', new Date());
     } catch (error) {
       msg = error.message;
       return ResponseBody.error(msg, 500);
