@@ -3,6 +3,7 @@ import { User } from 'src/entities/User';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, getRepository } from 'typeorm';
 import { ErrorMessage } from 'src/constant/constant';
+import { LoginBodyVO } from 'src/vo/LoginBodyVO';
 
 @Injectable()
 export class UserService {
@@ -67,5 +68,19 @@ export class UserService {
     }
     await this.userRepository.createQueryBuilder('user').update(User).set({ admin: 1 }).execute();
     return ErrorMessage.SET_AS_ADMIN_SUCCESS;
+  }
+
+  async login(vo:LoginBodyVO): Promise<User> {
+    const userList = await this.userRepository.find({name:vo.loginName});
+    let user = new User();
+    if (null === userList || userList.length === 0){
+      throw new BadRequestException(ErrorMessage.USER_OR_PASSWORD_IS_WRONG);
+    } else {
+      user = userList[0];
+    }
+    if (user.password !== vo.password.trim()){
+      throw new BadRequestException(ErrorMessage.USER_OR_PASSWORD_IS_WRONG);
+    }
+    return user;
   }
 }

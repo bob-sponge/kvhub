@@ -63,4 +63,5 @@ export class ErrorMessage {
   static NO_PERMISSION = 'No Permission!';
   static MUST_ADMIN = 'Only Administrator Can Modify!';
   static VALUE_NOT_BLANK = 'value is not blank!';
+  static USER_OR_PASSWORD_IS_WRONG = 'Username or password is wrong!';
 }

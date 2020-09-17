@@ -1,8 +1,9 @@
 import { Controller, Get, Session, Body, Post, Delete, Param, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
 import { ResponseBody } from 'src/vo/ResponseBody';
-import { PermissionGuard } from '../../permission/permission.guard'
+import { PermissionGuard } from '../../permission/permission.guard';
 import { Permission } from 'src/permission/permission.decorator';
+import { LoginBodyVO } from 'src/vo/LoginBodyVO';
 
 @Controller('user')
 @UseGuards(PermissionGuard)
@@ -33,14 +34,21 @@ export class UserController {
     return ResponseBody.okWithMsg(await this.userService.set(session, id, level));
   }
 
-  @Get('/login')
-  async login(@Session() session): Promise<ResponseBody> {
+  @Post('/login')
+  async login(@Session() session,@Body() loginBodyVO:LoginBodyVO): Promise<ResponseBody> {
+    const user = await this.userService.login(loginBodyVO);
     session.user = {
-      id: 1,
-      name: 'admin',
-      admin: 0,
-      permission: 'query,delete,set,reset,merge'
+      id: user.id,
+      name: user.name,
+      admin: user.admin,
+      permission: user.permission
     }
     return ResponseBody.okWithMsg('Login success!');
+  }
+
+  @Get('/loginout')
+  async loginout(@Session() session): Promise<ResponseBody> {
+    session.user = {}
+    return ResponseBody.okWithMsg('Logout success!');
   }
 }
