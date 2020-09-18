@@ -2,4 +2,4 @@ import { ajax } from '@ofm/ajax';
 
 const loginAddress = '/user/login';
 
-export const loginApi = () => ajax.get(loginAddress);
+export const loginApi = (params: any) => ajax.post(loginAddress,params);

@@ -17,12 +17,12 @@ const Login: React.FC<LoginProps> = () => {
     form.validateFields().then(async (values: any) => {
       // eslint-disable-next-line no-console
       console.log(values);
-      getLogin();
+      getLogin(values);
     });
   }, []);
 
-  const getLogin = async () => {
-    let result = await Api.loginApi();
+  const getLogin = async (values:any) => {
+    let result = await Api.loginApi({"loginName":values.username,"password":values.password});
     const { success } = result;
     if (success) {
       history.push('/dashboard');
