@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { ajax } from '@ofm/ajax';
 import { Router, Route, Switch, Redirect } from 'react-router-dom';
 import { history } from '@ofm/history';
 import NamespaceView from './modules/namespace';

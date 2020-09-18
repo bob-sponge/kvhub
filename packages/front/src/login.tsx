@@ -21,8 +21,8 @@ const Login: React.FC<LoginProps> = () => {
     });
   }, []);
 
-  const getLogin = async (values:any) => {
-    let result = await Api.loginApi({"loginName":values.username,"password":values.password});
+  const getLogin = async (values: any) => {
+    let result = await Api.loginApi({ loginName: values.username, password: values.password });
     const { success } = result;
     if (success) {
       history.push('/dashboard');

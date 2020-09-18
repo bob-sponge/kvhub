@@ -52,8 +52,8 @@ export class UserController {
   @Post('/login')
   async login(@Session() session, @Response() res, @Body() loginBodyVO: LoginBodyVO): Promise<ResponseBody> {
     const user = await this.userService.login(loginBodyVO);
-    const uuid = UUIDUtils.generateUUID();
-    res.cookie('token', uuid);
+    // const uuid = UUIDUtils.generateUUID();
+    res.cookie('token', loginBodyVO.loginName);
     user.password = null;
     res.status(HttpStatus.OK);
     res.setHeader('Content-Type', 'application/json');
