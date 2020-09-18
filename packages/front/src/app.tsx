@@ -14,11 +14,11 @@ import User from './modules/user';
 
 export function App() {
   React.useEffect(() => {
-    const res = ajax.get('/hello');
-    res.then(rr => {
-      // eslint-disable-next-line no-console
-      console.log(rr);
-    });
+    // const res = ajax.get('/hello');
+    // res.then(rr => {
+    //   // eslint-disable-next-line no-console
+    //   console.log(rr);
+    // });
   }, []);
 
   return (

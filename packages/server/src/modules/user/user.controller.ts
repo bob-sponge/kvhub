@@ -1,14 +1,29 @@
-import { Controller, Get, Session, Body, Post, Delete, Param, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Session,
+  Body,
+  Post,
+  Delete,
+  Param,
+  UseGuards,
+  Request,
+  Response,
+  BadRequestException,
+  HttpStatus,
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import { ResponseBody } from 'src/vo/ResponseBody';
 import { PermissionGuard } from '../../permission/permission.guard';
 import { Permission } from 'src/permission/permission.decorator';
 import { LoginBodyVO } from 'src/vo/LoginBodyVO';
+import { ErrorMessage } from 'src/constant/constant';
+import { UUIDUtils } from 'src/utils/uuid';
 
 @Controller('user')
 @UseGuards(PermissionGuard)
 export class UserController {
-  constructor(private readonly userService: UserService) { }
+  constructor(private readonly userService: UserService) {}
 
   @Post('/query')
   @Permission('query')
@@ -25,7 +40,7 @@ export class UserController {
   @Delete('/delete/:id')
   @Permission('delete')
   async delete(@Param('id') id: number): Promise<ResponseBody> {
-    return ResponseBody.okWithMsg(await this.userService.delete(id))
+    return ResponseBody.okWithMsg(await this.userService.delete(id));
   }
 
   @Get('/set/:id/:level')
@@ -35,20 +50,30 @@ export class UserController {
   }
 
   @Post('/login')
-  async login(@Session() session,@Body() loginBodyVO:LoginBodyVO): Promise<ResponseBody> {
+  async login(@Session() session, @Response() res, @Body() loginBodyVO: LoginBodyVO): Promise<ResponseBody> {
     const user = await this.userService.login(loginBodyVO);
-    session.user = {
-      id: user.id,
-      name: user.name,
-      admin: user.admin,
-      permission: user.permission
-    }
-    return ResponseBody.okWithMsg('Login success!');
+    const uuid = UUIDUtils.generateUUID();
+    res.cookie('token', uuid);
+    user.password = null;
+    res.status(HttpStatus.OK);
+    res.setHeader('Content-Type', 'application/json');
+    return res.send(JSON.stringify(ResponseBody.okWithData(user)));
   }
 
-  @Get('/loginout')
-  async loginout(@Session() session): Promise<ResponseBody> {
-    session.user = {}
-    return ResponseBody.okWithMsg('Logout success!');
+  @Get('/logout')
+  async logout(@Request() req, @Response() res): Promise<ResponseBody> {
+    if (
+      req.cookies === null ||
+      req.cookies === undefined ||
+      req.cookies.token === null ||
+      req.cookies.token === undefined
+    ) {
+      throw new BadRequestException(ErrorMessage.PLEASE_LOGIN_FIRST);
+    }
+    req.session.cookie.maxAge = 0;
+    req.cookies = null;
+    res.status(HttpStatus.OK);
+    res.setHeader('Content-Type', 'application/json');
+    return res.send(JSON.stringify(ResponseBody.okWithMsg('Logout success!')));
   }
 }

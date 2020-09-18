@@ -30,9 +30,9 @@
     "create-migration": "npm run typeorm migration:create"
   },
   "devDependencies": {
+    "fork-ts-checker-webpack-plugin": "4.1.2",
     "husky": "^1.3.1",
-    "typescript": "^3.8.0",
-    "fork-ts-checker-webpack-plugin": "4.1.2"
+    "typescript": "^3.8.0"
   },
   "jest": {
     "testMatch": [
@@ -56,6 +56,7 @@
     "class-transformer": "^0.2.3",
     "class-validator": "^0.12.1",
     "clsx": "^1.1.1",
+    "cookie-parser": "^1.4.5",
     "core-js": "3.6.4",
     "nostate": "^0.1.0"
   }
