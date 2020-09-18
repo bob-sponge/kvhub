@@ -118,8 +118,21 @@ export class BranchService {
             isExist = true;
             if (sourceKey.keyName !== targetKey.keyName) {
               isDifferent = true;
-            } else if (!(await this.checkValueVO(sourceKey.valueList, targetKey.valueList))) {
-              isDifferent = true;
+            } else {
+              const valueCheck = this.checkValueVO(sourceKey.valueList, targetKey.valueList);
+              if (!valueCheck) {
+                isDifferent = true;
+              }
+            }
+            break;
+          } else {
+            // 存在一种情况，两个分支添加了同样的  keyname
+            if (sourceKey.keyName === targetKey.keyName && sourceKey.namespaceId === targetKey.namespaceId) {
+              const valueCheck = this.checkValueVO(sourceKey.valueList, targetKey.valueList);
+              isExist = true;
+              if (!valueCheck) {
+                isDifferent = true;
+              }
             }
             break;
           }
@@ -195,6 +208,20 @@ export class BranchService {
         result = result.concat(crosMergeResult);
       }
     }
+
+    // 按照 namespace name 排序
+    result.sort((a, b) => {
+      const snn1 = a.source.namespaceName.toUpperCase();
+      const snn2 = b.source.namespaceName.toUpperCase();
+
+      if (snn1 < snn2) {
+        return -1;
+      }
+      if (snn1 > snn2) {
+        return 1;
+      }
+      return 0;
+    });
     return result;
   }
 
@@ -203,34 +230,25 @@ export class BranchService {
    * @param source
    * @param target
    */
-  private async checkValueVO(source: ValueVO[], target: ValueVO[]): Promise<boolean> {
+  private checkValueVO(source: ValueVO[], target: ValueVO[]): boolean {
     const sourceEmtpy = (source === null || source.length === 0) && target !== null && target.length > 0;
     const targetEmpty = (target === null || target.length === 0) && source !== null && source.length > 0;
     if (sourceEmtpy || targetEmpty) {
       return false;
     } else {
-      for (let i = 0; i < source.length; i++) {
-        const s = source[i];
-        let isExist = false;
-        let isDifferent = false;
-        for (let j = 0; j < target.length; j++) {
-          const t = target[j];
-          if (s.languageId === t.languageId) {
-            isExist = true;
-            if (s.value !== t.value) {
-              isDifferent = true;
-            }
-            break;
-          }
-        }
-        if (isDifferent || !isExist) {
-          return false;
-        } else {
-          return true;
-        }
+      if (source.length !== target.length) {
+        return false;
       }
+      return source.every(i => {
+        const filterLanguage = target.filter(j => j.languageId === i.languageId);
+        if (filterLanguage.length > 0) {
+          const filterValue = target.filter(j => j.languageId === i.languageId).filter(m => m.value !== i.value);
+          return !(filterValue.length > 0);
+        } else {
+          return false;
+        }
+      });
     }
-    return true;
   }
 
   /**

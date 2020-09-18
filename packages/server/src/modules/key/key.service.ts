@@ -59,6 +59,97 @@ export class KeyService {
     );
   }
 
+  async getKeyInfoByBranchId(branchId: number): Promise<KeyValueDetailVO[]> {
+    const query = `
+    SELECT *
+    FROM (
+      SELECT keyid, keynameid, keyname, valueid, languageid
+        , keyvalue, actualid, namespaceId
+      FROM ((
+        SELECT *
+        FROM (
+          SELECT k.id AS keyid, k.actual_id AS actualid, k.namespace_id AS namespaceId
+          FROM key k
+          WHERE k.delete = 'f'
+        ) s1
+          JOIN (
+            SELECT key_id
+            FROM branch_key
+            WHERE branch_id = ${branchId}
+          ) s2
+          ON s1.keyid = s2.key_id
+          JOIN (
+            SELECT kn.id AS keynameid, key_id, kn.name AS keyname
+            FROM keyname kn
+            WHERE latest = true
+          ) s3
+          ON s2.key_id = s3.key_id) s4
+          LEFT JOIN (
+            SELECT kv.id AS valueid, kv.language_id AS languageid, key_id, kv.value AS keyvalue
+            FROM keyvalue kv
+            WHERE latest = true
+          ) s5
+          ON s4.keyid = s5.key_id
+      ) s6
+      -- WHERE keynameid = actualid
+    ) s7
+
+    ORDER BY keyName ASC
+    `;
+    const keyinfos = await this.keyRepository.query(query);
+    const languages: Language[] = await this.getAllLanguage();
+    const languageMap = new Map();
+    languages.forEach(item => {
+      languageMap.set(item.id, item.name);
+    });
+    const kvds = new Map();
+    keyinfos.forEach(e => {
+      const keyId = e.keyid;
+      const keyActualId = e.actualid;
+      const keyName = e.keyname;
+      const namespaceId = e.namespaceid;
+      const valueId = e.valueid;
+      const value = e.keyvalue;
+      const languageId = e.languageid;
+      const languageName = languageMap.get(languageId);
+      if (kvds.has(keyId)) {
+        const kvd = kvds.get(keyId);
+        const vas = new ValueVO();
+        vas.languageId = languageId;
+        vas.languageName = languageName;
+        vas.value = value;
+        vas.valueId = valueId;
+        const vl = kvd.valueList;
+        vl.push(vas);
+        kvd.valueList = vl;
+      } else {
+        const vas = new ValueVO();
+        vas.languageId = languageId;
+        vas.languageName = languageName;
+        vas.value = value;
+        vas.valueId = valueId;
+        const kvd = new KeyValueDetailVO();
+        kvd.keyId = keyId;
+        kvd.keyActualId = keyActualId;
+        kvd.keyName = keyName;
+        kvd.namespaceId = namespaceId;
+        kvd.valueList = [vas];
+        kvds.set(keyId, kvd);
+      }
+    });
+    const result = [];
+    kvds.forEach((v, _) => {
+      result.push(v);
+    });
+    return result;
+  }
+
+  async getAllLanguage(): Promise<Language[]> {
+    const query = 'select * from language';
+    const result: Language[] = await this.keyRepository.query(query);
+    return result;
+  }
+
   // key: count(key) 因为只会获取keyvalue的最新值，所以count(key)既是count(language)
   async countKey(): Promise<any[]> {
     return await this.keyRepository.query(
@@ -146,7 +237,6 @@ export class KeyService {
 
   async getKeyListByBranchId(branchId: number): Promise<KeyValueDetailVO[]> {
     // 通过分支id，获取对应分支下所有的key及key对应的name和value
-    let result: KeyValueDetailVO[] = [];
     const branch = await this.branchService.getBranchById(branchId);
     let masterBranchId: number = 0;
     let isMaster: boolean = false;
@@ -161,70 +251,24 @@ export class KeyService {
         masterBranchId = masterBranch.id;
       }
     }
-    let keyList: Key[] = [];
-    let masterKeyList = await this.getKeyWithBranchId(masterBranchId);
+    let resultKeyList: KeyValueDetailVO[];
+    const masterKeyList: KeyValueDetailVO[] = await this.getKeyInfoByBranchId(masterBranchId);
     if (!isMaster) {
-      // 由于分支不是主分支，可能存在分支上独立的key或者master分支修改过的key，需要对比
-      let branchKeyList = await this.getKeyWithBranchId(branchId);
-      if (branchKeyList !== null && branchKeyList.length > 0) {
-        for (let k = 0; k < masterKeyList.length; k++) {
-          const masterKey = masterKeyList[k];
-          let branchKeyExist = false;
-          for (let l = 0; l < branchKeyList.length; l++) {
-            const branchKey = branchKeyList[l];
-            if (branchKey.actualId === masterKey.actualId) {
-              branchKeyExist = true;
-              branchKeyList.splice(l, 1);
-              keyList.push(branchKey);
-              break;
-            }
-          }
-          if (!branchKeyExist) {
-            keyList.push(masterKey);
-          }
+      const branchKeyList: KeyValueDetailVO[] = await this.getKeyInfoByBranchId(branch.id);
+      // master 分支的key 移除条件： 比较分支 namespace , key name 相同的key
+      const filterMasterKeyList = [];
+      masterKeyList.forEach(i => {
+        const filter = branchKeyList.filter(j => j.keyName === i.keyName && j.namespaceId === i.namespaceId);
+        if ((filter.length = 0)) {
+          filterMasterKeyList.push(i);
         }
-        if (branchKeyList.length > 0) {
-          keyList = keyList.concat(branchKeyList);
-        }
-      } else {
-        keyList = masterKeyList;
-      }
+      });
+      resultKeyList = filterMasterKeyList.concat(branchKeyList);
     } else {
-      keyList = masterKeyList;
+      resultKeyList = masterKeyList;
     }
 
-    if (keyList !== null && keyList.length > 0) {
-      for (let i = 0; i < keyList.length; i++) {
-        let detail = new KeyValueDetailVO();
-        const key = keyList[i];
-        detail.keyId = key.id;
-        detail.keyActualId = key.actualId;
-        detail.namespaceId = key.namespaceId;
-
-        const keyName = await this.keynameRepository.find({ keyId: detail.keyId });
-        if (keyName !== null && keyName.length > 0) {
-          detail.keyName = keyName[0].name;
-        }
-        let valueList: ValueVO[] = [];
-        const value = await this.keyvalueRepository.find({ keyId: detail.keyId, latest: true });
-        if (value !== null && value.length > 0) {
-          for (let j = 0; j < value.length; j++) {
-            const v = value[j];
-            const language = await this.languageRepository.findOne(v.languageId);
-            let languageName = CommonConstant.STRING_BLANK;
-            if (language !== undefined) {
-              languageName = language.name;
-            }
-            valueList.push({ valueId: v.id, value: v.value, languageId: v.languageId, languageName });
-          }
-          detail.valueList = valueList;
-        } else {
-          detail.valueList = [];
-        }
-        result.push(detail);
-      }
-    }
-    return result;
+    return resultKeyList;
   }
 
   async delete(id: number) {

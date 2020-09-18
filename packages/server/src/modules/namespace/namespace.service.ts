@@ -19,6 +19,7 @@ import { CommonConstant, ErrorMessage } from 'src/constant/constant';
 import * as fs from 'fs';
 import { ConfigService } from '@ofm/nestjs-utils';
 import { Language } from 'src/entities/Language';
+import { BranchService } from '../branch/branch.service';
 
 @Injectable()
 export class NamespaceService {
@@ -42,6 +43,7 @@ export class NamespaceService {
     @InjectRepository(Project)
     private readonly projectRepository: Repository<Project>,
     private readonly config: ConfigService,
+    private readonly branchService: BranchService,
   ) {}
 
   async deleteNamespace(namespaceId: number, modifier: any) {
@@ -167,27 +169,26 @@ export class NamespaceService {
       if (keyId === '' || keyId === null) {
         // 新增
         // 判断当前分支下是否有同名的 key name, 有抛出异常， 不能保存成功
-        const sameKeyName = `
-        SELECT *
-          FROM branch_key
-          WHERE (branch_id = ${branchId}
-            AND key_id IN (
-              SELECT id
-              FROM key
-              WHERE id IN (
-                  SELECT key_id
-                  FROM keyname
-                  WHERE name = '${zyKeyName}' and namespace_id = '${namespaceId}'
-                )
-                AND delete IS false
-            )
-            AND delete IS false)
-        `;
-        // logger.info(`sameKeyName: ${sameKeyName}`);
-        const sameNameValid = await this.keyRepository.query(sameKeyName);
-        const branchName = await this.branchRepository.query(`SELECT name FROM branch WHERE id = ${branchId}`);
-        if (sameNameValid.length > 0) {
-          throw new Error(`Key name already exist on branch ${branchName[0].name} .`);
+        // 如果當前分支不是master，还需保证master 分支不存在该key
+        const branch = await this.branchRepository.query(`SELECT * FROM branch WHERE id = ${branchId}`);
+        if (branch[0].master) {
+          const existOn = await this.checkKeyIsExist(branchId, zyKeyName, namespaceId);
+
+          if (existOn) {
+            throw new Error(`Key name already exist on branch ${branch[0].name} .`);
+          }
+        } else {
+          const project = await this.findProject(namespaceId);
+          const projectId = project[0].id;
+          const masterBranch = await this.branchService.findMasterBranchByProjectId(projectId);
+          const existOn = await this.checkKeyIsExist(branchId, zyKeyName, namespaceId);
+          const existOnMaster = await this.checkKeyIsExist(masterBranch.id, zyKeyName, namespaceId);
+          if (existOn) {
+            throw new Error(`Key name already exist on branch ${branch[0].name} .`);
+          }
+          if (existOnMaster) {
+            throw new Error(`Key name already exist on branch  ${masterBranch.name}.`);
+          }
         }
         // 插入key 表, 获取 key id.
         const keyEntity = new Key();
@@ -952,5 +953,30 @@ export class NamespaceService {
     const query = 'select * from language';
     const result: Language[] = await this.namespaceRepository.query(query);
     return result;
+  }
+
+  async checkKeyIsExist(branchId, keyName, namespaceId): Promise<boolean> {
+    const sameKeyName = `
+        SELECT *
+          FROM branch_key
+          WHERE (branch_id = ${branchId}
+            AND key_id IN (
+              SELECT id
+              FROM key
+              WHERE id IN (
+                  SELECT key_id
+                  FROM keyname
+                  WHERE name = '${keyName}' and namespace_id = '${namespaceId}'
+                )
+                AND delete IS false
+            )
+            AND delete IS false)
+        `;
+    // logger.info(`sameKeyName: ${sameKeyName}`);
+    const sameNameValid = await this.keyRepository.query(sameKeyName);
+    if (sameNameValid.length > 0) {
+      return true;
+    }
+    return false;
   }
 }
