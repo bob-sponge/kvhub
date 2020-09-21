@@ -18,7 +18,6 @@ import { PermissionGuard } from '../../permission/permission.guard';
 import { Permission } from 'src/permission/permission.decorator';
 import { LoginBodyVO } from 'src/vo/LoginBodyVO';
 import { ErrorMessage } from 'src/constant/constant';
-import { UUIDUtils } from 'src/utils/uuid';
 
 @Controller('user')
 @UseGuards(PermissionGuard)
@@ -54,6 +53,7 @@ export class UserController {
     const user = await this.userService.login(loginBodyVO);
     // const uuid = UUIDUtils.generateUUID();
     res.cookie('token', loginBodyVO.loginName, { maxAge: 3600000 });
+    res.cookie('permission', user.permission);
     user.password = null;
     res.status(HttpStatus.OK);
     res.setHeader('Content-Type', 'application/json;charset=UTF-8');
@@ -71,7 +71,7 @@ export class UserController {
       throw new BadRequestException(ErrorMessage.PLEASE_LOGIN_FIRST);
     }
     req.session.cookie.maxAge = 0;
-    res.cookie('token', null, { maxAge: 0 });
+    res.cookie('token', null, 'permission', null, { maxAge: 0 });
     res.status(HttpStatus.OK);
     res.setHeader('Content-Type', 'application/json;charset=UTF-8');
     return res.send(JSON.stringify(ResponseBody.okWithMsg('Logout success!')));

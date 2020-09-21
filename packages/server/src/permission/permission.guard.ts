@@ -14,18 +14,18 @@ export class PermissionGuard implements CanActivate {
       return true;
     }
     const request = context.switchToHttp().getRequest();
-    const user: User = request;
-    if (user == null) {
+    const permission: string = request.cookies.permission;
+    if (permission == null) {
       throw new UnauthorizedException(ErrorMessage.PLEASE_LOGIN_FIRST);
     }
     let pers: string[] = [];
-    if (user.permission.indexOf(',') == -1) {
-      pers = Array.of(user.permission);
+    if (permission.indexOf(',') == -1) {
+      pers = Array.of(permission);
     } else {
-      pers = user.permission.split(',');
+      pers = permission.split(',');
     }
     let hadPermission = () => pers.some((x) => permissions.includes(x));
-    if (user != null && hadPermission()) {
+    if (permission != null && hadPermission()) {
       return true;
     } else {
       throw new UnauthorizedException(ErrorMessage.NO_PERMISSION);
