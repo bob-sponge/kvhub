@@ -26,6 +26,7 @@ import { Keyvalue } from 'src/entities/Keyvalue';
 import { BranchKey } from 'src/entities/BranchKey';
 import { Namespace } from 'src/entities/Namespace';
 import { Project } from 'src/entities/Project';
+import { Language } from 'src/entities/Language';
 
 @Injectable()
 export class BranchMergeService {
@@ -184,10 +185,10 @@ export class BranchMergeService {
       }
       if (sortNameA !== sortNameB) {
         if (sourceAExist) {
-          sortNameA = a.source.keyName;
+          sortNameA = a.source.keyname;
         }
         if (sourceBExist) {
-          sortNameB = b.source.keyName;
+          sortNameB = b.source.keyname;
         }
         return sortNameA.localeCompare(sortNameB);
       } else {
@@ -201,6 +202,11 @@ export class BranchMergeService {
     branchId: number,
     keyActualId: number,
   ): Promise<MergeDiffShowVO> {
+    const languages: Language[] = await this.getAllLanguage();
+    const languageMap = new Map();
+    languages.forEach(item => {
+      languageMap.set(item.id, item.name);
+    });
     let vo = new MergeDiffShowVO();
     let valueList: MergeDiffValueShowVO[] = [];
     let key = await this.keyService.getKeyByBranchIdAndKeyActualId(branchId, keyActualId);
@@ -218,7 +224,7 @@ export class BranchMergeService {
 
     // key -> keyname
     const keyName = await this.keyService.getKeyInfo(key.id, false);
-    vo.keyName = keyName.name;
+    vo.keyname = keyName.name;
     vo.keyNameId = keyName.id;
 
     // 获取value
@@ -226,16 +232,12 @@ export class BranchMergeService {
     for (let i = 0; i < mergeDiffValueList.length; i++) {
       let valueShowVO = new MergeDiffValueShowVO();
       const mergeDiffValue = mergeDiffValueList[i];
-      valueShowVO.id = mergeDiffValue.valueId;
-      valueShowVO.keyId = key.id;
-
-      const value = await this.keyService.getValueInfo(valueShowVO.id);
-      if (value !== undefined) {
-        valueShowVO.languageId = value.languageId;
-        valueShowVO.languageName = value.langeuage;
-        valueShowVO.value = value.value;
-        valueList.push(valueShowVO);
-      }
+      valueShowVO.valueId = mergeDiffValue.valueId;
+      const value = await this.keyvalueRepository.findOne(mergeDiffValue.valueId);
+      valueShowVO.languageId = mergeDiffValue.languageId;
+      valueShowVO.language = languageMap.get(mergeDiffValue.languageId);
+      valueShowVO.value = value.value;
+      valueList.push(valueShowVO);
     }
     valueList.sort((v1, v2) => v1.languageId - v2.languageId);
     vo.valueList = valueList;
@@ -578,7 +580,7 @@ export class BranchMergeService {
           for (let j = 0; j < selectedKey.valueList.length; j++) {
             const skv = selectedKey.valueList[j];
             if (sv.languageId === skv.languageId) {
-              const value = await this.keyvalueRepository.findOne(sv.id);
+              const value = await this.keyvalueRepository.findOne(sv.valueId);
               value.latest = false;
               value.midifyTime = time;
               await this.keyvalueRepository.save(value);
@@ -636,7 +638,7 @@ export class BranchMergeService {
           for (let j = 0; j < selectedKey.valueList.length; j++) {
             const skv = selectedKey.valueList[j];
             if (sv.languageId === skv.languageId) {
-              const value = await this.keyvalueRepository.findOne(sv.id);
+              const value = await this.keyvalueRepository.findOne(sv.valueId);
               value.latest = false;
               value.midifyTime = time;
               await this.keyvalueRepository.save(value);
@@ -694,7 +696,7 @@ export class BranchMergeService {
           for (let j = 0; j < selectedKey.valueList.length; j++) {
             const skv = selectedKey.valueList[j];
             if (sv.languageId === skv.languageId) {
-              const value = await this.keyvalueRepository.findOne(sv.id);
+              const value = await this.keyvalueRepository.findOne(sv.valueId);
               value.latest = false;
               value.midifyTime = time;
               await this.keyvalueRepository.save(value);
@@ -737,18 +739,24 @@ export class BranchMergeService {
   private async getSelectedMergeInfo(dto: MergeDiffShowVO): Promise<SelectedKeyDTO> {
     let result = new SelectedKeyDTO();
     result.keyId = dto.keyId;
-    result.keyName = dto.keyName;
+    result.keyName = dto.keyname;
     result.keyNameId = dto.keyNameId;
 
     let valueList: SelectedValueDTO[] = [];
     dto.valueList.forEach(v => {
       let value = new SelectedValueDTO();
-      value.valueId = v.id;
+      value.valueId = v.valueId;
       value.value = v.value;
       value.languageId = v.languageId;
       valueList.push(value);
     });
     result.valueList = valueList;
+    return result;
+  }
+
+  async getAllLanguage(): Promise<Language[]> {
+    const query = 'select * from language';
+    const result: Language[] = await this.namespaceRepository.query(query);
     return result;
   }
 }

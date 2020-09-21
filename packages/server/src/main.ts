@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import * as session from 'express-session';
-import * as cookieParser from 'cookie-parser'
+import * as cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { LoggerInterceptor } from './interceptor/logger.inteceptor';
@@ -15,7 +15,7 @@ async function bootstrap() {
   });
   app.useGlobalInterceptors(new LoggerInterceptor());
   app.useGlobalInterceptors(new SessionCheckInterceptor());
-  app.use(session({ secret: 'you know who', cookie: { maxAge: 3600000 },rolling:true }, new ValidationPipe()));
+  app.use(session({ secret: 'you know who', cookie: { maxAge: 3600000 }, rolling: true }, new ValidationPipe()));
   app.use(cookieParser());
   app.useGlobalFilters(new BadRequestExceptionFilter());
   await app.listen(5000);
