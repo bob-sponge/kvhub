@@ -53,10 +53,10 @@ export class UserController {
   async login(@Session() session, @Response() res, @Body() loginBodyVO: LoginBodyVO): Promise<ResponseBody> {
     const user = await this.userService.login(loginBodyVO);
     // const uuid = UUIDUtils.generateUUID();
-    res.cookie('token', loginBodyVO.loginName);
+    res.cookie('token', loginBodyVO.loginName, { maxAge: 3600000 });
     user.password = null;
     res.status(HttpStatus.OK);
-    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Type', 'application/json;charset=UTF-8');
     return res.send(JSON.stringify(ResponseBody.okWithData(user)));
   }
 
@@ -71,9 +71,9 @@ export class UserController {
       throw new BadRequestException(ErrorMessage.PLEASE_LOGIN_FIRST);
     }
     req.session.cookie.maxAge = 0;
-    req.cookies = null;
+    res.cookie('token', null, { maxAge: 0 });
     res.status(HttpStatus.OK);
-    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Type', 'application/json;charset=UTF-8');
     return res.send(JSON.stringify(ResponseBody.okWithMsg('Logout success!')));
   }
 }
