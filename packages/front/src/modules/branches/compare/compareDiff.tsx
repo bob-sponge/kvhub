@@ -11,10 +11,11 @@ const CompareDiff: React.SFC<CompareDiffProps> = (props: CompareDiffProps) => {
 
   const handleHighlight = () => {
     let items: any[] = [];
-    // 情况1 源数据不存在只存在目标数据
     if (source === '' && target) {
+      // 情况1 源数据不存在只存在目标数据
       items = addHighlight(target);
     } else if (source && target) {
+      // 情况2 源数据存在目标数据
       if (source.length < target.length) {
         let newItems = [];
         const part1 = target.substring(0, source.length);
@@ -51,11 +52,7 @@ const CompareDiff: React.SFC<CompareDiffProps> = (props: CompareDiffProps) => {
     return newTarget;
   };
 
-  return (
-    <div>
-      {source} : {handleHighlight()}
-    </div>
-  );
+  return <div>{handleHighlight()}</div>;
 };
 
 export default CompareDiff;
