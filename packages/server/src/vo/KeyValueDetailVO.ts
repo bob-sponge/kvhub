@@ -3,6 +3,6 @@ export class KeyValueDetailVO {
   keyId: number;
   keyActualId: number;
   keyName: string;
-  namespaceId:number;
+  namespaceId: number;
   valueList: ValueVO[];
 }
