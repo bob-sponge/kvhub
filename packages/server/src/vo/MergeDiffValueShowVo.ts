@@ -2,9 +2,8 @@ export class MergeDiffValueShowVO {
   /**
    * value id
    */
-  id : number;
-  keyId : number;
-  languageId : number;
-  languageName : string;
-  value : string | undefined;
+  valueId: number;
+  languageId: number;
+  language: string;
+  value: string | undefined;
 }

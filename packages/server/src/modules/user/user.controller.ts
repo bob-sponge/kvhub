@@ -18,17 +18,22 @@ import { PermissionGuard } from '../../permission/permission.guard';
 import { Permission } from 'src/permission/permission.decorator';
 import { LoginBodyVO } from 'src/vo/LoginBodyVO';
 import { ErrorMessage } from 'src/constant/constant';
-import { UUIDUtils } from 'src/utils/uuid';
+import { User } from 'src/entities/User';
 
 @Controller('user')
 @UseGuards(PermissionGuard)
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) { }
 
   @Post('/query')
   @Permission('query')
   async queryAll(@Body() body: any): Promise<ResponseBody> {
     return ResponseBody.okWithData(await this.userService.query(body));
+  }
+
+  @Get('/query/:id')
+  async queryById(@Param('id') id: number): Promise<ResponseBody> {
+    return ResponseBody.okWithData(await this.userService.queryById(id));
   }
 
   @Post('/reset')
@@ -53,10 +58,11 @@ export class UserController {
   async login(@Session() session, @Response() res, @Body() loginBodyVO: LoginBodyVO): Promise<ResponseBody> {
     const user = await this.userService.login(loginBodyVO);
     // const uuid = UUIDUtils.generateUUID();
-    res.cookie('token', loginBodyVO.loginName);
+    res.cookie('token', loginBodyVO.loginName, { maxAge: 3600000 });
+    res.cookie('permission', user.permission);
     user.password = null;
     res.status(HttpStatus.OK);
-    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Type', 'application/json;charset=UTF-8');
     return res.send(JSON.stringify(ResponseBody.okWithData(user)));
   }
 
@@ -71,9 +77,16 @@ export class UserController {
       throw new BadRequestException(ErrorMessage.PLEASE_LOGIN_FIRST);
     }
     req.session.cookie.maxAge = 0;
-    req.cookies = null;
+    res.cookie('token', null, 'permission', null, { maxAge: 0 });
     res.status(HttpStatus.OK);
-    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Type', 'application/json;charset=UTF-8');
     return res.send(JSON.stringify(ResponseBody.okWithMsg('Logout success!')));
+  }
+
+  getUserInfoByUserName(userName: string): any {
+    this.userService.getUserInfoByUserName(userName).then(x => {
+      return x;
+    });
+
   }
 }

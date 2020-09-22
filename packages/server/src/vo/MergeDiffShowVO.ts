@@ -2,10 +2,10 @@ import { MergeDiffValueShowVO } from './MergeDiffValueShowVo';
 
 export class MergeDiffShowVO {
   keyId: number;
-  keyNameId:number;
-  keyName: string;
+  keyNameId: number;
+  keyname: string;
   branchId: number;
-  namespaceId:number;
-  namespaceName:string;
+  namespaceId: number;
+  namespaceName: string;
   valueList: MergeDiffValueShowVO[];
 }
