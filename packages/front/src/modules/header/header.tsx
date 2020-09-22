@@ -26,21 +26,21 @@ const Header = () => {
     }
   };
 
+  const getUserInfo = () => {
+    browserHistory.push('/profile');
+  };
+
   return (
     <div className={css.header}>
       <div className={css.headerLeft}>
         <img src={imgSrc} />
-        {/* <Tabs activeKey={selectTab} onChange={onChange}>
-          <TabPane tab="Translation" key="1"></TabPane>
-          <TabPane tab="User Management" key="2"></TabPane>
-        </Tabs> */}
         <Menu onClick={handleClick} selectedKeys={[selectTab]} mode="horizontal">
           <Menu.Item key="translation">Translation</Menu.Item>
           <Menu.Item key="user">User Management</Menu.Item>
         </Menu>
       </div>
       <div className={css.headerRight}>
-        <div className={css.headerToolItem}>
+        <div className={css.headerToolItem} onClick={getUserInfo}>
           <UserOutlined />
           <span>Admin123456</span>
         </div>

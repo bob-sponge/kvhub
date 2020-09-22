@@ -15,16 +15,15 @@ const Login: React.FC<LoginProps> = () => {
 
   const handleSubmit = useCallback(() => {
     form.validateFields().then(async (values: any) => {
-      // eslint-disable-next-line no-console
-      console.log(values);
       getLogin(values);
     });
   }, []);
 
   const getLogin = async (values: any) => {
     let result = await Api.loginApi({ loginName: values.username, password: values.password });
-    const { success } = result;
+    const { success, data } = result;
     if (success) {
+      sessionStorage.setItem('userId', data.id);
       history.push('/dashboard');
     }
     setErrorTips(true);
