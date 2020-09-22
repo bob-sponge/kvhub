@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import * as css from '../styles/merge.modules.less';
 import { Button, message } from 'antd';
 import Container from '../../../container';
@@ -52,9 +52,16 @@ const Merge = (props: ContainerProps) => {
     history.goBack();
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = useCallback(async () => {
+    const { id } = mergeDetail;
     window.console.log('submit', mergeList);
-  };
+    let params = {
+      mergeId: id,
+      branchMergeDiffList: mergeList,
+    };
+    const result = await Api.branchMergeApi(params);
+    window.console.log(result);
+  }, [mergeDetail, mergeList]);
 
   const handleRefuse = async () => {
     const { id } = mergeDetail;
