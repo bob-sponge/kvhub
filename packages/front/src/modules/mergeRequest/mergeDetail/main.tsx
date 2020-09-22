@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import * as css from '../styles/merge.modules.less';
-import { Button } from 'antd';
+import { Button, message } from 'antd';
 import Container from '../../../container';
 import DiffItem from './diffItem';
 import { history } from '@ofm/history';
@@ -24,6 +24,7 @@ const Merge = (props: ContainerProps) => {
   const branchMergeId = match.params.branchMergeId;
   const [diffList, setDiffList] = useState([]);
   const [mergeDetail, setMergeDetail] = useState<any>([]);
+  const [mergeList, setMergeList] = useState<any>([]);
 
   useEffect(() => {
     getBranchMergeInfo();
@@ -31,17 +32,37 @@ const Merge = (props: ContainerProps) => {
   }, []);
 
   const getBranchMergeInfo = async () => {
-    const res = await Api.branchMergeInfoApi(branchMergeId);
-    setMergeDetail(res && res.data);
+    const result = await Api.branchMergeInfoApi(branchMergeId);
+    const { success, data } = result;
+    if (success && data) {
+      setMergeDetail(data);
+    }
   };
 
   const branchMergeDiffApi = async () => {
-    const res = await Api.branchMergeDiffApi(branchMergeId);
-    setDiffList(res && res.data);
+    const result = await Api.branchMergeDiffApi(branchMergeId);
+    const { success, data } = result;
+    if (success && data) {
+      setDiffList(data);
+      setMergeList(data);
+    }
   };
 
   const goBack = () => {
     history.goBack();
+  };
+
+  const handleSubmit = () => {
+    window.console.log('submit', mergeList);
+  };
+
+  const handleRefuse = async () => {
+    const { id } = mergeDetail;
+    const result = await Api.branchMergeRefuseApi(id);
+    const { success, data } = result;
+    if (success) {
+      message.success(data);
+    }
   };
 
   return (
@@ -60,19 +81,19 @@ const Merge = (props: ContainerProps) => {
           <div className={css.buttonList}>
             <Button onClick={goBack}>
               <ArrowLeftOutlined />
-              {'Back'}
+              Back
             </Button>
             <Button>
               <DownloadOutlined />
-              {'Download'}
+              Download
             </Button>
-            <Button>
+            <Button onClick={handleRefuse}>
               <CloseOutlined />
-              {'Refused'}
+              Refused
             </Button>
-            <Button>
+            <Button onClick={handleSubmit}>
               <FullscreenExitOutlined />
-              {'Submit Merge'}
+              Submit Merge
             </Button>
           </div>
         </div>
@@ -80,9 +101,18 @@ const Merge = (props: ContainerProps) => {
           {`Diff(${diffList && diffList.length})`}
           <span className={css.select}>{'Please select the results you want to merge'}</span>
         </div>
-        {diffList &&
-          diffList.map((item, index) => {
-            return <DiffItem diffData={item} key={index} />;
+        {mergeList &&
+          mergeList.length > 0 &&
+          mergeList.map((item: any, index: number) => {
+            return (
+              <DiffItem
+                diffData={item}
+                key={index}
+                diffIndex={index}
+                mergeList={mergeList}
+                setMergeList={setMergeList}
+              />
+            );
           })}
       </div>
     </Container>
