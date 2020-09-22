@@ -7,7 +7,7 @@ import { LoginBodyVO } from 'src/vo/LoginBodyVO';
 
 @Injectable()
 export class UserService {
-  constructor(@InjectRepository(User) private readonly userRepository: Repository<User>) { }
+  constructor(@InjectRepository(User) private readonly userRepository: Repository<User>) {}
 
   async query(body: any): Promise<any> {
     const pageNo = body.pageNo;
@@ -20,12 +20,14 @@ export class UserService {
     const data = await this.userRepository.query(`SELECT * FROM public.\"user\" offset ${start} limit ${pageSize}`);
     return {
       total: total,
-      rows: data
-    }
+      rows: data,
+    };
   }
 
   async reset(@Session() session, body: any): Promise<string> {
-    if (session.user.admin != 0) { throw new BadRequestException(ErrorMessage.MUST_ADMIN); }
+    if (session.user.admin != 0) {
+      throw new BadRequestException(ErrorMessage.MUST_ADMIN);
+    }
     const oldPass = body.oldPass;
     const newPass = body.newPass;
     const userId = body.userId;
@@ -42,7 +44,7 @@ export class UserService {
   }
 
   async delete(id: number): Promise<string> {
-    if (id == null || null == await this.userRepository.findOne({ id: id })) {
+    if (id == null || null == (await this.userRepository.findOne({ id: id }))) {
       throw new BadRequestException(ErrorMessage.USER_NOT_EXIST);
     }
     await this.userRepository.delete({ id: id });
@@ -63,24 +65,37 @@ export class UserService {
   }
 
   async setAsGeneral(id: number): Promise<string> {
-    if (id == null || null == await this.userRepository.findOne({ id: id })) {
+    if (id == null || null == (await this.userRepository.findOne({ id: id }))) {
       throw new BadRequestException(ErrorMessage.USER_NOT_EXIST);
     }
-    await this.userRepository.createQueryBuilder('user').update(User).set({ admin: 1 }).execute();
+    await this.userRepository
+      .createQueryBuilder('user')
+      .update(User)
+      .set({ admin: 1 })
+      .execute();
     return ErrorMessage.SET_AS_ADMIN_SUCCESS;
   }
 
-  async login(vo:LoginBodyVO): Promise<User> {
-    const userList = await this.userRepository.find({name:vo.loginName});
+  async login(vo: LoginBodyVO): Promise<User> {
+    const userList = await this.userRepository.find({ name: vo.loginName });
     let user = new User();
-    if (null === userList || userList.length === 0){
+    if (null === userList || userList.length === 0) {
       throw new BadRequestException(ErrorMessage.USER_OR_PASSWORD_IS_WRONG);
     } else {
       user = userList[0];
     }
-    if (user.password !== vo.password.trim()){
+    if (user.password !== vo.password.trim()) {
       throw new BadRequestException(ErrorMessage.USER_OR_PASSWORD_IS_WRONG);
     }
     return user;
+  }
+
+  async getUserInfoByUserName(userName: string): Promise<User> | undefined{
+    const user: User = await this.userRepository.findOne({ where: { name: userName } });
+    if (null === user) {
+      return undefined;
+    } else {
+      return user;
+    }
   }
 }
