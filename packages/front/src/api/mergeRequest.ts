@@ -26,3 +26,6 @@ export const branchMergeRefuseApi = (branchMergeId: any) => ajax.get(`${prefix}/
  * diff key
  * */
 export const branchMergeDiffApi = (branchMergeId: any) => ajax.get(`${prefix}/diff/${branchMergeId}`);
+
+// merge
+export const branchMergeApi = (params: any) => ajax.post(`${prefix}/merge`, params);
