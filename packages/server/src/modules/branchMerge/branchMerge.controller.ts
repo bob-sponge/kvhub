@@ -10,7 +10,7 @@ import { Permission } from 'src/permission/permission.decorator';
 @Controller('branchMerge')
 @UseGuards(PermissionGuard)
 export class BranchMergeController {
-  constructor(private readonly branchMergeService: BranchMergeService) { }
+  constructor(private readonly branchMergeService: BranchMergeService) {}
   // find all languages
   @Post('/list')
   async list(@Body() vo: BranchMergeSearchVO): Promise<ResponseBody> {
@@ -24,7 +24,7 @@ export class BranchMergeController {
 
   @Get('/refuse/:id')
   async refuseById(@Param('id') id: number): Promise<ResponseBody> {
-    await this.branchMergeService.refuse(id)
+    await this.branchMergeService.refuse(id);
     return ResponseBody.ok();
   }
 
