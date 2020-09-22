@@ -13,10 +13,11 @@ export class CommonConstant {
   static MERGE_TYPE_MERGED = '1';
   static MERGE_TYPE_REFUSED = '2';
   static MERGE_TYPE_MERGING = '3';
+  static MERGE_TYPE_FAILED = '4';
 
   /* commit type
    * 0:add key
-   * 1:change value 
+   * 1:change value
    * 2:rename key
    * 3:merge request
    */

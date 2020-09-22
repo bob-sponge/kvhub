@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import { BadRequestException, Injectable, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Branch } from 'src/entities/Branch';
@@ -11,7 +12,7 @@ import { Repository, getRepository } from 'typeorm';
 import { ValueDTO } from './dto/ValueDTO';
 import { KeyValueDetailVO } from 'src/vo/KeyValueDetailVO';
 import { ValueVO } from 'src/vo/ValueVO';
-import { CommonConstant, ErrorMessage } from 'src/constant/constant';
+import { ErrorMessage } from 'src/constant/constant';
 
 @Injectable()
 export class KeyService {
@@ -28,14 +29,6 @@ export class KeyService {
     return await this.keyRepository.find({ delete: false });
   }
 
-  // key left join keyvalue
-  async findKeyWithKeyValue(): Promise<any[]> {
-    return await this.keyRepository.query(
-      'SELECT k.id as key_id, k.actual_id, k.namespace_id, v.language_id, v.value' +
-        ' FROM key k LEFT JOIN keyvalue v ON k.id = v.key_id WHERE v.latest = TRUE AND k.delete = FALSE',
-    );
-  }
-
   async getKeyWithBranchIdAndNamespaceId(branchId: number, namespaceId: number): Promise<Key[]> {
     return await this.keyRepository.query(
       ' select k.id,k.actual_id "actualId",k.namespace_id "namespaceId",k.modifier,k.modify_time "modifyTime",k.delete' +
@@ -46,16 +39,6 @@ export class KeyService {
         ' and k.namespace_id = ' +
         namespaceId +
         ' ',
-    );
-  }
-
-  async getKeyWithBranchId(branchId: number): Promise<Key[]> {
-    return await this.keyRepository.query(
-      ' select k.id,k.actual_id "actualId",k.namespace_id "namespaceId",k.modifier,k.modify_time "modifyTime",k.delete' +
-        ' from key k left join branch_key bk ' +
-        ' on k.id = bk.key_id where bk.delete = false and k.delete = false ' +
-        ' and bk.branch_id = ' +
-        branchId,
     );
   }
 

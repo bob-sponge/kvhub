@@ -1,13 +1,13 @@
 import { Injectable, Session, BadRequestException } from '@nestjs/common';
 import { User } from 'src/entities/User';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, getRepository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { ErrorMessage } from 'src/constant/constant';
 import { LoginBodyVO } from 'src/vo/LoginBodyVO';
 
 @Injectable()
 export class UserService {
-  constructor(@InjectRepository(User) private readonly userRepository: Repository<User>) { }
+  constructor(@InjectRepository(User) private readonly userRepository: Repository<User>) {}
 
   async query(body: any): Promise<any> {
     const pageNo = body.pageNo;
@@ -33,7 +33,7 @@ export class UserService {
   }
 
   async reset(@Session() session, body: any): Promise<string> {
-    if (session.user.admin != 0) {
+    if (session.user.admin !== 0) {
       throw new BadRequestException(ErrorMessage.MUST_ADMIN);
     }
     const oldPass = body.oldPass;
@@ -60,7 +60,7 @@ export class UserService {
   }
 
   async set(@Session() session, id: number, level: number): Promise<string> {
-    if (session.user.admin != 0) {
+    if (session.user.admin !== 0) {
       throw new BadRequestException(ErrorMessage.MUST_ADMIN);
     }
     let user: User;
@@ -69,7 +69,7 @@ export class UserService {
     }
     user.admin = level;
     await this.userRepository.save(user);
-    return level == 0 ? ErrorMessage.SET_AS_ADMIN_SUCCESS : ErrorMessage.SET_AS_GENERAL_SUCCESS;
+    return level === 0 ? ErrorMessage.SET_AS_ADMIN_SUCCESS : ErrorMessage.SET_AS_GENERAL_SUCCESS;
   }
 
   async setAsGeneral(id: number): Promise<string> {

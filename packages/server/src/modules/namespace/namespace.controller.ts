@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-expressions */
-import { Controller, Post, Body, Get, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Delete, UseGuards, Request } from '@nestjs/common';
 import { NamespaceService } from './namespace.service';
 import { BranchService } from '../branch/branch.service';
 import { ResponseBody } from 'src/vo/ResponseBody';
@@ -219,9 +219,11 @@ export class NamespaceController {
     @Param('languageId') languageId: number,
     @Param('keyId') keyId: number,
     @Body() keyvalue: any,
+    @Request() req,
   ): Promise<ResponseBody> {
     const value = keyvalue.keyvalue;
     const valueId = keyvalue.valueId;
+    const currentUser = req.cookies.token;
     const data = await (
       await this.namespaceService.editKeyValueOnlanguage(
         branchId,
@@ -229,7 +231,7 @@ export class NamespaceController {
         keyId,
         value,
         valueId,
-        'modifier',
+        currentUser,
         new Date(),
       )
     ).raw;
@@ -276,7 +278,7 @@ export class NamespaceController {
          }
    */
   @Post('/view/keyvalue')
-  async addKeyValue(@Body() keyvalue: any) {
+  async addKeyValue(@Body() keyvalue: any, @Request() req) {
     const logger = Log4js.getLogger();
     logger.level = 'INFO';
     const branchId = keyvalue.branchId;
@@ -284,11 +286,12 @@ export class NamespaceController {
     const keyId = keyvalue.keyId;
     const keyName = keyvalue.keyName;
     const data: [] = keyvalue.kv;
+    const currentUser = req.cookies.token;
     logger.info(`view keyvalue: key id: ${keyId}, key name: ${keyName}`);
     // 如果key id 有值，则为修改，否则为增加
     let msg = '';
     try {
-      await this.namespaceService.editKeyValue(branchId, namespaceId, keyId, keyName, data, 'modifier', new Date());
+      await this.namespaceService.editKeyValue(branchId, namespaceId, keyId, keyName, data, currentUser, new Date());
     } catch (error) {
       msg = error.message;
       return ResponseBody.error(msg, 500);
@@ -318,13 +321,14 @@ export class NamespaceController {
       }
    */
   @Post('/view/keyname')
-  async editKeyname(@Body() data: any) {
+  async editKeyname(@Body() data: any, @Request() req) {
     const keyId = data.keyId;
     const keyName = data.keyName;
     let res: any;
     let msg = '';
+    const currentUser = req.cookies.token;
     try {
-      res = await this.namespaceService.editKeyname(keyId, keyName, 'modifier', new Date());
+      res = await this.namespaceService.editKeyname(keyId, keyName, currentUser, new Date());
     } catch (error) {
       msg = error.message;
       return ResponseBody.error(msg, 500);
@@ -348,11 +352,12 @@ export class NamespaceController {
    */
   @Delete('/view/key/:keyId')
   @Permission('delete')
-  async deleteKey(@Param('keyId') keyId: number) {
+  async deleteKey(@Param('keyId') keyId: number, @Request() req) {
     let msg = '';
     try {
       // todo before delete key record,will verify the relationship between Branch and key
-      await this.namespaceService.deleteKey(keyId, 'modifier');
+      const currentUser = req.cookies.token;
+      await this.namespaceService.deleteKey(keyId, currentUser);
     } catch (error) {
       msg = error.message;
       return ResponseBody.error(msg, 500);
@@ -375,10 +380,11 @@ export class NamespaceController {
       }
    */
   @Delete('/view/:namespaceId')
-  async deleteNamespace(@Param('namespaceId') namespaceId: number) {
+  async deleteNamespace(@Param('namespaceId') namespaceId: number, @Request() req) {
     let msg = '';
     try {
-      await this.namespaceService.deleteNamespace(namespaceId, 'modifier');
+      const currentUser = req.cookies.token;
+      await this.namespaceService.deleteNamespace(namespaceId, currentUser);
     } catch (error) {
       msg = error.message;
       return ResponseBody.error(msg, 500);

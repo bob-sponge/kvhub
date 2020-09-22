@@ -21,12 +21,12 @@ export class ProjectLanguageService {
         const exist = await this.projectLanguageRepository.find({
           where: { id: Not(projectLanguage.id), languageId: projectLanguage.languageId, delete: false },
         });
-        if (exist !== null && exist.length > 0 ){
+        if (exist !== null && exist.length > 0) {
           throw new BadRequestException('This language is exist!');
         }
       } else {
         const exist = await this.projectLanguageRepository.find({
-          where: { projectId:projectLanguage.projectId,languageId: projectLanguage.languageId, delete: false },
+          where: { projectId: projectLanguage.projectId, languageId: projectLanguage.languageId, delete: false },
         });
 
         if (exist !== null && exist.length > 0) {
@@ -49,9 +49,8 @@ export class ProjectLanguageService {
   }
 
   async delete(id: number): Promise<void> {
-
     const projectLanguage = await this.projectLanguageRepository.findOne(id);
-    if (projectLanguage === undefined){
+    if (projectLanguage === undefined) {
       throw new BadRequestException('project language is not exist');
     } else {
       projectLanguage.delete = true;

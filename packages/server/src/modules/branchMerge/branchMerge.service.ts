@@ -27,6 +27,7 @@ import { BranchKey } from 'src/entities/BranchKey';
 import { Namespace } from 'src/entities/Namespace';
 import { Project } from 'src/entities/Project';
 import { Language } from 'src/entities/Language';
+import * as Log4js from 'log4js';
 
 @Injectable()
 export class BranchMergeService {
@@ -463,6 +464,8 @@ export class BranchMergeService {
    * @param vo
    */
   async merge(vo: BranchMergeSubmitVO) {
+    const logger = Log4js.getLogger();
+    logger.level = 'INFO';
     // check merge branch is exist or is created status!
     const mergeId = vo.mergeId;
     let branchMerge = await this.branchMergeRepository.findOne(mergeId);
@@ -485,29 +488,35 @@ export class BranchMergeService {
     branchMerge.type = CommonConstant.MERGE_TYPE_MERGING;
     await this.branchMergeRepository.save(branchMerge);
 
-    const paramMergeList = vo.branchMergeDiffList;
-    if (null === paramMergeList || paramMergeList.length === 0) {
-      throw new BadRequestException(ErrorMessage.BRANCH_MERGE_DIFF_KEY_NOT_CHOOSE);
-    } else if (paramMergeList.length < mergeDiffList.length) {
-      throw new BadRequestException(ErrorMessage.BRANCH_MERGE_DIFF_KEY_NOT_SELECT_ALL);
-    }
-
-    /**
-     * According to the incoming key and value, compare with the key and value found in the system,
-     * the selected and modified ones will be submitted
-     */
-
-    for (let i = 0; i < paramMergeList.length; i++) {
-      const paramMergeDiff = paramMergeList[i];
-      if (paramMergeDiff.mergeDiffKey.selectBranchId !== null && paramMergeDiff.mergeDiffKey.selectBranchId > 0) {
-        await this.mergeKey(paramMergeDiff, branchMerge);
-      } else {
+    try {
+      const paramMergeList = vo.branchMergeDiffList;
+      if (null === paramMergeList || paramMergeList.length === 0) {
+        throw new BadRequestException(ErrorMessage.BRANCH_MERGE_DIFF_KEY_NOT_CHOOSE);
+      } else if (paramMergeList.length < mergeDiffList.length) {
         throw new BadRequestException(ErrorMessage.BRANCH_MERGE_DIFF_KEY_NOT_SELECT_ALL);
       }
-    }
 
-    branchMerge.type = CommonConstant.MERGE_TYPE_MERGED;
-    await this.branchMergeRepository.save(branchMerge);
+      /**
+       * According to the incoming key and value, compare with the key and value found in the system,
+       * the selected and modified ones will be submitted
+       */
+
+      for (let i = 0; i < paramMergeList.length; i++) {
+        const paramMergeDiff = paramMergeList[i];
+        if (paramMergeDiff.mergeDiffKey.selectBranchId !== null && paramMergeDiff.mergeDiffKey.selectBranchId > 0) {
+          await this.mergeKey(paramMergeDiff, branchMerge);
+        } else {
+          throw new BadRequestException(ErrorMessage.BRANCH_MERGE_DIFF_KEY_NOT_SELECT_ALL);
+        }
+      }
+
+      branchMerge.type = CommonConstant.MERGE_TYPE_MERGED;
+      await this.branchMergeRepository.save(branchMerge);
+    } catch (error) {
+      logger.info(`merge fail. details: ${error}`);
+      branchMerge.type = CommonConstant.MERGE_TYPE_FAILED;
+      await this.branchMergeRepository.save(branchMerge);
+    }
   }
 
   /**

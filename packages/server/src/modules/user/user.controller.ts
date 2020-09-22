@@ -18,12 +18,11 @@ import { PermissionGuard } from '../../permission/permission.guard';
 import { Permission } from 'src/permission/permission.decorator';
 import { LoginBodyVO } from 'src/vo/LoginBodyVO';
 import { ErrorMessage } from 'src/constant/constant';
-import { User } from 'src/entities/User';
 
 @Controller('user')
 @UseGuards(PermissionGuard)
 export class UserController {
-  constructor(private readonly userService: UserService) { }
+  constructor(private readonly userService: UserService) {}
 
   @Post('/query')
   @Permission('query')
@@ -82,12 +81,5 @@ export class UserController {
     res.status(HttpStatus.OK);
     res.setHeader('Content-Type', 'application/json;charset=UTF-8');
     return res.send(JSON.stringify(ResponseBody.okWithMsg('Logout success!')));
-  }
-
-  getUserInfoByUserName(userName: string): any {
-    this.userService.getUserInfoByUserName(userName).then(x => {
-      return x;
-    });
-
   }
 }

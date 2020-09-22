@@ -8,7 +8,7 @@ import { Permission } from 'src/permission/permission.decorator';
 @Controller('projectLanguage')
 @UseGuards(PermissionGuard)
 export class ProjectLanguageController {
-  constructor(private readonly projectLanguageService: ProjectLanguageService) { }
+  constructor(private readonly projectLanguageService: ProjectLanguageService) {}
 
   /**
    * delete project language
