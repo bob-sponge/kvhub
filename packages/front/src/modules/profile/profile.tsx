@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import * as css from './style/index.modules.less';
 import * as Api from '../../api/user';
+import { timeAgo } from '../dashboard/constant';
 
 const profileInfo: React.SFC = () => {
   const [userInfo, setUserInfo] = useState<any>({});
@@ -27,16 +28,12 @@ const profileInfo: React.SFC = () => {
           <div className={css.content}>{userInfo.name}</div>
         </div>
         <div className={css.itemList}>
-          <div className={css.title}>Department</div>
-          <div className={css.content}>{userInfo.department}</div>
-        </div>
-        <div className={css.itemList}>
           <div className={css.title}>User Type</div>
           <div className={css.content}>{userInfo.admin === 1 ? 'General' : 'Admin'}</div>
         </div>
         <div className={css.itemList}>
-          <div className={css.title}>Login Type</div>
-          <div className={css.content}>{userInfo.type === '1' ? 'LADP' : 'Normal'}</div>
+          <div className={css.title}>Lastest Login</div>
+          <div className={css.content}>{userInfo.lastTime ? timeAgo(userInfo.lastTime) : '(Null)'}</div>
         </div>
       </div>
     </div>

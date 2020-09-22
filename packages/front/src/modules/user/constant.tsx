@@ -68,6 +68,7 @@ export const columns = (onDelete: Function, onReset: Function, setAdmin: Functio
           <div className={css.operation}>
             {permissions &&
               permissions.length > 0 &&
+              sessionStorage.getItem('userType') === '0' &&
               permissions.map((item: any) => {
                 if (item === 'delete') {
                   return <span onClick={() => onDelete(record)}>Delete</span>;
