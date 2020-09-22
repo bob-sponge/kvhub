@@ -75,7 +75,7 @@ export class KeyService {
           JOIN (
             SELECT key_id
             FROM branch_key
-            WHERE branch_id = ${branchId}
+            WHERE branch_id = ${branchId} and delete = false
           ) s2
           ON s1.keyid = s2.key_id
           JOIN (
@@ -210,6 +210,7 @@ export class KeyService {
       throw new BadRequestException('key name is not exist!');
     } else {
       result.name = keyname[0].name;
+      result.keynameId = keyname[0].id;
     }
     if (needValue !== null && needValue) {
       const valueDtoList: ValueDTO[] = await this.keyvalueRepository.query(

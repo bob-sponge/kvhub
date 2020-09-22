@@ -770,7 +770,7 @@ export class NamespaceService {
           JOIN (
             SELECT key_id
             FROM branch_key
-            WHERE branch_id = ${branchId}
+            WHERE branch_id = ${branchId} and delete = false
           ) s2
           ON s1.keyid = s2.key_id
           JOIN (

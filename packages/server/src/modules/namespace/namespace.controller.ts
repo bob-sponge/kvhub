@@ -347,7 +347,7 @@ export class NamespaceController {
       }
    */
   @Delete('/view/key/:keyId')
-  //@Permission('delete')
+  @Permission('delete')
   async deleteKey(@Param('keyId') keyId: number) {
     let msg = '';
     try {

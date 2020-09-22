@@ -115,7 +115,7 @@ export class BranchService {
           targetIndex = j;
           targetKey = target[j];
           if (sourceKey.keyActualId === targetKey.keyActualId) {
-            isExist = true;
+            //isExist = true;
             if (sourceKey.keyName !== targetKey.keyName) {
               isDifferent = true;
             } else {
@@ -129,12 +129,12 @@ export class BranchService {
             // 存在一种情况，两个分支添加了同样的  keyname
             if (sourceKey.keyName === targetKey.keyName && sourceKey.namespaceId === targetKey.namespaceId) {
               const valueCheck = this.checkValueVO(sourceKey.valueList, targetKey.valueList);
-              isExist = true;
+              //isExist = true;
               if (!valueCheck) {
                 isDifferent = true;
+                break;
               }
             }
-            break;
           }
         }
       }
@@ -143,7 +143,7 @@ export class BranchService {
          when the same translation value of the key is different or
          when only a certain branch is translated,
          need to add diffkey data */
-      if (isDifferent || !isExist || !hasTarget) {
+      if (isDifferent) {
         sourceCompare.keyId = sourceKey.keyId;
         sourceCompare.keyname = sourceKey.keyName;
         const sNamespace = await this.namespaceRepository.findOne(sourceKey.namespaceId);
@@ -614,5 +614,16 @@ export class BranchService {
    */
   async getBranchById(id: number): Promise<Branch> | undefined {
     return await this.branchRepository.findOne({ id: id });
+  }
+
+  async findMasterBranchByBranchId(branchId: number): Promise<Branch> | undefined {
+    // eslint-disable-next-line max-len
+    const query = `select * from branch WHERE project_id = (select project_id from branch where id=${branchId}) and master = true`;
+    const branchList = await this.branchRepository.query(query);
+    if (branchList === null) {
+      return undefined;
+    } else {
+      return branchList[0];
+    }
   }
 }

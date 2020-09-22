@@ -60,6 +60,7 @@ export class UserController {
     // const uuid = UUIDUtils.generateUUID();
     res.cookie('token', loginBodyVO.loginName, { maxAge: 3600000 });
     res.cookie('permission', user.permission);
+    res.cookie('admin', user.admin);
     user.password = null;
     res.status(HttpStatus.OK);
     res.setHeader('Content-Type', 'application/json;charset=UTF-8');

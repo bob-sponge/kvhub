@@ -225,7 +225,7 @@ export class BranchMergeService {
     // key -> keyname
     const keyName = await this.keyService.getKeyInfo(key.id, false);
     vo.keyname = keyName.name;
-    vo.keyNameId = keyName.id;
+    vo.keyNameId = keyName.keynameId;
 
     // 获取value
     const mergeDiffValueList = await this.mergeDiffValueRepository.find({ mergeDiffKeyId, branchId });
@@ -372,9 +372,9 @@ export class BranchMergeService {
               isExist = true;
               if (!valueCheck) {
                 isDifferent = true;
+                break;
               }
             }
-            break;
           }
         }
       }
@@ -383,7 +383,7 @@ export class BranchMergeService {
          when the same translation value of the key is different or
          when only a certain branch is translated,
          need to add diffkey data */
-      if (isDifferent || !isExist || !hasTarget) {
+      if (isDifferent) {
         let mergeDiffKey = new MergeDiffKey();
         mergeDiffKey.mergeId = mergeId;
         mergeDiffKey.key = sourceKey.keyActualId;
@@ -519,7 +519,7 @@ export class BranchMergeService {
     const time = new Date();
     const source = diffVO.source;
     const target = diffVO.target;
-    const masterBranch = await this.branchService.findMasterBranchByProjectId(source.branchId);
+    const masterBranch = await this.branchService.findMasterBranchByBranchId(source.branchId);
     let masterBranchId = 0;
     if (masterBranch === null) {
       throw new BadRequestException(ErrorMessage.BRANCH_NOT_EXIST);
