@@ -23,12 +23,17 @@ import { User } from 'src/entities/User';
 @Controller('user')
 @UseGuards(PermissionGuard)
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) { }
 
   @Post('/query')
   @Permission('query')
   async queryAll(@Body() body: any): Promise<ResponseBody> {
     return ResponseBody.okWithData(await this.userService.query(body));
+  }
+
+  @Get('/query/:id')
+  async queryById(@Param('id') id: number): Promise<ResponseBody> {
+    return ResponseBody.okWithData(await this.userService.queryById(id));
   }
 
   @Post('/reset')
@@ -78,10 +83,10 @@ export class UserController {
     return res.send(JSON.stringify(ResponseBody.okWithMsg('Logout success!')));
   }
 
-  getUserInfoByUserName(userName:string):any{
-    this.userService.getUserInfoByUserName(userName).then(x=>{
+  getUserInfoByUserName(userName: string): any {
+    this.userService.getUserInfoByUserName(userName).then(x => {
       return x;
     });
-    
+
   }
 }

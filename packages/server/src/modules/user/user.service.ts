@@ -7,7 +7,7 @@ import { LoginBodyVO } from 'src/vo/LoginBodyVO';
 
 @Injectable()
 export class UserService {
-  constructor(@InjectRepository(User) private readonly userRepository: Repository<User>) {}
+  constructor(@InjectRepository(User) private readonly userRepository: Repository<User>) { }
 
   async query(body: any): Promise<any> {
     const pageNo = body.pageNo;
@@ -22,6 +22,14 @@ export class UserService {
       total: total,
       rows: data,
     };
+  }
+
+  async queryById(id: number): Promise<any> {
+    const user = await this.userRepository.findOne({ id: id });
+    if (user == null) {
+      throw new BadRequestException(ErrorMessage.USER_NOT_EXIST_IN_DB);
+    }
+    return user;
   }
 
   async reset(@Session() session, body: any): Promise<string> {
@@ -90,7 +98,7 @@ export class UserService {
     return user;
   }
 
-  async getUserInfoByUserName(userName: string): Promise<User> | undefined{
+  async getUserInfoByUserName(userName: string): Promise<User> | undefined {
     const user: User = await this.userRepository.findOne({ where: { name: userName } });
     if (null === user) {
       return undefined;
