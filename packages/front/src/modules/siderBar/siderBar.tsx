@@ -45,7 +45,7 @@ const SideBar: React.SFC<SideBarProps> = (props: SideBarProps) => {
       </Menu.ItemGroup>
       <Menu.ItemGroup key="g2" title="Action">
         <Menu.Item key="4">Download</Menu.Item>
-        <Menu.Item key="5">Delete Project</Menu.Item>
+        {sessionStorage.getItem('userType') === '0' && <Menu.Item key="5">Delete Project</Menu.Item>}
       </Menu.ItemGroup>
     </Menu>
   );

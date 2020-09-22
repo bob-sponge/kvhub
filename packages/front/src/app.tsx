@@ -13,14 +13,6 @@ import User from './modules/user';
 import Profile from './modules/profile';
 
 export function App() {
-  React.useEffect(() => {
-    // const res = ajax.get('/hello');
-    // res.then(rr => {
-    //   // eslint-disable-next-line no-console
-    //   console.log(rr);
-    // });
-  }, []);
-
   return (
     <div>
       <BasicRoute />

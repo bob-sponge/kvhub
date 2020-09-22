@@ -24,6 +24,7 @@ const Login: React.FC<LoginProps> = () => {
     const { success, data } = result;
     if (success) {
       sessionStorage.setItem('userId', data.id);
+      sessionStorage.setItem('userType', data.admin);
       history.push('/dashboard');
     }
     setErrorTips(true);

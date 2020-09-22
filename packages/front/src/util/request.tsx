@@ -3,6 +3,7 @@ import { ajax, initAjax } from '@ofm/ajax';
 import { Modal } from 'antd';
 import { CloseCircleOutlined } from '@ant-design/icons';
 import { getServerIp } from './url';
+import { history } from '@ofm/history';
 // const Cookies = require('js-cookie');
 
 let baseURL = '';
@@ -73,6 +74,12 @@ ajax.interceptors.request.use(
   },
 );
 
+const jumpLogin = () => {
+  sessionStorage.removeItem('userId');
+  sessionStorage.removeItem('userType');
+  history.push('/login');
+};
+
 // trasform axiosResponse to ajaxResponse
 ajax.interceptors.response.use(response => {
   let data = response.data;
@@ -80,7 +87,11 @@ ajax.interceptors.response.use(response => {
   //   window.location.replace('/');
   // }
   if (data.success !== undefined && (data.success === false || data.success === null) && !!data.data) {
-    addErrorList(data.data);
+    if (data.data === 'Please Login First!') {
+      addErrorList(data.data, jumpLogin);
+    } else {
+      addErrorList(data.data);
+    }
   }
   return data;
 });

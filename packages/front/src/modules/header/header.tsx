@@ -30,6 +30,12 @@ const Header = () => {
     browserHistory.push('/profile');
   };
 
+  const handleLogOut = () => {
+    sessionStorage.removeItem('userId');
+    sessionStorage.removeItem('userType');
+    browserHistory.push('/login');
+  };
+
   return (
     <div className={css.header}>
       <div className={css.headerLeft}>
@@ -44,7 +50,7 @@ const Header = () => {
           <UserOutlined />
           <span>Admin123456</span>
         </div>
-        <div className={css.headerToolItem}>
+        <div className={css.headerToolItem} onClick={handleLogOut}>
           <ImportOutlined />
           <span>Logout</span>
         </div>
