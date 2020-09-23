@@ -8,6 +8,7 @@ import { columns } from './tableConfig';
 import AddOrEdit from './addOrEdit';
 import * as Api from '../../api/mergeRequest';
 import { projectDetailApi } from '../../api';
+import * as BranchApi from '../../api/branch';
 
 const { Search } = Input;
 
@@ -84,7 +85,17 @@ const MergeRequest = (props: MergeRequestProps) => {
   };
 
   const goToBranchCompare = () => {
-    history.push(`/branch/compare/${projectId}`);
+    window.console.log(projectDetail);
+    getBranchList(projectId);
+  };
+
+  const getBranchList = async (id: number) => {
+    let result = await BranchApi.branchListApi(id);
+    const { success, data } = result;
+    if (success && data) {
+      let branchId = data[0].id;
+      history.push(`/branch/compare/${branchId}`);
+    }
   };
 
   return (

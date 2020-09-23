@@ -48,7 +48,7 @@ const Header = () => {
       <div className={css.headerRight}>
         <div className={css.headerToolItem} onClick={getUserInfo}>
           <UserOutlined />
-          <span>Admin123456</span>
+          <span>{sessionStorage.getItem('userName')}</span>
         </div>
         <div className={css.headerToolItem} onClick={handleLogOut}>
           <ImportOutlined />
