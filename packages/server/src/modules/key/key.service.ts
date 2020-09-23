@@ -243,7 +243,7 @@ export class KeyService {
       const filterMasterKeyList = [];
       masterKeyList.forEach(i => {
         const filter = branchKeyList.filter(j => j.keyName === i.keyName && j.namespaceId === i.namespaceId);
-        if ((filter.length = 0)) {
+        if (filter.length === 0) {
           filterMasterKeyList.push(i);
         }
       });
