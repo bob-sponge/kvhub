@@ -195,6 +195,7 @@ export interface LanguageValue {
 }
 
 export interface ItemKey {
+  branchId: number;
   keyId: number;
   keyName: string;
   refreLanguageValue: LanguageValue;

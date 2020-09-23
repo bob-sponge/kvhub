@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { ajax, initAjax } from '@ofm/ajax';
-import { Modal } from 'antd';
+import { Modal, message } from 'antd';
 import { CloseCircleOutlined } from '@ant-design/icons';
 import { getServerIp } from './url';
 import { history } from '@ofm/history';
@@ -77,18 +77,16 @@ ajax.interceptors.request.use(
 const jumpLogin = () => {
   sessionStorage.removeItem('userId');
   sessionStorage.removeItem('userType');
-  history.push('/login');
+  history.replace('/login');
 };
 
 // trasform axiosResponse to ajaxResponse
 ajax.interceptors.response.use(response => {
   let data = response.data;
-  // if (data && (data.sessionTimeout || !sessionStorage.getItem('username'))) {
-  //   window.location.replace('/');
-  // }
   if (data.success !== undefined && (data.success === false || data.success === null) && !!data.data) {
     if (data.data === 'Please Login First!') {
-      addErrorList(data.data, jumpLogin);
+      jumpLogin();
+      message.error('Please login first!');
     } else {
       addErrorList(data.data);
     }

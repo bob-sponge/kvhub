@@ -114,16 +114,20 @@ const LanguageBox: React.FC<LanguageBoxProps> = ({
             <KeyOutlined />
             <label className={css.boxTitle}>{currentKeyData ? currentKeyData.keyName : ''}</label>
           </div>
-          <Popover
-            placement="bottomRight"
-            onVisibleChange={handleVisibleChange}
-            visible={visible}
-            trigger="click"
-            content={settingContent}>
-            <div onClick={() => setVisible(true)}>
-              <Button className={css.settingIcon} icon={<SettingOutlined />} />
-            </div>
-          </Popover>
+          {currentKeyData.branchId === branchId ? (
+            <Popover
+              placement="bottomRight"
+              onVisibleChange={handleVisibleChange}
+              visible={visible}
+              trigger="click"
+              content={settingContent}>
+              <div onClick={() => setVisible(true)}>
+                <Button className={css.settingIcon} icon={<SettingOutlined />} />
+              </div>
+            </Popover>
+          ) : (
+            <Button disabled={true} className={css.settingIcon} icon={<SettingOutlined />} />
+          )}
         </div>
         <div className={css.language}>
           <div className={css.left}>

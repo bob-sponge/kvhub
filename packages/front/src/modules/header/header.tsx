@@ -3,6 +3,7 @@ import * as css from './styles/header.modules.less';
 import { UserOutlined, ImportOutlined } from '@ant-design/icons';
 import { Menu } from 'antd';
 import { history as browserHistory } from '@ofm/history';
+import * as Api from '../../api/login';
 
 const imgSrc = require('./header.png');
 
@@ -30,10 +31,13 @@ const Header = () => {
     browserHistory.push('/profile');
   };
 
-  const handleLogOut = () => {
-    sessionStorage.removeItem('userId');
-    sessionStorage.removeItem('userType');
-    browserHistory.push('/login');
+  const handleLogOut = async () => {
+    const result = await Api.logoutApi();
+    if (result.success) {
+      sessionStorage.removeItem('userId');
+      sessionStorage.removeItem('userType');
+      browserHistory.push('/login');
+    }
   };
 
   return (

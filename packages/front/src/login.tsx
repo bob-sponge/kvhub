@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback } from 'react';
 import { Input, Form, Button } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import * as css from '../src/style/login.modules.less';
@@ -10,7 +10,7 @@ const i18nLogo = require('./resource/logo-i18n.png');
 interface LoginProps {}
 
 const Login: React.FC<LoginProps> = () => {
-  const [showError, setErrorTips] = useState(false);
+  // const [showError, setErrorTips] = useState(false);
   const [form] = Form.useForm();
 
   const handleSubmit = useCallback(() => {
@@ -28,11 +28,11 @@ const Login: React.FC<LoginProps> = () => {
       sessionStorage.setItem('userType', data.admin);
       history.push('/dashboard');
     }
-    setErrorTips(true);
+    // setErrorTips(true);
   };
 
   const handleChange = (type: string) => {
-    setErrorTips(false);
+    // setErrorTips(false);
     // eslint-disable-next-line no-console
     console.log('type', type);
   };
@@ -59,7 +59,7 @@ const Login: React.FC<LoginProps> = () => {
                   onChange={() => handleChange('password')}
                 />
               </Form.Item>
-              {showError && <div className={css.apiTips}>Wrong username or password, please login again!</div>}
+              {/* {showError && <div className={css.apiTips}>Wrong username or password, please login again!</div>} */}
             </div>
           </Form>
           <div className={css.loginBtn}>
