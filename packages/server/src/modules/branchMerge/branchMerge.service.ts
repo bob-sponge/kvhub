@@ -380,6 +380,10 @@ export class BranchMergeService {
         }
       }
 
+      if (!isExist && !isDifferent) {
+        isDifferent = true;
+      }
+
       /* When the name of the key is inconsistent or
          when the same translation value of the key is different or
          when only a certain branch is translated,
@@ -429,7 +433,7 @@ export class BranchMergeService {
 
     // When crosmerge is true, the branches need to be compared with each other
     if (crosmerge != null && crosmerge) {
-      await this.diffKey(target, source, mergeId, false, sourceBranchId, targetBranchId);
+      await this.diffKey(target, source, mergeId, false, targetBranchId, sourceBranchId);
     }
   }
 
