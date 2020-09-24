@@ -15,7 +15,8 @@ export class NamespaceController {
   constructor(private readonly namespaceService: NamespaceService, private readonly branchService: BranchService) {}
 
   @Post('/save')
-  async save(@Body() vo: Namespace): Promise<ResponseBody> {
+  async save(@Body() vo: Namespace,@Request() req): Promise<ResponseBody> {
+    vo.modifier = req.cookies.token;
     await this.namespaceService.save(vo);
     return ResponseBody.ok();
   }

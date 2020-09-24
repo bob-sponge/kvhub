@@ -115,7 +115,7 @@ export class BranchService {
           targetIndex = j;
           targetKey = target[j];
           if (sourceKey.keyActualId === targetKey.keyActualId) {
-            //isExist = true;
+            isExist = true;
             if (sourceKey.keyName !== targetKey.keyName) {
               isDifferent = true;
             } else {
@@ -137,6 +137,10 @@ export class BranchService {
             }
           }
         }
+      }
+
+      if(!isExist && !isDifferent){
+        isDifferent = true;
       }
 
       /* When the name of the key is inconsistent or
@@ -205,7 +209,16 @@ export class BranchService {
     if (crosMerge) {
       const crosMergeResult = await this.diffKey(target, source, false);
       if (crosMergeResult !== null && crosMergeResult.length > 0) {
-        result = result.concat(crosMergeResult);
+        const mergeResult : CompareBranchVO[] = [];
+        crosMergeResult.forEach(r => {
+          const result = new CompareBranchVO();
+          if (r.target !== null){
+            result.source = r.target;
+          }
+          result.target = r.source;
+          mergeResult.push(result);
+        })
+        result = result.concat(mergeResult);
       }
     }
 
@@ -226,7 +239,7 @@ export class BranchService {
   }
 
   /**
-   * return true --> source === target / false source !== target
+   * return true --> source === target / false --> source !== target
    * @param source
    * @param target
    */
@@ -242,7 +255,7 @@ export class BranchService {
       return source.every(i => {
         const filterLanguage = target.filter(j => j.languageId === i.languageId);
         if (filterLanguage.length > 0) {
-          const filterValue = target.filter(j => j.languageId === i.languageId).filter(m => m.value !== i.value);
+          const filterValue = filterLanguage.filter(m => m.value !== i.value);
           return !(filterValue.length > 0);
         } else {
           return false;
@@ -464,7 +477,7 @@ export class BranchService {
       name: branchBody.name.trim(),
       projectId: branchBody.projectId,
       master: false,
-      modifier: this.config.get('constants', 'modifier'),
+      modifier: branchBody.user,
       modifyTime: new Date(),
     });
 

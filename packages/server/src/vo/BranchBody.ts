@@ -8,4 +8,6 @@ export class BranchBody {
   projectId: number;
 
   branchId:number;
+
+  user:string;
 }

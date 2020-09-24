@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Body, UsePipes, ValidationPipe, Post, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Body, UsePipes, ValidationPipe, Post, Delete, UseGuards, Request } from '@nestjs/common';
 import { Branch } from 'src/entities/Branch';
 import { BranchService } from './branch.service';
 import { ResponseBody } from 'src/vo/ResponseBody';
@@ -61,7 +61,8 @@ export class BranchController {
    */
   @Post('/save')
   @UsePipes(new ValidationPipe())
-  async addBranch(@Body() branchBody: BranchBody): Promise<ResponseBody> {
+  async addBranch(@Body() branchBody: BranchBody,@Request() req): Promise<ResponseBody> {
+    branchBody.user = req.cookies.token;
     await this.branchService.save(branchBody);
     return ResponseBody.okWithData('save branch success');
   }

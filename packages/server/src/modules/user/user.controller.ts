@@ -77,7 +77,8 @@ export class UserController {
       throw new BadRequestException(ErrorMessage.PLEASE_LOGIN_FIRST);
     }
     req.session.cookie.maxAge = 0;
-    res.cookie('token', null, 'permission', null, { maxAge: 0 });
+    res.cookie('token', null, { maxAge: 0 });
+    res.cookie('permission', null);
     res.status(HttpStatus.OK);
     res.setHeader('Content-Type', 'application/json;charset=UTF-8');
     return res.send(JSON.stringify(ResponseBody.okWithMsg('Logout success!')));
