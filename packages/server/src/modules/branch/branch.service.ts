@@ -226,7 +226,7 @@ export class BranchService {
   }
 
   /**
-   * return true --> source === target / false source !== target
+   * return true --> source === target / false --> source !== target
    * @param source
    * @param target
    */
@@ -242,7 +242,7 @@ export class BranchService {
       return source.every(i => {
         const filterLanguage = target.filter(j => j.languageId === i.languageId);
         if (filterLanguage.length > 0) {
-          const filterValue = target.filter(j => j.languageId === i.languageId).filter(m => m.value !== i.value);
+          const filterValue = filterLanguage.filter(m => m.value !== i.value);
           return !(filterValue.length > 0);
         } else {
           return false;
@@ -464,7 +464,7 @@ export class BranchService {
       name: branchBody.name.trim(),
       projectId: branchBody.projectId,
       master: false,
-      modifier: this.config.get('constants', 'modifier'),
+      modifier: branchBody.user,
       modifyTime: new Date(),
     });
 
