@@ -65,7 +65,7 @@ const CompareProject: React.SFC<CompareProjectProps> = (props: CompareProjectPro
         getCreateMerge(params);
       }
     });
-  }, [detail]);
+  }, [detail, isChange]);
 
   const getCreateMerge = async (params: any) => {
     setLoading(true);
