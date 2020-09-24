@@ -115,7 +115,7 @@ export class BranchService {
           targetIndex = j;
           targetKey = target[j];
           if (sourceKey.keyActualId === targetKey.keyActualId) {
-            //isExist = true;
+            isExist = true;
             if (sourceKey.keyName !== targetKey.keyName) {
               isDifferent = true;
             } else {
@@ -137,6 +137,10 @@ export class BranchService {
             }
           }
         }
+      }
+
+      if(!isExist && !isDifferent){
+        isDifferent = true;
       }
 
       /* When the name of the key is inconsistent or
@@ -205,7 +209,16 @@ export class BranchService {
     if (crosMerge) {
       const crosMergeResult = await this.diffKey(target, source, false);
       if (crosMergeResult !== null && crosMergeResult.length > 0) {
-        result = result.concat(crosMergeResult);
+        const mergeResult : CompareBranchVO[] = [];
+        crosMergeResult.forEach(r => {
+          const result = new CompareBranchVO();
+          if (r.target !== null){
+            result.source = r.target;
+          }
+          result.target = r.source;
+          mergeResult.push(result);
+        })
+        result = result.concat(mergeResult);
       }
     }
 

@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Param, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, UseGuards, Request } from '@nestjs/common';
 import { BranchMergeService } from './branchMerge.service';
 import { BranchMerge } from 'src/entities/BranchMerge';
 import { BranchMergeSearchVO } from 'src/vo/BranchMergeSearchVO';
@@ -34,7 +34,8 @@ export class BranchMergeController {
   }
 
   @Post('/save')
-  async save(@Body() vo: BranchMerge): Promise<ResponseBody> {
+  async save(@Body() vo: BranchMerge, @Request() req): Promise<ResponseBody> {
+    vo.modifier = req.cookies.token;
     return ResponseBody.okWithData(await this.branchMergeService.save(vo));
   }
 
