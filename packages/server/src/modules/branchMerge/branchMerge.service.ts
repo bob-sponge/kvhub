@@ -469,7 +469,7 @@ export class BranchMergeService {
    * merge
    * @param vo
    */
-  async merge(vo: BranchMergeSubmitVO) {
+  async merge(vo: BranchMergeSubmitVO, user: string) {
     const logger = Log4js.getLogger();
     logger.level = 'INFO';
     // check merge branch is exist or is created status!
@@ -510,7 +510,7 @@ export class BranchMergeService {
       for (let i = 0; i < paramMergeList.length; i++) {
         const paramMergeDiff = paramMergeList[i];
         if (paramMergeDiff.mergeDiffKey.selectBranchId !== null && paramMergeDiff.mergeDiffKey.selectBranchId > 0) {
-          await this.mergeKey(paramMergeDiff, branchMerge);
+          await this.mergeKey(paramMergeDiff, branchMerge, user);
         } else {
           throw new BadRequestException(ErrorMessage.BRANCH_MERGE_DIFF_KEY_NOT_SELECT_ALL);
         }
@@ -530,7 +530,7 @@ export class BranchMergeService {
    * @param diffVO
    * @param crosMerge
    */
-  private async mergeKey(diffVO: BranchMergeDiffVO, branchMerge: BranchMerge) {
+  private async mergeKey(diffVO: BranchMergeDiffVO, branchMerge: BranchMerge, user: string) {
     const time = new Date();
     const source = diffVO.source;
     const target = diffVO.target;
@@ -556,14 +556,14 @@ export class BranchMergeService {
 
     // save branch commit data
     let branchCommit = new BranchCommit();
-    branchCommit.branchId = target.branchId;
+    branchCommit.branchId = branchMerge.targetBranchId;
     branchCommit.commitId = branchMerge.commitId;
     branchCommit.commitTime = time;
     branchCommit.type = CommonConstant.COMMIT_TYPE_MERGE;
     await this.branchCommitRepository.save(branchCommit);
 
     if (branchMerge.crosMerge !== null && branchMerge.crosMerge) {
-      branchCommit.branchId = source.branchId;
+      branchCommit.branchId = branchMerge.sourceBranchId;
       branchCommit.commitId = branchMerge.commitId;
       branchCommit.commitTime = time;
       branchCommit.type = CommonConstant.COMMIT_TYPE_MERGE;
@@ -597,82 +597,133 @@ export class BranchMergeService {
         // 传入的分支不对
         throw new BadRequestException(ErrorMessage.BRANCH_NOT_EXIST);
       }
-    } else if (selectBranchId !== masterBranchId && notSelectBranchId === masterBranchId) {
+    } else if (
+      selectBranchId !== masterBranchId &&
+      (notSelectBranchId === masterBranchId || notSelectBranchId === null || notSelectBranchId === undefined)
+    ) {
       // 选中的分支不是 master 分支，另外一个分支是 master 分支
       // master 分支的 key不变，key name, key value 新增加，并绑定原有key
       // 另一个分支的 branch key 删除
       // 找出master 分支的 key name, 标记删除
-      let masterKeyName = null;
-      let noMasterKeyName = null;
-      if (selectSource) {
-        masterKeyName = await this.keynameRepository.findOne(target.keyNameId);
-        noMasterKeyName = await this.keynameRepository.findOne(source.keyNameId);
+      if (target === null || target === undefined) {
+        // 目标分支(master)的为空,不存在比较的key,直接写到master分支
+        // 插入key 表, 获取 key id.
+        const keyEntity = new Key();
+        keyEntity.modifier = user;
+        keyEntity.namespaceId = source.namespaceId;
+        keyEntity.modifyTime = time;
+        keyEntity.delete = false;
+        keyEntity.actualId = 0;
+        const insertKey = await this.keyRepository.insert(keyEntity);
+        const keyEntityId = insertKey.raw[0].id;
+        this.keyRepository.query(`update key set actual_id=${keyEntityId} where id=${keyEntityId}`);
+        // 插入 key branch 表
+        const branchKeyEntity = new BranchKey();
+        branchKeyEntity.branchId = branchMerge.targetBranchId;
+        branchKeyEntity.keyId = keyEntityId;
+        branchKeyEntity.delete = false;
+        await this.branchKeyRepository.insert(branchKeyEntity);
+        // 插入keyName 表,
+        const keyNameEntity = new Keyname();
+        keyNameEntity.keyId = keyEntityId;
+        keyNameEntity.modifier = user;
+        keyNameEntity.modifyTime = time;
+        keyNameEntity.name = source.keyname;
+        keyNameEntity.commitId = branchMerge.commitId;
+        // throw new Error('test transaction.');
+        await this.keynameRepository.insert(keyNameEntity);
+        let keyValueEntitys = [];
+        source.valueList.forEach(d => {
+          const languageId = d.languageId;
+          const value = d.value;
+          const keyValueEntity = new Keyvalue();
+          if (value === null || value === '' || value === undefined) {
+            keyValueEntity.value = ' ';
+          } else {
+            keyValueEntity.value = value;
+            keyValueEntity.keyId = keyEntityId;
+            keyValueEntity.commitId = branchMerge.commitId;
+            keyValueEntity.languageId = languageId;
+            keyValueEntity.latest = true;
+            keyValueEntity.modifier = user;
+            keyValueEntity.midifyTime = time;
+            keyValueEntitys.push(keyValueEntity);
+          }
+        });
+        await this.keyvalueRepository.insert(keyValueEntitys);
       } else {
-        masterKeyName = await this.keynameRepository.findOne(source.keyNameId);
-        noMasterKeyName = await this.keynameRepository.findOne(target.keyNameId);
-      }
-      masterKeyName.modifyTime = time;
-      masterKeyName.latest = false;
-      await this.keynameRepository.save(masterKeyName);
-      // 把另一个分支的name 复制过来
-      const newKeyname = masterKeyName;
-      newKeyname.commitId = branchMerge.commitId;
-      newKeyname.name = selectedKey.keyName;
-      newKeyname.latest = true;
-      await this.keynameRepository.save(newKeyname);
-
-      //  处理值
-      // 标记原来 master的值删除
-      let masterValues = [];
-      if (selectSource) {
-        const ids = target.valueList.map(item => item.valueId);
-        masterValues = await this.keyvalueRepository.findByIds(ids);
-      } else {
-        const ids = source.valueList.map(item => item.valueId);
-        masterValues = await this.keyvalueRepository.findByIds(ids);
-      }
-      masterValues.forEach(item => {
-        item.latest = false;
-        item.modifyTime = time;
-      });
-      await this.keyvalueRepository.save(masterValues);
-
-      // 把选中的值，赋予对应的语言的值
-      let valueList: Keyvalue[] = [];
-      selectedKey.valueList.forEach(item => {
-        if (masterValues.filter(m => m.languageId === item.languageId)) {
-          masterValues
-            .filter(m => m.languageId === item.languageId)
-            .map(n => {
-              const newValue = new Keyvalue();
-              newValue.keyId = n.keyId;
-              newValue.languageId = n.languageId;
-              newValue.value = item.value;
-              newValue.latest = true;
-              newValue.mergeId = branchMerge.id;
-              newValue.commitId = branchMerge.commitId;
-              valueList.push(newValue);
-            });
+        let masterKeyName = null;
+        let noMasterKeyName = null;
+        if (selectSource) {
+          masterKeyName = await this.keynameRepository.findOne(target.keyNameId);
+          noMasterKeyName = await this.keynameRepository.findOne(source.keyNameId);
         } else {
-          const newValue = new Keyvalue();
-          newValue.keyId = masterValues[0].keyId;
-          newValue.languageId = item.languageId;
-          newValue.value = item.value;
-          newValue.latest = true;
-          newValue.mergeId = branchMerge.id;
-          newValue.commitId = branchMerge.commitId;
-          valueList.push(newValue);
+          masterKeyName = await this.keynameRepository.findOne(source.keyNameId);
+          noMasterKeyName = await this.keynameRepository.findOne(target.keyNameId);
         }
-      });
-      await this.keyvalueRepository.save(valueList);
-      // 删除 另一个分支的 branch key
-      const branchKeys = await this.branchKeyRepository.find({
-        where: { branchId: selectBranchId, keyId: noMasterKeyName.keyId },
-      });
-      if (branchKeys !== null && branchKeys.length > 0) {
-        const bk = branchKeys[0];
-        bk.delete = true;
-        await this.branchKeyRepository.save(bk);
+        masterKeyName.modifyTime = time;
+        masterKeyName.latest = false;
+        await this.keynameRepository.save(masterKeyName);
+        // 把另一个分支的name 复制过来
+        const newKeyname = masterKeyName;
+        newKeyname.commitId = branchMerge.commitId;
+        newKeyname.name = selectedKey.keyName;
+        newKeyname.latest = true;
+        await this.keynameRepository.save(newKeyname);
+
+        //  处理值
+        // 标记原来 master的值删除
+        let masterValues = [];
+        if (selectSource) {
+          const ids = target.valueList.map(item => item.valueId);
+          masterValues = await this.keyvalueRepository.findByIds(ids);
+        } else {
+          const ids = source.valueList.map(item => item.valueId);
+          masterValues = await this.keyvalueRepository.findByIds(ids);
+        }
+        masterValues.forEach(item => {
+          item.latest = false;
+          item.modifyTime = time;
+        });
+        await this.keyvalueRepository.save(masterValues);
+
+        // 把选中的值，赋予对应的语言的值
+        let valueList: Keyvalue[] = [];
+        selectedKey.valueList.forEach(item => {
+          if (masterValues.filter(m => m.languageId === item.languageId)) {
+            masterValues
+              .filter(m => m.languageId === item.languageId)
+              .map(n => {
+                const newValue = new Keyvalue();
+                newValue.keyId = n.keyId;
+                newValue.languageId = n.languageId;
+                newValue.value = item.value;
+                newValue.latest = true;
+                newValue.mergeId = branchMerge.id;
+                newValue.commitId = branchMerge.commitId;
+                valueList.push(newValue);
+              });
+          } else {
+            const newValue = new Keyvalue();
+            newValue.keyId = masterValues[0].keyId;
+            newValue.languageId = item.languageId;
+            newValue.value = item.value;
+            newValue.latest = true;
+            newValue.mergeId = branchMerge.id;
+            newValue.commitId = branchMerge.commitId;
+            valueList.push(newValue);
+          }
+        });
+        await this.keyvalueRepository.save(valueList);
+        // 删除 另一个分支的 branch key
+        const branchKeys = await this.branchKeyRepository.find({
+          where: { branchId: selectBranchId, keyId: noMasterKeyName.keyId },
+        });
+        if (branchKeys !== null && branchKeys.length > 0) {
+          const bk = branchKeys[0];
+          bk.delete = true;
+          await this.branchKeyRepository.save(bk);
+        }
       }
     } else {
       // 处理 key name
