@@ -9,6 +9,7 @@ const TYPE_STATE = {
   '1': 'merged',
   '2': 'refused',
   '3': 'mergeing',
+  '4': 'failed',
 };
 
 export const columns = (onMerge: Function, onResufe: Function) => {
