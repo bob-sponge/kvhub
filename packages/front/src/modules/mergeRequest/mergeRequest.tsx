@@ -85,7 +85,6 @@ const MergeRequest = (props: MergeRequestProps) => {
   };
 
   const goToBranchCompare = () => {
-    window.console.log(projectDetail);
     getBranchList(projectId);
   };
 

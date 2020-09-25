@@ -53,22 +53,26 @@ const Merge = (props: ContainerProps) => {
   };
 
   const handleSubmit = useCallback(async () => {
-    const { id } = mergeDetail;
-    window.console.log('submit', mergeList);
+    const { id, projectId } = mergeDetail;
     let params = {
       mergeId: id,
       branchMergeDiffList: mergeList,
     };
     const result = await Api.branchMergeApi(params);
-    window.console.log(result);
+    const { success, data } = result;
+    if (success) {
+      message.success(data);
+      history.push(`/mergeRequest/${projectId}`);
+    }
   }, [mergeDetail, mergeList]);
 
   const handleRefuse = async () => {
-    const { id } = mergeDetail;
+    const { id, projectId } = mergeDetail;
     const result = await Api.branchMergeRefuseApi(id);
     const { success, data } = result;
     if (success) {
       message.success(data);
+      history.push(`/mergeRequest/${projectId}`);
     }
   };
 
