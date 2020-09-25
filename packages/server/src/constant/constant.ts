@@ -3,11 +3,13 @@
  */
 
 export class CommonConstant {
-  /* merge type
+  /*
+   * merge type
    * 0:created
    * 1:merged
    * 2:refused
    * 3:merging
+   * 4:failed
    */
   static MERGE_TYPE_CREATED = '0';
   static MERGE_TYPE_MERGED = '1';
