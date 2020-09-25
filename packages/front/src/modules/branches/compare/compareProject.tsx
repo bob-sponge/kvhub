@@ -100,6 +100,15 @@ const CompareProject: React.SFC<CompareProjectProps> = (props: CompareProjectPro
 
   const handleChange = () => {
     setIsChange(!isChange);
+    setDiffData([]);
+  };
+
+  const handleSource = () => {
+    setDiffData([]);
+  };
+
+  const hanleDestination = () => {
+    setDiffData([]);
   };
 
   return (
@@ -112,7 +121,7 @@ const CompareProject: React.SFC<CompareProjectProps> = (props: CompareProjectPro
                 label="Source"
                 name="source"
                 rules={[{ required: true, message: 'Please select source branch' }]}>
-                <Select style={{ width: '100%' }}>
+                <Select style={{ width: '100%' }} onChange={handleSource}>
                   {branchList &&
                     branchList.length > 0 &&
                     branchList.map((item: any) => {
@@ -144,7 +153,7 @@ const CompareProject: React.SFC<CompareProjectProps> = (props: CompareProjectPro
                 label="Destination"
                 name="destination"
                 rules={[{ required: true, message: 'Please select destination branch' }]}>
-                <Select style={{ width: '100%' }}>
+                <Select style={{ width: '100%' }} onChange={hanleDestination}>
                   {branchList &&
                     branchList.length > 0 &&
                     branchList.map((item: any) => {
@@ -163,7 +172,11 @@ const CompareProject: React.SFC<CompareProjectProps> = (props: CompareProjectPro
           <Button type="primary" icon={<PlusOutlined />} onClick={onCompare} style={{ marginRight: 16 }}>
             Compare
           </Button>
-          <Button type="primary" icon={<PlusOutlined />} onClick={onCreateMerge}>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={onCreateMerge}
+            disabled={diffData && diffData.length === 0}>
             Create Merge Request
           </Button>
         </div>
