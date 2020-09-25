@@ -77,9 +77,11 @@ export class BranchMergeService {
     branchList.forEach(branch => {
       if (branch.id === branchMergeVO.sourceBranchId) {
         branchMergeVO.sourceBranchName = branch.name;
+        branchMergeVO.projectId = branch.projectId;
       }
       if (branch.id === branchMergeVO.targetBranchId) {
         branchMergeVO.targetBranchName = branch.name;
+        branchMergeVO.projectId = branch.projectId;
       }
     });
     return branchMergeVO;

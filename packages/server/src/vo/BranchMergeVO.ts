@@ -3,10 +3,11 @@ export class BranchMergeVO {
   sourceBranchId: number | null;
   sourceBranchName: string | null;
   targetBranchId: number;
-  targetBranchName : string;
+  targetBranchName: string;
   crosMerge: boolean | null;
   type: string;
   commitId: string;
   modifier: string | null;
   modifyTime: Date | null;
+  projectId: number;
 }
