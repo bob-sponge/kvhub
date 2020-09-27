@@ -1,4 +1,4 @@
-import { Injectable, Session, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { User } from 'src/entities/User';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -32,8 +32,8 @@ export class UserService {
     return user;
   }
 
-  async reset(@Session() session, body: any): Promise<string> {
-    if (session.user.admin !== 0) {
+  async reset(admin: number, body: any): Promise<string> {
+    if (admin !== 0) {
       throw new BadRequestException(ErrorMessage.MUST_ADMIN);
     }
     const oldPass = body.oldPass;
@@ -51,6 +51,21 @@ export class UserService {
     return ErrorMessage.RESET_PASSWORD_SUCCESS;
   }
 
+  async resetoneuser(admin: number, body: any): Promise<string> {
+    if (admin !== 0) {
+      throw new BadRequestException(ErrorMessage.MUST_ADMIN);
+    }
+    const newPass = body.newPass;
+    const userId = body.userId;
+    let user: User;
+    if (null == userId || null == (user = await this.userRepository.findOne({ id: userId }))) {
+      throw new BadRequestException(ErrorMessage.USER_NOT_EXIST);
+    }
+    user.password = newPass;
+    await this.userRepository.save(user);
+    return ErrorMessage.RESET_PASSWORD_SUCCESS;
+  }
+
   async delete(id: number): Promise<string> {
     if (id == null || null == (await this.userRepository.findOne({ id: id }))) {
       throw new BadRequestException(ErrorMessage.USER_NOT_EXIST);
@@ -59,8 +74,8 @@ export class UserService {
     return ErrorMessage.DELETE_USER_SUCCESS;
   }
 
-  async set(@Session() session, id: number, level: number): Promise<string> {
-    if (session.user.admin !== 0) {
+  async set(admin: number, id: number, level: number): Promise<string> {
+    if (admin !== 0) {
       throw new BadRequestException(ErrorMessage.MUST_ADMIN);
     }
     let user: User;
@@ -95,6 +110,9 @@ export class UserService {
     if (user.password !== vo.password.trim()) {
       throw new BadRequestException(ErrorMessage.USER_OR_PASSWORD_IS_WRONG);
     }
+    const lastTime = new Date().toLocaleString();
+    const query = `update "public".user set last_time = '${lastTime}' where id = ${user.id}`;
+    await this.userRepository.query(query);
     return user;
   }
 

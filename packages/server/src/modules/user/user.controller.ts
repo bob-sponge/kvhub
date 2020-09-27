@@ -37,8 +37,18 @@ export class UserController {
 
   @Post('/reset')
   @Permission('reset')
-  async reset(@Session() session, @Body() body: any): Promise<ResponseBody> {
-    return ResponseBody.okWithMsg(await this.userService.reset(session, body));
+  async reset(@Session() session, @Body() body: any, @Request() req): Promise<ResponseBody> {
+    const admin: number = Number.parseInt(req.cookies.admin);
+    const result = await this.userService.reset(admin, body);
+    return ResponseBody.okWithMsg(result);
+  }
+
+  @Post('/reset/oneuser')
+  @Permission('reset')
+  async resetoneuser(@Session() session, @Body() body: any, @Request() req): Promise<ResponseBody> {
+    const admin: number = Number.parseInt(req.cookies.admin);
+    const result = await this.userService.resetoneuser(admin, body);
+    return ResponseBody.okWithMsg(result);
   }
 
   @Delete('/delete/:id')
@@ -49,8 +59,15 @@ export class UserController {
 
   @Get('/set/:id/:level')
   @Permission('set')
-  async set(@Session() session, @Param('id') id: number, @Param('level') level: number): Promise<ResponseBody> {
-    return ResponseBody.okWithMsg(await this.userService.set(session, id, level));
+  async set(
+    @Session() session,
+    @Param('id') id: number,
+    @Param('level') level: number,
+    @Request() req,
+  ): Promise<ResponseBody> {
+    const admin: number = Number.parseInt(req.cookies.admin);
+    const result = await this.userService.set(admin, id, level);
+    return ResponseBody.okWithMsg(result);
   }
 
   @Post('/login')

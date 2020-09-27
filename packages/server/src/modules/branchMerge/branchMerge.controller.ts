@@ -47,8 +47,9 @@ export class BranchMergeController {
 
   @Post('/merge')
   @Permission('merge')
-  async merge(@Body() vo: BranchMergeSubmitVO): Promise<ResponseBody> {
-    await this.branchMergeService.merge(vo);
+  async merge(@Body() vo: BranchMergeSubmitVO, @Request() req): Promise<ResponseBody> {
+    const currentUser = req.cookies.token;
+    await this.branchMergeService.merge(vo, currentUser);
     return ResponseBody.ok();
   }
 }

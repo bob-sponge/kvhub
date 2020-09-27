@@ -1,4 +1,15 @@
-import { Controller, Get, Param, Body, UsePipes, ValidationPipe, Post, Delete, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Body,
+  UsePipes,
+  ValidationPipe,
+  Post,
+  Delete,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { Branch } from 'src/entities/Branch';
 import { BranchService } from './branch.service';
 import { ResponseBody } from 'src/vo/ResponseBody';
@@ -11,7 +22,7 @@ import { Permission } from 'src/permission/permission.decorator';
 @Controller('branch')
 @UseGuards(PermissionGuard)
 export class BranchController {
-  constructor(private readonly branchService: BranchService) { }
+  constructor(private readonly branchService: BranchService) {}
 
   /**
    * 根据projectId查询branch
@@ -61,7 +72,7 @@ export class BranchController {
    */
   @Post('/save')
   @UsePipes(new ValidationPipe())
-  async addBranch(@Body() branchBody: BranchBody,@Request() req): Promise<ResponseBody> {
+  async addBranch(@Body() branchBody: BranchBody, @Request() req): Promise<ResponseBody> {
     branchBody.user = req.cookies.token;
     await this.branchService.save(branchBody);
     return ResponseBody.okWithData('save branch success');

@@ -97,72 +97,22 @@ export class BranchService {
     crosMerge: boolean,
   ): Promise<CompareBranchVO[]> {
     let result: CompareBranchVO[] = [];
-    for (let i = 0; i < source.length; i++) {
-      const sourceKey = source[i];
-      let targetKey = new KeyValueDetailVO();
 
-      let isExist = false;
-      let isDifferent = false;
-      let hasTarget = false;
-      let targetIndex = 0;
+    for (const item of source) {
+      let targetKey = new KeyValueDetailVO();
       const compareBranchVO = new CompareBranchVO();
       const sourceCompare = new CompareKeyVO();
       const targetCompare = new CompareKeyVO();
-
-      if (target !== null && target.length > 0) {
-        hasTarget = true;
-        for (let j = 0; j < target.length; j++) {
-          targetIndex = j;
-          targetKey = target[j];
-          if (sourceKey.keyActualId === targetKey.keyActualId) {
-            isExist = true;
-            if (sourceKey.keyName !== targetKey.keyName) {
-              isDifferent = true;
-            } else {
-              const valueCheck = this.checkValueVO(sourceKey.valueList, targetKey.valueList);
-              if (!valueCheck) {
-                isDifferent = true;
-              }
-            }
-            break;
-          } else {
-            // 存在一种情况，两个分支添加了同样的  keyname
-            if (sourceKey.keyName === targetKey.keyName && sourceKey.namespaceId === targetKey.namespaceId) {
-              const valueCheck = this.checkValueVO(sourceKey.valueList, targetKey.valueList);
-              //isExist = true;
-              if (!valueCheck) {
-                isDifferent = true;
-                break;
-              }
-            }
-          }
-        }
-      }
-
-      if(!isExist && !isDifferent){
-        isDifferent = true;
-      }
-
-      /* When the name of the key is inconsistent or
-         when the same translation value of the key is different or
-         when only a certain branch is translated,
-         need to add diffkey data */
-      if (isDifferent) {
+      const sourceKey = item;
+      // 如果在目标分支找不到 和源分支keyname 一样的，则表明diff 值只存在原始分支
+      const existedTargetKey = target.find(m => m.keyName === item.keyName && m.namespaceId === item.namespaceId);
+      if (existedTargetKey === undefined) {
+        // 表明不存在，只返回源
         sourceCompare.keyId = sourceKey.keyId;
         sourceCompare.keyname = sourceKey.keyName;
         const sNamespace = await this.namespaceRepository.findOne(sourceKey.namespaceId);
         if (sNamespace !== undefined && !sNamespace.delete) {
           sourceCompare.namespaceName = sNamespace.name;
-        }
-        if (targetKey !== null) {
-          targetCompare.keyId = targetKey.keyId;
-          targetCompare.keyname = targetKey.keyName;
-          if (targetKey.namespaceId !== undefined) {
-            const tNamespace = await this.namespaceRepository.findOne(targetKey.namespaceId);
-            if (tNamespace !== undefined && !tNamespace.delete) {
-              targetCompare.namespaceName = tNamespace.name;
-            }
-          }
         }
         const sourceValueList: CompareValueVO[] = [];
         if (sourceKey.valueList !== null && sourceKey.valueList.length > 0) {
@@ -176,48 +126,75 @@ export class BranchService {
           });
         }
         sourceCompare.valueList = sourceValueList;
-
-        const targetValueList: CompareValueVO[] = [];
-        if (hasTarget && targetKey.valueList !== null && targetKey.valueList.length > 0) {
-          targetKey.valueList.forEach(v => {
-            const diffValue = new CompareValueVO();
-            diffValue.languageId = v.languageId;
-            diffValue.valueId = v.valueId;
-            diffValue.value = v.value;
-            diffValue.language = v.languageName;
-            targetValueList.push(diffValue);
-          });
-        }
-        targetCompare.valueList = targetValueList;
-
         compareBranchVO.source = sourceCompare;
         compareBranchVO.target = targetCompare;
         result.push(compareBranchVO);
-      }
+      } else {
+        // 表明存在
+        targetKey = existedTargetKey;
+        const valueCheck = this.checkValueVO(sourceKey.valueList, targetKey.valueList);
+        if (!valueCheck) {
+          sourceCompare.keyId = sourceKey.keyId;
+          sourceCompare.keyname = sourceKey.keyName;
+          const sNamespace = await this.namespaceRepository.findOne(sourceKey.namespaceId);
+          if (sNamespace !== undefined && !sNamespace.delete) {
+            sourceCompare.namespaceName = sNamespace.name;
+          }
+          if (targetKey !== null) {
+            targetCompare.keyId = targetKey.keyId;
+            targetCompare.keyname = targetKey.keyName;
+            if (targetKey.namespaceId !== undefined) {
+              const tNamespace = await this.namespaceRepository.findOne(targetKey.namespaceId);
+              if (tNamespace !== undefined && !tNamespace.delete) {
+                targetCompare.namespaceName = tNamespace.name;
+              }
+            }
+          }
+          const sourceValueList: CompareValueVO[] = [];
+          if (sourceKey.valueList !== null && sourceKey.valueList.length > 0) {
+            sourceKey.valueList.forEach(v => {
+              const diffValue = new CompareValueVO();
+              diffValue.languageId = v.languageId;
+              diffValue.valueId = v.valueId;
+              diffValue.value = v.value;
+              diffValue.language = v.languageName;
+              sourceValueList.push(diffValue);
+            });
+          }
+          sourceCompare.valueList = sourceValueList;
 
-      // When source and target have the same key, delete both sides to reduce the number of cycles
-      if (isExist) {
-        source.splice(i, 1);
-        if (target.length > 0) {
-          target.splice(targetIndex, 1);
+          const targetValueList: CompareValueVO[] = [];
+          if (targetKey.valueList !== null && targetKey.valueList.length > 0) {
+            targetKey.valueList.forEach(v => {
+              const diffValue = new CompareValueVO();
+              diffValue.languageId = v.languageId;
+              diffValue.valueId = v.valueId;
+              diffValue.value = v.value;
+              diffValue.language = v.languageName;
+              targetValueList.push(diffValue);
+            });
+          }
+          targetCompare.valueList = targetValueList;
+
+          compareBranchVO.source = sourceCompare;
+          compareBranchVO.target = targetCompare;
+          result.push(compareBranchVO);
         }
-        i--;
       }
     }
-
     // When crosmerge is true, the branches need to be compared with each other
     if (crosMerge) {
       const crosMergeResult = await this.diffKey(target, source, false);
       if (crosMergeResult !== null && crosMergeResult.length > 0) {
-        const mergeResult : CompareBranchVO[] = [];
+        const mergeResult: CompareBranchVO[] = [];
         crosMergeResult.forEach(r => {
           const result = new CompareBranchVO();
-          if (r.target !== null){
+          if (r.target !== null) {
             result.source = r.target;
           }
           result.target = r.source;
           mergeResult.push(result);
-        })
+        });
         result = result.concat(mergeResult);
       }
     }
@@ -441,6 +418,7 @@ export class BranchService {
    */
   // eslint-disable-next-line @typescript-eslint/member-ordering
   async save(branchBody: BranchBody): Promise<void> {
+    const modifyTime = new Date();
     // 判断project_id 是否存在
     if ((await this.projectRepository.findOne({ id: branchBody.projectId })) === undefined) {
       throw new BadRequestException(ErrorMessage.PROJECT_NOT_EXIST);
@@ -478,7 +456,7 @@ export class BranchService {
       projectId: branchBody.projectId,
       master: false,
       modifier: branchBody.user,
-      modifyTime: new Date(),
+      modifyTime: modifyTime,
     });
 
     if (inheritBranch && !isMaster) {
@@ -487,7 +465,7 @@ export class BranchService {
       branchCommit.branchId = branch.id;
       branchCommit.commitId = commitId;
       branchCommit.type = CommonConstant.COMMIT_TYPE_ADD;
-      branchCommit.commitTime = new Date();
+      branchCommit.commitTime = modifyTime;
       await this.branchCommitRepository.save(branchCommit);
 
       const branchKeyList = await this.branchKeyRepository.find({ where: { branchId: branchBody.branchId } });
@@ -513,16 +491,26 @@ export class BranchService {
             newKey.actualId = key.actualId;
             newKey.namespaceId = key.namespaceId;
             newKey.delete = false;
+            newKey.modifier = branchBody.user;
+            newKey.modifyTime = modifyTime;
             newKey = await this.keyRepository.save(newKey);
-            const keyNameList = await this.keynameRepository.find({ where: { keyId } });
+            // 需要更新 branch key的key id为新的 key id
+            // eslint-disable-next-line max-len
+            const updateBranchKeySql = `update branch_key set key_id = ${newKey.id} where key_id=${key.id} and delete = false and branch_id=${branch.id}`;
+            await this.branchKeyRepository.query(updateBranchKeySql);
+            const keyNameList = await this.keynameRepository.query(
+              `select * from keyname where key_id=${key.id} and latest = true`,
+            );
             if (keyNameList !== null && keyNameList.length > 0) {
-            } else {
               const keyname = keyNameList[0];
               if (keyname !== undefined) {
                 let newKeyname = new Keyname();
                 newKeyname.keyId = newKey.id;
                 newKeyname.name = keyname.name;
                 newKeyname.commitId = commitId;
+                newKeyname.latest = true;
+                newKeyname.modifier = branchBody.user;
+                newKeyname.modifyTime = modifyTime;
                 await this.keynameRepository.save(newKeyname);
               }
             }
@@ -537,6 +525,8 @@ export class BranchService {
                 newKv.value = kv.value;
                 newKv.latest = true;
                 newKv.commitId = commitId;
+                newKv.modifier = branchBody.user;
+                newKv.midifyTime = modifyTime;
                 newKeyvalueList.push(newKv);
               });
               await this.keyvalueRepository.save(newKeyvalueList);
