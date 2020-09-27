@@ -97,72 +97,22 @@ export class BranchService {
     crosMerge: boolean,
   ): Promise<CompareBranchVO[]> {
     let result: CompareBranchVO[] = [];
-    for (let i = 0; i < source.length; i++) {
-      const sourceKey = source[i];
-      let targetKey = new KeyValueDetailVO();
 
-      let isExist = false;
-      let isDifferent = false;
-      let hasTarget = false;
-      let targetIndex = 0;
+    for (const item of source) {
+      let targetKey = new KeyValueDetailVO();
       const compareBranchVO = new CompareBranchVO();
       const sourceCompare = new CompareKeyVO();
       const targetCompare = new CompareKeyVO();
-
-      if (target !== null && target.length > 0) {
-        hasTarget = true;
-        for (let j = 0; j < target.length; j++) {
-          targetIndex = j;
-          targetKey = target[j];
-          if (sourceKey.keyActualId === targetKey.keyActualId) {
-            isExist = true;
-            if (sourceKey.keyName !== targetKey.keyName) {
-              isDifferent = true;
-            } else {
-              const valueCheck = this.checkValueVO(sourceKey.valueList, targetKey.valueList);
-              if (!valueCheck) {
-                isDifferent = true;
-              }
-            }
-            break;
-          } else {
-            // 存在一种情况，两个分支添加了同样的  keyname
-            if (sourceKey.keyName === targetKey.keyName && sourceKey.namespaceId === targetKey.namespaceId) {
-              const valueCheck = this.checkValueVO(sourceKey.valueList, targetKey.valueList);
-              //isExist = true;
-              if (!valueCheck) {
-                isDifferent = true;
-                break;
-              }
-            }
-          }
-        }
-      }
-
-      if(!isExist && !isDifferent){
-        isDifferent = true;
-      }
-
-      /* When the name of the key is inconsistent or
-         when the same translation value of the key is different or
-         when only a certain branch is translated,
-         need to add diffkey data */
-      if (isDifferent) {
+      const sourceKey = item;
+      // 如果在目标分支找不到 和源分支keyname 一样的，则表明diff 值只存在原始分支
+      const existedTargetKey = target.find(m => m.keyName === item.keyName && m.namespaceId === item.namespaceId);
+      if (existedTargetKey === undefined) {
+        // 表明不存在，只返回源
         sourceCompare.keyId = sourceKey.keyId;
         sourceCompare.keyname = sourceKey.keyName;
         const sNamespace = await this.namespaceRepository.findOne(sourceKey.namespaceId);
         if (sNamespace !== undefined && !sNamespace.delete) {
           sourceCompare.namespaceName = sNamespace.name;
-        }
-        if (targetKey !== null) {
-          targetCompare.keyId = targetKey.keyId;
-          targetCompare.keyname = targetKey.keyName;
-          if (targetKey.namespaceId !== undefined) {
-            const tNamespace = await this.namespaceRepository.findOne(targetKey.namespaceId);
-            if (tNamespace !== undefined && !tNamespace.delete) {
-              targetCompare.namespaceName = tNamespace.name;
-            }
-          }
         }
         const sourceValueList: CompareValueVO[] = [];
         if (sourceKey.valueList !== null && sourceKey.valueList.length > 0) {
@@ -176,48 +126,75 @@ export class BranchService {
           });
         }
         sourceCompare.valueList = sourceValueList;
-
-        const targetValueList: CompareValueVO[] = [];
-        if (hasTarget && targetKey.valueList !== null && targetKey.valueList.length > 0) {
-          targetKey.valueList.forEach(v => {
-            const diffValue = new CompareValueVO();
-            diffValue.languageId = v.languageId;
-            diffValue.valueId = v.valueId;
-            diffValue.value = v.value;
-            diffValue.language = v.languageName;
-            targetValueList.push(diffValue);
-          });
-        }
-        targetCompare.valueList = targetValueList;
-
         compareBranchVO.source = sourceCompare;
         compareBranchVO.target = targetCompare;
         result.push(compareBranchVO);
-      }
+      } else {
+        // 表明存在
+        targetKey = existedTargetKey;
+        const valueCheck = this.checkValueVO(sourceKey.valueList, targetKey.valueList);
+        if (!valueCheck) {
+          sourceCompare.keyId = sourceKey.keyId;
+          sourceCompare.keyname = sourceKey.keyName;
+          const sNamespace = await this.namespaceRepository.findOne(sourceKey.namespaceId);
+          if (sNamespace !== undefined && !sNamespace.delete) {
+            sourceCompare.namespaceName = sNamespace.name;
+          }
+          if (targetKey !== null) {
+            targetCompare.keyId = targetKey.keyId;
+            targetCompare.keyname = targetKey.keyName;
+            if (targetKey.namespaceId !== undefined) {
+              const tNamespace = await this.namespaceRepository.findOne(targetKey.namespaceId);
+              if (tNamespace !== undefined && !tNamespace.delete) {
+                targetCompare.namespaceName = tNamespace.name;
+              }
+            }
+          }
+          const sourceValueList: CompareValueVO[] = [];
+          if (sourceKey.valueList !== null && sourceKey.valueList.length > 0) {
+            sourceKey.valueList.forEach(v => {
+              const diffValue = new CompareValueVO();
+              diffValue.languageId = v.languageId;
+              diffValue.valueId = v.valueId;
+              diffValue.value = v.value;
+              diffValue.language = v.languageName;
+              sourceValueList.push(diffValue);
+            });
+          }
+          sourceCompare.valueList = sourceValueList;
 
-      // When source and target have the same key, delete both sides to reduce the number of cycles
-      if (isExist) {
-        source.splice(i, 1);
-        if (target.length > 0) {
-          target.splice(targetIndex, 1);
+          const targetValueList: CompareValueVO[] = [];
+          if (targetKey.valueList !== null && targetKey.valueList.length > 0) {
+            targetKey.valueList.forEach(v => {
+              const diffValue = new CompareValueVO();
+              diffValue.languageId = v.languageId;
+              diffValue.valueId = v.valueId;
+              diffValue.value = v.value;
+              diffValue.language = v.languageName;
+              targetValueList.push(diffValue);
+            });
+          }
+          targetCompare.valueList = targetValueList;
+
+          compareBranchVO.source = sourceCompare;
+          compareBranchVO.target = targetCompare;
+          result.push(compareBranchVO);
         }
-        i--;
       }
     }
-
     // When crosmerge is true, the branches need to be compared with each other
     if (crosMerge) {
       const crosMergeResult = await this.diffKey(target, source, false);
       if (crosMergeResult !== null && crosMergeResult.length > 0) {
-        const mergeResult : CompareBranchVO[] = [];
+        const mergeResult: CompareBranchVO[] = [];
         crosMergeResult.forEach(r => {
           const result = new CompareBranchVO();
-          if (r.target !== null){
+          if (r.target !== null) {
             result.source = r.target;
           }
           result.target = r.source;
           mergeResult.push(result);
-        })
+        });
         result = result.concat(mergeResult);
       }
     }
