@@ -26,15 +26,15 @@ const DiffItem: React.SFC<DiffProps> = (props: DiffProps) => {
               {source.valueList &&
                 source.valueList.length > 0 &&
                 source.valueList.map((list: any, index: number) => {
-                  let targetIndex = -1;
-                  if (Object.keys(target).length > 0) {
-                    targetIndex = target.valueList.findIndex((item: any) => item.languageId === list.languageId);
-                  }
+                  const targetIndex =
+                    target.valueList &&
+                    target.valueList.length > 0 &&
+                    target.valueList.findIndex((item: any) => item.languageId === list.languageId);
                   return (
                     <div className={css.keyList} key={index}>
                       <div className={css.language}>{list.language}</div>
                       <div className={css.name}>
-                        {targetIndex !== -1 ? (
+                        {targetIndex !== -1 && target.valueList && target.valueList.length > 0 ? (
                           <CompareDiff source={target.valueList[index].value} target={list.value} />
                         ) : (
                           <CompareDiff source={''} target={list.value} />
@@ -56,12 +56,15 @@ const DiffItem: React.SFC<DiffProps> = (props: DiffProps) => {
               {target.valueList &&
                 target.valueList.length > 0 &&
                 target.valueList.map((list: any, index: number) => {
-                  const sourceIndex = source.valueList.findIndex((item: any) => item.languageId === list.languageId);
+                  const sourceIndex =
+                    source.valueList &&
+                    source.valueList.length > 0 &&
+                    source.valueList.findIndex((item: any) => item.languageId === list.languageId);
                   return (
                     <div className={css.keyList} key={index}>
                       <div className={css.language}>{list.language}</div>
                       <div className={css.name}>
-                        {sourceIndex !== -1 ? (
+                        {sourceIndex !== -1 && source.valueList && source.valueList.length > 0 ? (
                           <CompareDiff source={source.valueList[index].value} target={list.value} />
                         ) : (
                           <CompareDiff source={''} target={list.value} />
