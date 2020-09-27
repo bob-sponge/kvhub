@@ -418,6 +418,7 @@ export class BranchService {
    */
   // eslint-disable-next-line @typescript-eslint/member-ordering
   async save(branchBody: BranchBody): Promise<void> {
+    const modifyTime = new Date();
     // 判断project_id 是否存在
     if ((await this.projectRepository.findOne({ id: branchBody.projectId })) === undefined) {
       throw new BadRequestException(ErrorMessage.PROJECT_NOT_EXIST);
@@ -455,7 +456,7 @@ export class BranchService {
       projectId: branchBody.projectId,
       master: false,
       modifier: branchBody.user,
-      modifyTime: new Date(),
+      modifyTime: modifyTime,
     });
 
     if (inheritBranch && !isMaster) {
@@ -464,7 +465,7 @@ export class BranchService {
       branchCommit.branchId = branch.id;
       branchCommit.commitId = commitId;
       branchCommit.type = CommonConstant.COMMIT_TYPE_ADD;
-      branchCommit.commitTime = new Date();
+      branchCommit.commitTime = modifyTime;
       await this.branchCommitRepository.save(branchCommit);
 
       const branchKeyList = await this.branchKeyRepository.find({ where: { branchId: branchBody.branchId } });
@@ -490,16 +491,26 @@ export class BranchService {
             newKey.actualId = key.actualId;
             newKey.namespaceId = key.namespaceId;
             newKey.delete = false;
+            newKey.modifier = branchBody.user;
+            newKey.modifyTime = modifyTime;
             newKey = await this.keyRepository.save(newKey);
-            const keyNameList = await this.keynameRepository.find({ where: { keyId } });
+            // 需要更新 branch key的key id为新的 key id
+            // eslint-disable-next-line max-len
+            const updateBranchKeySql = `update branch_key set key_id = ${newKey.id} where key_id=${key.id} and delete = false and branch_id=${branch.id}`;
+            await this.branchKeyRepository.query(updateBranchKeySql);
+            const keyNameList = await this.keynameRepository.query(
+              `select * from keyname where key_id=${key.id} and latest = true`,
+            );
             if (keyNameList !== null && keyNameList.length > 0) {
-            } else {
               const keyname = keyNameList[0];
               if (keyname !== undefined) {
                 let newKeyname = new Keyname();
                 newKeyname.keyId = newKey.id;
                 newKeyname.name = keyname.name;
                 newKeyname.commitId = commitId;
+                newKeyname.latest = true;
+                newKeyname.modifier = branchBody.user;
+                newKeyname.modifyTime = modifyTime;
                 await this.keynameRepository.save(newKeyname);
               }
             }
@@ -514,6 +525,8 @@ export class BranchService {
                 newKv.value = kv.value;
                 newKv.latest = true;
                 newKv.commitId = commitId;
+                newKv.modifier = branchBody.user;
+                newKv.midifyTime = modifyTime;
                 newKeyvalueList.push(newKv);
               });
               await this.keyvalueRepository.save(newKeyvalueList);
