@@ -139,7 +139,7 @@ export class BranchService {
         }
       }
 
-      if(!isExist && !isDifferent){
+      if (!isExist && !isDifferent) {
         isDifferent = true;
       }
 
@@ -209,15 +209,15 @@ export class BranchService {
     if (crosMerge) {
       const crosMergeResult = await this.diffKey(target, source, false);
       if (crosMergeResult !== null && crosMergeResult.length > 0) {
-        const mergeResult : CompareBranchVO[] = [];
+        const mergeResult: CompareBranchVO[] = [];
         crosMergeResult.forEach(r => {
           const result = new CompareBranchVO();
-          if (r.target !== null){
+          if (r.target !== null) {
             result.source = r.target;
           }
           result.target = r.source;
           mergeResult.push(result);
-        })
+        });
         result = result.concat(mergeResult);
       }
     }

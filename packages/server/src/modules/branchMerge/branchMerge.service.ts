@@ -605,7 +605,7 @@ export class BranchMergeService {
       // master 分支的 key不变，key name, key value 新增加，并绑定原有key
       // 另一个分支的 branch key 删除
       // 找出master 分支的 key name, 标记删除
-      if (target === null || target === undefined) {
+      if (target === null || target === undefined || Object.keys(target).length === 0) {
         // 目标分支(master)的为空,不存在比较的key,直接写到master分支
         // 插入key 表, 获取 key id.
         const keyEntity = new Key();
