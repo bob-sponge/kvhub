@@ -26,7 +26,10 @@ const DiffItem: React.SFC<DiffProps> = (props: DiffProps) => {
               {source.valueList &&
                 source.valueList.length > 0 &&
                 source.valueList.map((list: any, index: number) => {
-                  const targetIndex = target.valueList.findIndex((item: any) => item.languageId === list.languageId);
+                  let targetIndex = -1;
+                  if (Object.keys(target).length > 0) {
+                    targetIndex = target.valueList.findIndex((item: any) => item.languageId === list.languageId);
+                  }
                   return (
                     <div className={css.keyList} key={index}>
                       <div className={css.language}>{list.language}</div>

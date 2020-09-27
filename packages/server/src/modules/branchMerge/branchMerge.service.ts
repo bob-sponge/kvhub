@@ -343,59 +343,18 @@ export class BranchMergeService {
     sourceBranchId: number,
     targetBranchId: number,
   ) {
-    for (let i = 0; i < source.length; i++) {
-      const sourceKey = source[i];
-
+    for (const item of source) {
       let targetKey = new KeyValueDetailVO();
-      let isExist = false;
-      let isDifferent = false;
-      let hasTarget = false;
-      let targetIndex = 0;
-
-      if (target !== null && target.length > 0) {
-        hasTarget = true;
-        for (let j = 0; j < target.length; j++) {
-          targetIndex = j;
-          targetKey = target[j];
-          if (sourceKey.keyActualId === targetKey.keyActualId) {
-            isExist = true;
-            if (sourceKey.keyName !== targetKey.keyName) {
-              isDifferent = true;
-            } else {
-              const valueCheck = this.checkValueVO(sourceKey.valueList, targetKey.valueList);
-              if (!valueCheck) {
-                isDifferent = true;
-              }
-            }
-            break;
-          } else {
-            // 存在一种情况，两个分支添加了同样的  keyname
-            if (sourceKey.keyName === targetKey.keyName && sourceKey.namespaceId === targetKey.namespaceId) {
-              const valueCheck = this.checkValueVO(sourceKey.valueList, targetKey.valueList);
-              isExist = true;
-              if (!valueCheck) {
-                isDifferent = true;
-                break;
-              }
-            }
-          }
-        }
-      }
-
-      if (!isExist && !isDifferent) {
-        isDifferent = true;
-      }
-
-      /* When the name of the key is inconsistent or
-         when the same translation value of the key is different or
-         when only a certain branch is translated,
-         need to add diffkey data */
-      if (isDifferent) {
+      let diffValueList: MergeDiffValue[] = [];
+      const sourceKey = item;
+      // 如果在目标分支找不到 和源分支keyname 一样的，则表明diff 值只存在原始分支
+      const existedTargetKey = target.find(m => m.keyName === item.keyName && m.namespaceId === item.namespaceId);
+      if (existedTargetKey === undefined) {
+        // 表明不存在，只返回源
         let mergeDiffKey = new MergeDiffKey();
         mergeDiffKey.mergeId = mergeId;
         mergeDiffKey.key = sourceKey.keyActualId;
         mergeDiffKey = await this.mergeDiffKeyRepository.save(mergeDiffKey);
-        let diffValueList: MergeDiffValue[] = [];
         if (sourceKey.valueList !== null && sourceKey.valueList.length > 0) {
           sourceKey.valueList.forEach(v => {
             let diffValue = new MergeDiffValue();
@@ -407,29 +366,42 @@ export class BranchMergeService {
             diffValueList.push(diffValue);
           });
         }
-        if (hasTarget && targetKey.valueList !== null && targetKey.valueList.length > 0) {
-          targetKey.valueList.forEach(v => {
-            let diffValue = new MergeDiffValue();
-            diffValue.languageId = v.languageId;
-            diffValue.mergeDiffKeyId = mergeDiffKey.id;
-            diffValue.valueId = v.valueId;
-            diffValue.keyId = targetKey.keyId;
-            diffValue.branchId = targetBranchId;
-            diffValueList.push(diffValue);
-          });
-        }
-        if (diffValueList.length > 0) {
-          await this.mergeDiffValueRepository.save(diffValueList);
+      } else {
+        // 表明存在
+        targetKey = existedTargetKey;
+        const valueCheck = this.checkValueVO(sourceKey.valueList, targetKey.valueList);
+        if (!valueCheck) {
+          let mergeDiffKey = new MergeDiffKey();
+          mergeDiffKey.mergeId = mergeId;
+          mergeDiffKey.key = sourceKey.keyActualId;
+          mergeDiffKey = await this.mergeDiffKeyRepository.save(mergeDiffKey);
+
+          if (sourceKey.valueList !== null && sourceKey.valueList.length > 0) {
+            sourceKey.valueList.forEach(v => {
+              let diffValue = new MergeDiffValue();
+              diffValue.languageId = v.languageId;
+              diffValue.mergeDiffKeyId = mergeDiffKey.id;
+              diffValue.valueId = v.valueId;
+              diffValue.keyId = sourceKey.keyId;
+              diffValue.branchId = sourceBranchId;
+              diffValueList.push(diffValue);
+            });
+          }
+          if (targetKey.valueList !== null && targetKey.valueList.length > 0) {
+            targetKey.valueList.forEach(v => {
+              let diffValue = new MergeDiffValue();
+              diffValue.languageId = v.languageId;
+              diffValue.mergeDiffKeyId = mergeDiffKey.id;
+              diffValue.valueId = v.valueId;
+              diffValue.keyId = targetKey.keyId;
+              diffValue.branchId = targetBranchId;
+              diffValueList.push(diffValue);
+            });
+          }
         }
       }
-
-      // When source and target have the same key, delete both sides to reduce the number of cycles
-      if (isExist) {
-        source.splice(i, 1);
-        if (target.length > 0) {
-          target.splice(targetIndex, 1);
-        }
-        i--;
+      if (diffValueList.length > 0) {
+        await this.mergeDiffValueRepository.save(diffValueList);
       }
     }
 
