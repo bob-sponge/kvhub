@@ -110,6 +110,9 @@ export class UserService {
     if (user.password !== vo.password.trim()) {
       throw new BadRequestException(ErrorMessage.USER_OR_PASSWORD_IS_WRONG);
     }
+    const lastTime = new Date().toLocaleString();
+    const query = `update "public".user set last_time = '${lastTime}' where id = ${user.id}`;
+    await this.userRepository.query(query);
     return user;
   }
 
