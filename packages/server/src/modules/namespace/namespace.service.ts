@@ -79,6 +79,22 @@ export class NamespaceService {
       if (keyNameInfo.filter(a => a.name === keyName.trim()).length > 0) {
         throw new Error(`Key id get name is equals key name ${keyName}`);
       }
+      // 判断重复问题
+      // 查找当前key的namespce id 和 branch id
+      const namespaceId = await this.keyRepository.query(`select namespace_id from key where id =${keyId}`);
+      const branchId = await this.keyRepository.query(`select branch_id from branch_key where key_id= ${keyId}`);
+      // 查找输入名字的一致的 namespace ids 和 branch ids
+      const namespaceIds = await this.keyRepository.query(
+        `select DISTINCT namespace_id from key where id in (select key_id from keyname where name='${keyName}' and latest=true) and "delete"=false`,
+      );
+      const branchIds = await this.keyRepository.query(
+        `select DISTINCT branch_id from branch_key where key_id in (select key_id from keyname where name='${keyName}' and latest=true) and delete =false`,
+      );
+      const c1 = branchIds.filter(item => item.branch_id === branchId[0].branch_id);
+      const c2 = namespaceIds.filter(item => item.namespace_id === namespaceId[0].namespace_id);
+      if (c1.length > 0 && c2.length > 0) {
+        throw new Error(`key name ${keyName} already exist!`);
+      }
       const oldKeyNameId = keyNameInfo[0].id;
       // key 表不动，key name 增加，key value 增加
       // todo branch commit record
