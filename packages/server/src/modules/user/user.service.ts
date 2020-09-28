@@ -18,6 +18,10 @@ export class UserService {
     const total = await this.userRepository.count();
     const start = (pageNo - 1) * pageSize;
     const data = await this.userRepository.query(`SELECT * FROM public.\"user\" offset ${start} limit ${pageSize}`);
+    data.forEach(element => {
+      const time = element.last_time;
+      element.lastTimestamp = time.getTime();
+    });
     return {
       total: total,
       rows: data,
@@ -29,6 +33,8 @@ export class UserService {
     if (user == null) {
       throw new BadRequestException(ErrorMessage.USER_NOT_EXIST_IN_DB);
     }
+    const time = user.lastTime;
+    user.lastTimestamp = time.getTime();
     return user;
   }
 
