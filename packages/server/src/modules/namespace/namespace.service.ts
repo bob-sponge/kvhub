@@ -75,7 +75,9 @@ export class NamespaceService {
     // await queryRunner.connect();
     // await queryRunner.startTransaction();
     try {
-      const keyNameInfo = await this.keyRepository.query(`select * from keyname where key_id = ${keyId}`);
+      const keyNameInfo = await this.keyRepository.query(
+        `select * from keyname where key_id = ${keyId} and latest=true`,
+      );
       if (keyNameInfo.filter(a => a.name === keyName.trim()).length > 0) {
         throw new Error(`Key id get name is equals key name ${keyName}`);
       }
