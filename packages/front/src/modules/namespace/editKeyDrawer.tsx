@@ -44,6 +44,7 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
     }
     setPopoverVisible(false);
     refreshList();
+    onClose();
   }, [currKeyItem]);
 
   const getEditTitle = useCallback(() => {
