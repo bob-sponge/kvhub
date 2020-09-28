@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { ajax, initAjax } from '@ofm/ajax';
-import { Modal, message } from 'antd';
+import { message, Modal } from 'antd';
 import { CloseCircleOutlined } from '@ant-design/icons';
 import { getServerIp } from './url';
 import { history } from '@ofm/history';
@@ -9,6 +9,7 @@ import { history } from '@ofm/history';
 let baseURL = '';
 const errorList: any[] = [];
 let isShowingError = false;
+let showLoginTips = false;
 
 const showError = (cb?: Function) => {
   if (isShowingError || errorList.length === 0) {
@@ -85,8 +86,11 @@ ajax.interceptors.response.use(response => {
   let data = response.data;
   if (data.success !== undefined && (data.success === false || data.success === null) && !!data.data) {
     if (data.data === 'Please Login First!') {
+      if (!showLoginTips) {
+        showLoginTips = true;
+        message.warn('Please login first!');
+      }
       jumpLogin();
-      message.error('Please login first!');
     } else {
       addErrorList(data.data);
     }
