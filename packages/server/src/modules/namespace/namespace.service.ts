@@ -967,7 +967,7 @@ export class NamespaceService {
               WHERE id IN (
                   SELECT key_id
                   FROM keyname
-                  WHERE name = '${keyName}' and namespace_id = '${namespaceId}'
+                  WHERE name = '${keyName}' and namespace_id = '${namespaceId}' and latest = true
                 )
                 AND delete IS false
             )
