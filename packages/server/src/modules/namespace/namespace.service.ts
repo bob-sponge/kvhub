@@ -469,7 +469,7 @@ export class NamespaceService {
         SELECT project_id
         FROM namespace
         WHERE id = ${id}
-      )
+      ) and delete = false
     )
     `;
     logger.info(`query2 is ${languageQuery}`);
