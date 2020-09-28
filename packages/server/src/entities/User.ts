@@ -29,4 +29,6 @@ export class User {
 
   @Column({ name: 'last_time', nullable: true })
   lastTime: Date | null;
+
+  lastTimestamp: number;
 }
