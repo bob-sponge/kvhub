@@ -46,7 +46,7 @@ const Header = () => {
         <img src={imgSrc} />
         <Menu onClick={handleClick} selectedKeys={[selectTab]} mode="horizontal">
           <Menu.Item key="translation">Translation</Menu.Item>
-          <Menu.Item key="user">User Management</Menu.Item>
+          {sessionStorage.getItem('userType') === '0' && <Menu.Item key="user">User Management</Menu.Item>}
         </Menu>
       </div>
       <div className={css.headerRight}>

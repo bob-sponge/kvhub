@@ -120,7 +120,7 @@ const User: React.SFC<UserProps> = (_props: UserProps) => {
   }, [resetPwd]);
 
   const reset = async (params: any) => {
-    let result = await Api.resetPwdApi(params);
+    let result = await Api.resetOnePwdApi(params);
     const { success, data } = result;
     if (success) {
       message.success(data);
@@ -161,13 +161,6 @@ const User: React.SFC<UserProps> = (_props: UserProps) => {
         </div>
         <Modal destroyOnClose={true} title="Reset Password" visible={visible} onOk={handleOk} onCancel={handleCancel}>
           <Form form={form} name="basic" layout="vertical" initialValues={{ remember: true }}>
-            <Form.Item
-              label="Old Password"
-              name="oldPass"
-              rules={[{ required: true, message: 'Please input your old password!' }]}>
-              <Input onChange={() => onContentChange('oldPass')} />
-            </Form.Item>
-
             <Form.Item
               label="New Password"
               name="newPass"
