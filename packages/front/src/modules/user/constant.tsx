@@ -41,9 +41,9 @@ export const columns = (onDelete: Function, onReset: Function, setAdmin: Functio
       },
     },
     {
-      key: 'lastTime',
+      key: 'lastTimestamp',
       title: 'Lastest Login',
-      dataIndex: 'lastTime',
+      dataIndex: 'lastTimestamp',
       render: (text: any) => {
         if (text) {
           return timeAgo(text);
@@ -65,26 +65,15 @@ export const columns = (onDelete: Function, onReset: Function, setAdmin: Functio
           permissions.push(permissions);
         }
         return (
-          <div className={css.operation}>
-            {permissions &&
-              permissions.length > 0 &&
-              sessionStorage.getItem('userType') === '0' &&
-              permissions.map((item: any) => {
-                if (item === 'delete') {
-                  return <span onClick={() => onDelete(record)}>Delete</span>;
-                } else if (item === 'reset') {
-                  return <span onClick={() => onReset(record)}>Reset</span>;
-                } else if (item === 'set') {
-                  return (
-                    <span onClick={() => setAdmin(record)}>
-                      {record.admin === 0 ? 'Set to General' : 'Set to Admin'}
-                    </span>
-                  );
-                } else {
-                  return null;
-                }
-              })}
-          </div>
+          <>
+            {sessionStorage.getItem('userType') === '0' && (
+              <div className={css.operation}>
+                <span onClick={() => onDelete(record)}>Delete</span>
+                <span onClick={() => onReset(record)}>Reset</span>
+                <span onClick={() => setAdmin(record)}>{record.admin === 0 ? 'Set to General' : 'Set to Admin'}</span>
+              </div>
+            )}
+          </>
         );
       },
     },

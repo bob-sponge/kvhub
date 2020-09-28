@@ -162,7 +162,7 @@ const NamespaceView: React.FC = () => {
       <Container>
         <div className={css.title}>
           <div>
-            <span>{name}</span>
+            <span>{decodeURI(name)}</span>
           </div>
           <div>
             {branches.length > 0 && (

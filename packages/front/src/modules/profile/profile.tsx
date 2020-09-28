@@ -33,7 +33,7 @@ const profileInfo: React.SFC = () => {
         </div>
         <div className={css.itemList}>
           <div className={css.title}>Lastest Login</div>
-          <div className={css.content}>{userInfo.lastTime ? timeAgo(userInfo.lastTime) : '(Null)'}</div>
+          <div className={css.content}>{userInfo.lastTimestamp ? timeAgo(userInfo.lastTimestamp) : '(Null)'}</div>
         </div>
       </div>
     </div>
