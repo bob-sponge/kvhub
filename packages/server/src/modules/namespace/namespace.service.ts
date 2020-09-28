@@ -175,7 +175,7 @@ export class NamespaceService {
           const existOn = await this.checkKeyIsExist(branchId, zyKeyName, namespaceId);
 
           if (existOn) {
-            throw new Error(`Key name already exist on branch ${branch[0].name} .`);
+            throw new Error(`key name ${keyName} already exist on branch ${branch[0].name} .`);
           }
         } else {
           const project = await this.findProject(namespaceId);
@@ -184,10 +184,10 @@ export class NamespaceService {
           const existOn = await this.checkKeyIsExist(branchId, zyKeyName, namespaceId);
           const existOnMaster = await this.checkKeyIsExist(masterBranch.id, zyKeyName, namespaceId);
           if (existOn) {
-            throw new Error(`Key name already exist on branch ${branch[0].name} .`);
+            throw new Error(`key name already exist on branch ${branch[0].name} .`);
           }
           if (existOnMaster) {
-            throw new Error(`Key name already exist on branch  ${masterBranch.name}.`);
+            throw new Error(`key name already exist on branch  ${masterBranch.name}.`);
           }
         }
         // 插入key 表, 获取 key id.
@@ -290,7 +290,8 @@ export class NamespaceService {
       //await queryRunner.commitTransaction();
     } catch (error) {
       //await queryRunner.rollbackTransaction();
-      throw new Error(`err message: ${error.message}, keyname is ${keyName}, data is ${JSON.stringify(data)}`);
+      logger.error(`err message: ${error.message}, keyname is ${keyName}, data is ${JSON.stringify(data)}`);
+      throw new Error(`${error.message}`);
     }
   }
 
