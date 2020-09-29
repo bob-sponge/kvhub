@@ -198,7 +198,12 @@ export class BranchService {
         result = result.concat(mergeResult);
       }
     }
-
+    // 去重
+    let unique = {};
+    result.forEach(item => {
+      unique[JSON.stringify(item)] = item;
+    });
+    result = Object.keys(unique).map(item => JSON.parse(item));
     // 按照 namespace name 排序
     result.sort((a, b) => {
       const snn1 = a.source.namespaceName.toUpperCase();
