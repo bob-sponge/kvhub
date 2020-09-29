@@ -8,7 +8,7 @@ export class Keyname {
   @Column('integer', { name: 'key_id' })
   keyId: number;
 
-  @Column('character varying', { name: 'name', length: 255 })
+  @Column('character varying', { name: 'name', length: 500 })
   name: string;
 
   @Column('character varying', {
@@ -27,6 +27,6 @@ export class Keyname {
   @Column('character varying', { name: 'commit_id', length: 255 })
   commitId: string;
 
-  @Column('boolean', { name: 'latest', nullable: true })
+  @Column('boolean', { name: 'latest', nullable: true, default: true })
   latest: boolean | null;
 }

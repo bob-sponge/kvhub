@@ -27,6 +27,6 @@ export class Branch {
   })
   modifyTime: Date | null;
 
-  @Column('boolean', { name: 'delete', nullable: true })
+  @Column('boolean', { name: 'delete', nullable: true, default: false })
   delete: boolean | null;
 }
