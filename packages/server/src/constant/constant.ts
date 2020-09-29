@@ -39,6 +39,8 @@ export class ErrorMessage {
   static BRANCH_NOT_SAME = 'Branch can not be the same!';
   static BRANCH_NAME_DUPLICATE = 'Branch name is duplicate!';
   static BRANCH_IS_MERGING = 'Branch is merging!';
+  static BRANCH_IS_MASTER = 'Branch is master,can not delete!';
+  static BRANCH_IS_DELETED = 'Branch has been deleted!';
 
   // branch merge
   static BRANCH_MERGE_NOT_EXIST = 'Branch merge is not exist!';

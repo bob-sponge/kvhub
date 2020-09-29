@@ -61,8 +61,9 @@ export class BranchController {
    */
   @Delete('/delete/:id')
   @Permission('delete')
-  async deleteBranch(@Param('id') id: number): Promise<ResponseBody> {
-    await this.branchService.deleteBranch(id);
+  async deleteBranch(@Param('id') id: number, @Request() req): Promise<ResponseBody> {
+    const user = req.cookies.token;
+    await this.branchService.deleteBranch(id, user);
     return ResponseBody.okWithData('delete success');
   }
 

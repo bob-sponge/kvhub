@@ -464,6 +464,7 @@ export class BranchService {
       master: false,
       modifier: branchBody.user,
       modifyTime: modifyTime,
+      delete: false,
     });
 
     if (inheritBranch && !isMaster) {
@@ -548,12 +549,16 @@ export class BranchService {
    * 根据id删除branch
    * @param id id
    */
-  async deleteBranch(id: number): Promise<void> {
-    const branches: Branch[] = await this.branchRepository.query(
-      `SELECT * FROM branch WHERE branch.master = true AND branch.id = ${id}`,
-    );
-    if (branches.length !== 0) {
-      throw new BadRequestException('can not delete master branch');
+  async deleteBranch(id: number, user: string): Promise<void> {
+    const branch: Branch = await this.branchRepository.findOne({ id });
+    if (branch === null || branch === undefined) {
+      throw new BadRequestException(ErrorMessage.BRANCH_NOT_EXIST);
+    } else {
+      if (branch.master) {
+        throw new BadRequestException(ErrorMessage.BRANCH_IS_MASTER);
+      } else if (branch.delete) {
+        throw new BadRequestException(ErrorMessage.BRANCH_IS_DELETED);
+      }
     }
     const existBranchMerge = await this.branchMergeRepository.find({
       where: [
@@ -570,17 +575,26 @@ export class BranchService {
     if (existBranchMerge !== null && existBranchMerge.length > 0) {
       throw new BadRequestException(ErrorMessage.BRANCH_IS_MERGING);
     }
-    const result: DeleteResult = await this.branchRepository.delete({ id: id });
-    if (result.affected.toString() !== '1') {
+    branch.delete = true;
+    branch.modifyTime = new Date();
+    branch.modifier = user;
+    const newBranch = await this.branchRepository.save(branch);
+    if (newBranch === null || newBranch === undefined) {
       throw new BadRequestException('delete branch error');
     }
+
+    const branchKeyList = await this.branchKeyRepository.find({ where: { branchId: id } });
+    branchKeyList.forEach(x => {
+      x.delete = true;
+    });
+    await this.branchKeyRepository.save(branchKeyList);
   }
 
   // branch_id -> key_Ids
   async findKeyIdsByBranchIds(id: number): Promise<any[]> {
     return await this.branchRepository.query(
       'SELECT key.id as key_id FROM (SELECT * FROM branch LEFT JOIN branch_key ON ' +
-        'branch.id = branch_key.branch_id WHERE branch_key.delete = FALSE AND branch.master = TRUE ' +
+        'branch.id = branch_key.branch_id WHERE branch_key.delete = FALSE AND branch.master = TRUE AND branch.delete = FALSE ' +
         `AND branch.id = '${id}') a ` +
         'LEFT JOIN key ON a.key_id = key.id WHERE key.delete = FALSE AND key.id = key.actual_id',
     );
@@ -601,7 +615,7 @@ export class BranchService {
     return await this.branchRepository.query(
       'SELECT a.project_id, a.branch_id as branchId, a.name as branch_name, a.master as is_master, key.id as key_id, ' +
         'key.actual_id, key.namespace_id FROM (SELECT * FROM branch LEFT JOIN branch_key ON ' +
-        'branch.id = branch_key.branch_id WHERE branch_key.delete = FALSE AND branch.master = TRUE) a ' +
+        'branch.id = branch_key.branch_id WHERE branch_key.delete = FALSE AND branch.master = TRUE AND branch.delete = FALSE ) a ' +
         'LEFT JOIN key ON a.key_id = key.id WHERE key.delete = FALSE',
     );
   }
@@ -623,7 +637,7 @@ export class BranchService {
    * 通过分支ID获取分支信息
    */
   async getBranchById(id: number): Promise<Branch> | undefined {
-    return await this.branchRepository.findOne({ id: id });
+    return await this.branchRepository.findOne({ id: id, delete: false });
   }
 
   async findMasterBranchByBranchId(branchId: number): Promise<Branch> | undefined {

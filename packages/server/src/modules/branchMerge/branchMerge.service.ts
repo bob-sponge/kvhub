@@ -461,7 +461,8 @@ export class BranchMergeService {
     } else if (
       CommonConstant.MERGE_TYPE_REFUSED === branchMerge.type ||
       CommonConstant.MERGE_TYPE_MERGED === branchMerge.type ||
-      CommonConstant.MERGE_TYPE_MERGING === branchMerge.type
+      CommonConstant.MERGE_TYPE_MERGING === branchMerge.type ||
+      CommonConstant.MERGE_TYPE_FAILED === branchMerge.type
     ) {
       throw new BadRequestException(ErrorMessage.BRANCH_MERGE_IS_NOT_CREATED);
     }
