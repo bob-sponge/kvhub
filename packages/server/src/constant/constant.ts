@@ -69,4 +69,5 @@ export class ErrorMessage {
   static VALUE_NOT_BLANK = 'value is not blank!';
   static USER_OR_PASSWORD_IS_WRONG = 'Username or password is wrong!';
   static USER_NOT_EXIST_IN_DB = 'User not exist!';
+  static NAMESPACE_ALREADY_EXISTED = 'namespace alredy existed!';
 }
