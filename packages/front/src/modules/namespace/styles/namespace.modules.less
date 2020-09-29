@@ -29,6 +29,9 @@
       margin-left: 8px;
       color: #627279;
       cursor: pointer;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
     }
   }
 
@@ -46,6 +49,10 @@
 
       .translate {
         margin-top: 12px;
+        margin-top: 12px;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
       }
     }
 
@@ -57,7 +64,7 @@
         margin-top: 12px;
       }
     }
-    
+
     .label {
       display: inline-block;
       margin-right: 10px;
@@ -91,6 +98,13 @@
 .edit-key-name {
   display: flex;
 
+  &-title {
+    width: 70%;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
   .rename {
     margin-left: 12px;
     cursor: pointer;
@@ -99,7 +113,7 @@
       color: #23b9b9;
       margin-right: 12px;
     }
-  
+
     .lable {
       color: #23b9b9;
     }
@@ -181,7 +195,6 @@
 
 .modify-key-name {
   width: 336px;
-  height: 116px;
 
   .key-title {
     font-family: SiemensSans-Bold;

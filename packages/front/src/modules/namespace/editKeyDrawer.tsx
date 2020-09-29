@@ -30,22 +30,32 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
   const [language, setLanguage] = useState<any>(null);
   const [popoverVisible, setPopoverVisible] = useState(false);
   const [currKeyItem, setCurrKeyItem] = useState(keyItem);
+  const [errorTips, setErrorTips] = useState({
+    show: false,
+    tips: '',
+  });
   const [currKeyName, setKeyName] = useState(keyItem ? keyItem.keyName : '');
   const [form] = Form.useForm();
 
   const modifyKeyName = useCallback(async () => {
-    const data = {
-      keyId: currKeyItem.keyId,
-      keyName: currKeyItem.keyName,
-    };
-    const res = await Api.modifyKeyname(data);
-    if (res.success) {
-      setKeyName(res.data.name);
+    if (!errorTips.show) {
+      const data = {
+        keyId: currKeyItem.keyId,
+        keyName: currKeyItem.keyName,
+      };
+      const res = await Api.modifyKeyname(data);
+      if (res.success) {
+        setKeyName(res.data.name);
+        setErrorTips({
+          show: false,
+          tips: '',
+        });
+      }
+      setPopoverVisible(false);
+      refreshList();
+      onClose();
     }
-    setPopoverVisible(false);
-    refreshList();
-    onClose();
-  }, [currKeyItem]);
+  }, [currKeyItem, errorTips]);
 
   const getEditTitle = useCallback(() => {
     let content = (
@@ -59,10 +69,34 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
               keyName: e.target.value,
             };
             setCurrKeyItem(newItem);
+            if (e.target.value) {
+              if (e.target.value.length > 500) {
+                setErrorTips({
+                  show: true,
+                  tips: 'Can contain at most 500 characters',
+                });
+              } else {
+                setErrorTips({
+                  show: false,
+                  tips: '',
+                });
+              }
+            } else {
+              setErrorTips({
+                show: true,
+                tips: 'Key name can not be null',
+              });
+            }
           }}
         />
+        {errorTips && <label style={{ color: 'red' }}>{errorTips.tips}</label>}
         <div className={css.buttonList}>
-          <Button onClick={() => setPopoverVisible(false)}>{'Discard'}</Button>
+          <Button
+            onClick={() => {
+              setPopoverVisible(false);
+            }}>
+            {'Discard'}
+          </Button>
           <Button type="primary" onClick={modifyKeyName}>
             {'Save'}
           </Button>
@@ -71,7 +105,9 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
     );
     let title = (
       <div className={css.editKeyName}>
-        <div>{currKeyName}</div>
+        <div title={currKeyName} className={css.editKeyNameTitle}>
+          {currKeyName}
+        </div>
         <Popover
           onVisibleChange={handleVisibleChange}
           placement="bottomLeft"
@@ -88,9 +124,18 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
       </div>
     );
     return title;
-  }, [popoverVisible, currKeyItem, keyItem, currKeyName]);
+  }, [popoverVisible, currKeyItem, keyItem, currKeyName, errorTips]);
 
   const handleVisibleChange = (isShow: boolean) => {
+    if (isShow) {
+      setCurrKeyItem(keyItem);
+      if (errorTips.show) {
+        setErrorTips({
+          show: false,
+          tips: '',
+        });
+      }
+    }
     setPopoverVisible(isShow);
   };
 
@@ -165,6 +210,16 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
     });
   }, [keyItem]);
 
+  const checkValue = (_: any, value: any) => {
+    if (!value) {
+      return Promise.reject('Please enter reference language');
+    } else if (value && value.length > 500) {
+      return Promise.reject('Can contain at most 500 characters');
+    } else {
+      return Promise.resolve();
+    }
+  };
+
   useEffect(() => {
     getLanguageInfo();
   }, []);
@@ -203,7 +258,11 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
                         <span className={css.keyLabel}>key</span>
                       </div>
                     }
-                    rules={[{ required: true, message: 'Please enter key name' }]}>
+                    rules={[
+                      {
+                        validator: checkValue,
+                      },
+                    ]}>
                     <TextArea />
                   </Form.Item>
                 </Col>
@@ -222,7 +281,13 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
                           </div>
                         }
                         rules={
-                          ele.referenceLanguage ? [{ required: true, message: 'Please enter reference language' }] : []
+                          ele.referenceLanguage
+                            ? [
+                                {
+                                  validator: checkValue,
+                                },
+                              ]
+                            : []
                         }>
                         <TextArea />
                       </Form.Item>
@@ -251,7 +316,11 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
                           }
                           rules={
                             ele.referenceLanguage
-                              ? [{ required: true, message: 'Please enter reference language' }]
+                              ? [
+                                  {
+                                    validator: checkValue,
+                                  },
+                                ]
                               : []
                           }>
                           <TextArea value={ele.value} />

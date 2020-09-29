@@ -61,7 +61,7 @@ const LanguageBox: React.FC<LanguageBoxProps> = ({
 
   const editKey = useCallback(() => {
     setShowDrawer(EDIT, true, currentKeyData);
-  }, []);
+  }, [currentKeyData]);
 
   const handleDiscard = useCallback(() => {
     setCurrentKeyData(keyData);
@@ -110,9 +110,11 @@ const LanguageBox: React.FC<LanguageBoxProps> = ({
     <>
       <div className={css.box}>
         <div className={css.key}>
-          <div onClick={editKey}>
+          <div style={{ display: 'flex', width: '94%' }} onClick={editKey}>
             <KeyOutlined />
-            <label className={css.boxTitle}>{currentKeyData ? currentKeyData.keyName : ''}</label>
+            <div title={currentKeyData ? currentKeyData.keyName : ''} className={css.boxTitle}>
+              {currentKeyData ? currentKeyData.keyName : ''}
+            </div>
           </div>
           {currentKeyData.branchId === branchId ? (
             <Popover
@@ -143,7 +145,9 @@ const LanguageBox: React.FC<LanguageBoxProps> = ({
                 <SwapRightOutlined />
               </div>
             </div>
-            <div className={css.translate}>{currentKeyData ? currentKeyData.refreLanguageValue.keyValue : ''}</div>
+            <div title={currentKeyData ? currentKeyData.refreLanguageValue.keyValue : ''} className={css.translate}>
+              {currentKeyData ? currentKeyData.refreLanguageValue.keyValue : ''}
+            </div>
           </div>
           <div className={css.right}>
             <span className={css.label}>{currentKeyData ? currentKeyData.targetLanguageValue.languageName : ''}</span>
