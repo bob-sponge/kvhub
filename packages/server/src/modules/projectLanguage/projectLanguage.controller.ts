@@ -4,6 +4,7 @@ import { ResponseBody } from 'src/vo/ResponseBody';
 import { ProjectLanguage } from 'src/entities/ProjectLanguage';
 import { PermissionGuard } from 'src/permission/permission.guard';
 import { Permission } from 'src/permission/permission.decorator';
+import { PermissionCtl } from 'src/constant/constant';
 
 @Controller('projectLanguage')
 @UseGuards(PermissionGuard)
@@ -15,7 +16,7 @@ export class ProjectLanguageController {
    * @param id
    */
   @Get('/delete/:id')
-  @Permission('delete')
+  @Permission(PermissionCtl.DELETE_PROJECT_LANGUAGE)
   async deleteProjectLanguage(@Param('id') id: number): Promise<ResponseBody> {
     await this.projectLanguageService.delete(id);
     return ResponseBody.okWithMsg('delete success!');

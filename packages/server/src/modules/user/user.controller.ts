@@ -17,7 +17,7 @@ import { ResponseBody } from 'src/vo/ResponseBody';
 import { PermissionGuard } from '../../permission/permission.guard';
 import { Permission } from 'src/permission/permission.decorator';
 import { LoginBodyVO } from 'src/vo/LoginBodyVO';
-import { ErrorMessage } from 'src/constant/constant';
+import { ErrorMessage, PermissionCtl } from 'src/constant/constant';
 
 @Controller('user')
 @UseGuards(PermissionGuard)
@@ -25,7 +25,6 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Post('/query')
-  @Permission('query')
   async queryAll(@Body() body: any): Promise<ResponseBody> {
     return ResponseBody.okWithData(await this.userService.query(body));
   }
@@ -36,7 +35,6 @@ export class UserController {
   }
 
   @Post('/reset')
-  @Permission('reset')
   async reset(@Session() session, @Body() body: any, @Request() req): Promise<ResponseBody> {
     const admin: number = Number.parseInt(req.cookies.admin);
     const result = await this.userService.reset(admin, body);
@@ -44,7 +42,7 @@ export class UserController {
   }
 
   @Post('/reset/oneuser')
-  @Permission('reset')
+  @Permission(PermissionCtl.EDIT_PASSWORD)
   async resetoneuser(@Session() session, @Body() body: any, @Request() req): Promise<ResponseBody> {
     const admin: number = Number.parseInt(req.cookies.admin);
     const result = await this.userService.resetoneuser(admin, body);
@@ -52,13 +50,11 @@ export class UserController {
   }
 
   @Delete('/delete/:id')
-  @Permission('delete')
   async delete(@Param('id') id: number): Promise<ResponseBody> {
     return ResponseBody.okWithMsg(await this.userService.delete(id));
   }
 
   @Get('/set/:id/:level')
-  @Permission('set')
   async set(
     @Session() session,
     @Param('id') id: number,

@@ -1,8 +1,9 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('key', { schema: 'public' })
 export class Key {
   @PrimaryGeneratedColumn({ type: 'integer', name: 'id' })
+  @Index()
   id: number;
 
   @Column('integer', { name: 'actual_id', nullable: false })

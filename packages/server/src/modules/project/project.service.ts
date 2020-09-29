@@ -17,6 +17,7 @@ import { ProjectLanguage } from 'src/entities/ProjectLanguage';
 import { LanguagesService } from '../languages/languages.service';
 import { Branch } from 'src/entities/Branch';
 import { ConfigService } from '@ofm/nestjs-utils';
+import { ErrorMessage } from 'src/constant/constant';
 
 @Injectable()
 export class ProjectService {
@@ -181,11 +182,11 @@ export class ProjectService {
     // 数据校验
     const project = await this.projectRepository.find({ id, delete: false });
     if (null === project || project.length === 0) {
-      throw new BadRequestException('Project is not exist');
+      throw new BadRequestException(ErrorMessage.PROJECT_NOT_EXIST);
     }
     const branch = await this.branchService.getBranchById(branchId);
     if (undefined === branch) {
-      throw new BadRequestException('Branch is not exist');
+      throw new BadRequestException(ErrorMessage.BRANCH_NOT_EXIST);
     } else {
       if (branch.master !== null && branch.master) {
         masterBranchId = branchId;
