@@ -287,7 +287,17 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
                                   validator: checkValue,
                                 },
                               ]
-                            : []
+                            : [
+                                {
+                                  validator: (_: any, value: any) => {
+                                    if (value && value.length > 500) {
+                                      return Promise.reject('Can contain at most 500 characters');
+                                    } else {
+                                      return Promise.resolve();
+                                    }
+                                  },
+                                },
+                              ]
                         }>
                         <TextArea />
                       </Form.Item>
@@ -321,7 +331,17 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
                                     validator: checkValue,
                                   },
                                 ]
-                              : []
+                              : [
+                                  {
+                                    validator: (_: any, value: any) => {
+                                      if (value && value.length > 500) {
+                                        return Promise.reject('Can contain at most 500 characters');
+                                      } else {
+                                        return Promise.resolve();
+                                      }
+                                    },
+                                  },
+                                ]
                           }>
                           <TextArea value={ele.value} />
                         </Form.Item>
