@@ -15,7 +15,7 @@ const Nav: React.SFC<NavProps> = (props: NavProps) => {
       navs &&
       navs.length > 0 &&
       navs.map((item: any, index: number) => {
-        if (index === navs.length - 1) {
+        if (!item.url) {
           return (
             <Item>
               {index === 0 && <HomeOutlined />}

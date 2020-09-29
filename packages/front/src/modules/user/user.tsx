@@ -9,7 +9,6 @@ interface UserProps {}
 
 const User: React.SFC<UserProps> = (_props: UserProps) => {
   const [form] = Form.useForm();
-  const [navs, setNavs] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [userList, setUserList] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
@@ -19,19 +18,6 @@ const User: React.SFC<UserProps> = (_props: UserProps) => {
   });
   const [visible, setVisible] = useState<boolean>(false);
   const [resetPwd, setResetPwd] = useState<any>({});
-
-  useEffect(() => {
-    setNavs([
-      {
-        name: 'Home',
-        url: '/',
-      },
-      {
-        name: 'User Management',
-        url: '',
-      },
-    ]);
-  }, []);
 
   useEffect(() => {
     getUser(filter);
@@ -138,7 +124,7 @@ const User: React.SFC<UserProps> = (_props: UserProps) => {
   };
 
   return (
-    <Container navs={navs}>
+    <Container>
       <div className={css.user}>
         <div className={css.userTitle}>User Management</div>
         <div className={css.userTable}>

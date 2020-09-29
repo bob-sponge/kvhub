@@ -6,7 +6,7 @@ import SideBar from './modules/siderBar';
 interface ContainerProps {
   children?: React.ReactNode;
   match: any;
-  navs: any[];
+  navs?: any;
 }
 
 const ContainerMenu: React.SFC<ContainerProps> = (props: ContainerProps) => {

@@ -23,39 +23,14 @@ const MergeRequest = (props: MergeRequestProps) => {
   const [mergeRequestList, setMergeRequestList] = useState<any[]>([]);
   const [filter, setFilter] = useState('');
 
-  const [navs, setNavs] = useState<any[]>([]);
-  const [projectDetail, setProjectDetail] = useState<any>({});
-
   const getProjectDetail = async (id: any) => {
-    let result = await projectDetailApi(id);
-    const { success, data } = result;
-    if (success && data) {
-      setProjectDetail(data);
-    }
+    await projectDetailApi(id);
   };
 
   useEffect(() => {
     const projectid = match.params.projectId;
     getProjectDetail(projectid);
   }, [match]);
-
-  useEffect(() => {
-    const { name } = projectDetail;
-    setNavs([
-      {
-        name: 'Home',
-        url: '/',
-      },
-      {
-        name: 'Project Dashboard',
-        url: '/dashboard',
-      },
-      {
-        name,
-        url: '',
-      },
-    ]);
-  }, [projectDetail]);
 
   useEffect(() => {
     getMergeRequest();
@@ -98,7 +73,7 @@ const MergeRequest = (props: MergeRequestProps) => {
   };
 
   return (
-    <ContainerMenu match={match} navs={navs}>
+    <ContainerMenu match={match}>
       <div className={css.mergeWapper}>
         <div className={css.basicTitle}>
           <div className={css.title}>Merge Request</div>
