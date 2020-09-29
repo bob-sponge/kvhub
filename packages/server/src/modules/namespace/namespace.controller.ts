@@ -8,6 +8,7 @@ import { NamespaceViewDetail } from 'src/vo/NamespaceViewDetail';
 import * as Log4js from 'log4js';
 import { Permission } from 'src/permission/permission.decorator';
 import { PermissionGuard } from 'src/permission/permission.guard';
+import { PermissionCtl } from 'src/constant/constant';
 
 @Controller('namespace')
 @UseGuards(PermissionGuard)
@@ -352,7 +353,7 @@ export class NamespaceController {
       }
    */
   @Delete('/view/key/:keyId')
-  @Permission('delete')
+  @Permission(PermissionCtl.DELETE_KEY)
   async deleteKey(@Param('keyId') keyId: number, @Request() req) {
     let msg = '';
     try {

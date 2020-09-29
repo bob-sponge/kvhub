@@ -6,6 +6,7 @@ import { BranchMergeSubmitVO } from 'src/vo/BranchMergeSubmitVO';
 import { ResponseBody } from 'src/vo/ResponseBody';
 import { PermissionGuard } from 'src/permission/permission.guard';
 import { Permission } from 'src/permission/permission.decorator';
+import { PermissionCtl } from 'src/constant/constant';
 
 @Controller('branchMerge')
 @UseGuards(PermissionGuard)
@@ -29,24 +30,27 @@ export class BranchMergeController {
   }
 
   @Get('/diff/:mergeId')
+  @Permission(PermissionCtl.MERGE_BRANCH)
   async getDiffById(@Param('mergeId') mergeId: number): Promise<ResponseBody> {
     return ResponseBody.okWithData(await this.branchMergeService.getDiffById(mergeId));
   }
 
   @Post('/save')
+  @Permission(PermissionCtl.MERGE_BRANCH)
   async save(@Body() vo: BranchMerge, @Request() req): Promise<ResponseBody> {
     vo.modifier = req.cookies.token;
     return ResponseBody.okWithData(await this.branchMergeService.save(vo));
   }
 
   @Get('/diffkey/generate/:mergeId')
+  @Permission(PermissionCtl.MERGE_BRANCH)
   async generateDiffKey(@Param('mergeId') mergeId: number): Promise<ResponseBody> {
     await this.branchMergeService.generateDiffKey(mergeId);
     return ResponseBody.ok();
   }
 
   @Post('/merge')
-  @Permission('merge')
+  @Permission(PermissionCtl.MERGE_BRANCH)
   async merge(@Body() vo: BranchMergeSubmitVO, @Request() req): Promise<ResponseBody> {
     const currentUser = req.cookies.token;
     await this.branchMergeService.merge(vo, currentUser);

@@ -71,3 +71,12 @@ export class ErrorMessage {
   static USER_NOT_EXIST_IN_DB = 'User not exist!';
   static NAMESPACE_ALREADY_EXISTED = 'namespace alredy existed!';
 }
+
+export class PermissionCtl {
+  static EDIT_PASSWORD = 'E_PD';
+  static DELETE_PROJECT_LANGUAGE = 'D_PL';
+  static DELETE_KEY = 'D_KEY';
+  static DELETE_BRANCH = 'D_BR';
+  static DELETE_PROJECT = 'D_PJ';
+  static MERGE_BRANCH = 'M_BR';
+}
