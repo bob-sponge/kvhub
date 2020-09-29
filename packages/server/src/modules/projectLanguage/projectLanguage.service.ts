@@ -53,6 +53,14 @@ export class ProjectLanguageService {
     if (projectLanguage === undefined) {
       throw new BadRequestException('project language is not exist');
     } else {
+      // 找到 project id
+      const projectId = projectLanguage.projectId;
+      const refLanguageId = await this.projectLanguageRepository.query(
+        `select reference_language_id from project where id=${projectId}`,
+      );
+      if (projectLanguage.languageId === refLanguageId[0].reference_language_id) {
+        throw new BadRequestException('refrence language can not delete.');
+      }
       projectLanguage.delete = true;
       await this.projectLanguageRepository.save(projectLanguage);
     }

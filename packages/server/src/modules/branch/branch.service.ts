@@ -113,6 +113,7 @@ export class BranchService {
         const sNamespace = await this.namespaceRepository.findOne(sourceKey.namespaceId);
         if (sNamespace !== undefined && !sNamespace.delete) {
           sourceCompare.namespaceName = sNamespace.name;
+          targetCompare.namespaceName = sNamespace.name;
         }
         const sourceValueList: CompareValueVO[] = [];
         if (sourceKey.valueList !== null && sourceKey.valueList.length > 0) {
@@ -198,7 +199,12 @@ export class BranchService {
         result = result.concat(mergeResult);
       }
     }
-
+    // 去重
+    let unique = {};
+    result.forEach(item => {
+      unique[JSON.stringify(item)] = item;
+    });
+    result = Object.keys(unique).map(item => JSON.parse(item));
     // 按照 namespace name 排序
     result.sort((a, b) => {
       const snn1 = a.source.namespaceName.toUpperCase();
@@ -381,6 +387,7 @@ export class BranchService {
       branchVO.id = d.id;
       branchVO.name = d.name;
       branchVO.time = d.modifyTime === null || d.modifyTime === undefined ? null : d.modifyTime.valueOf();
+      branchVO.isMaster = d.master;
       // 默认是 0 -> open
       branchVO.merge = this.constant.get('0');
       map.forEach((x, y) => {
