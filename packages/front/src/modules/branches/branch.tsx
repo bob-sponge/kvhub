@@ -27,36 +27,11 @@ const Branches: React.SFC<BranchProps> = (props: BranchProps) => {
     content: '',
     projectId: NaN,
   });
-  const [navs, setNavs] = useState<any[]>([]);
-  const [projectDetail, setProjectDetail] = useState<any>({});
-
   const getProjectDetail = async (id: any) => {
     setLoading(true);
-    let result = await projectDetailApi(id);
+    await projectDetailApi(id);
     setLoading(false);
-    const { success, data } = result;
-    if (success && data) {
-      setProjectDetail(data);
-    }
   };
-
-  useEffect(() => {
-    const { name } = projectDetail;
-    setNavs([
-      {
-        name: 'Home',
-        url: '/',
-      },
-      {
-        name: 'Project Dashboard',
-        url: '/dashboard',
-      },
-      {
-        name,
-        url: '',
-      },
-    ]);
-  }, [projectDetail]);
 
   useEffect(() => {
     const projectid = match.params.projectId;
@@ -123,7 +98,7 @@ const Branches: React.SFC<BranchProps> = (props: BranchProps) => {
   };
 
   return (
-    <ContainerMenu match={match} navs={navs}>
+    <ContainerMenu match={match}>
       <div className={css.branchWapper}>
         <div className={css.basicTitle}>
           <div className={css.title}>Branches</div>

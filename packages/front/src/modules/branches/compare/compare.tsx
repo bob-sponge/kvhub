@@ -14,32 +14,11 @@ const Compare: React.SFC<CompareProps> = (props: CompareProps) => {
       params: { id },
     },
   } = props;
-  const [navs, setNavs] = useState<any[]>([]);
   const [detail, setDetail] = useState<any>(null);
 
   useEffect(() => {
     getBranchDetail(id);
   }, [id]);
-
-  useEffect(() => {
-    if (detail && detail.id) {
-      const { name } = detail;
-      setNavs([
-        {
-          name: 'Home',
-          url: '/',
-        },
-        {
-          name: 'Project Dashboard',
-          url: '/dashboard',
-        },
-        {
-          name,
-          url: '',
-        },
-      ]);
-    }
-  }, [detail]);
 
   const getBranchDetail = async (branchId: any) => {
     if (id) {
@@ -52,7 +31,7 @@ const Compare: React.SFC<CompareProps> = (props: CompareProps) => {
   };
 
   return (
-    <Container navs={navs}>
+    <Container>
       <div className={css.compareWapper}>
         <div className={css.commonTitle}>Compare</div>
         <CompareObject detail={detail} />

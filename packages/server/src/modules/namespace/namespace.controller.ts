@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-expressions */
-import { Controller, Post, Body, Get, Param, Delete, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Delete, UseGuards, Request, BadRequestException } from '@nestjs/common';
 import { NamespaceService } from './namespace.service';
 import { BranchService } from '../branch/branch.service';
 import { ResponseBody } from 'src/vo/ResponseBody';
@@ -9,6 +9,7 @@ import * as Log4js from 'log4js';
 import { Permission } from 'src/permission/permission.decorator';
 import { PermissionGuard } from 'src/permission/permission.guard';
 import { PermissionCtl } from 'src/constant/constant';
+import { ErrorMessage } from 'src/constant/constant';
 
 @Controller('namespace')
 @UseGuards(PermissionGuard)
@@ -93,6 +94,9 @@ export class NamespaceController {
     const pageSize = namespaceViewDetail.pageSize;
     const branchId = namespaceViewDetail.branchId;
     const branch = await this.branchService.getBranchById(branchId);
+    if (branch === undefined) {
+      throw new BadRequestException(ErrorMessage.BRANCH_NOT_EXIST);
+    }
     const offset = (page - 1) * pageSize;
     logger.info(`page: ${page}, page size: ${pageSize}, branchID: ${branchId}`);
     if (branch.master) {
