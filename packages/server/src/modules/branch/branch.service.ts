@@ -113,6 +113,7 @@ export class BranchService {
         const sNamespace = await this.namespaceRepository.findOne(sourceKey.namespaceId);
         if (sNamespace !== undefined && !sNamespace.delete) {
           sourceCompare.namespaceName = sNamespace.name;
+          targetCompare.namespaceName = sNamespace.name;
         }
         const sourceValueList: CompareValueVO[] = [];
         if (sourceKey.valueList !== null && sourceKey.valueList.length > 0) {
