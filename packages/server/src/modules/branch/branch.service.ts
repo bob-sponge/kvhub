@@ -381,6 +381,7 @@ export class BranchService {
       branchVO.id = d.id;
       branchVO.name = d.name;
       branchVO.time = d.modifyTime === null || d.modifyTime === undefined ? null : d.modifyTime.valueOf();
+      branchVO.isMaster = d.master;
       // 默认是 0 -> open
       branchVO.merge = this.constant.get('0');
       map.forEach((x, y) => {
