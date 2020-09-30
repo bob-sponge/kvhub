@@ -64,7 +64,9 @@ const LanguageItem = ({ item, index, projectView, branchId, pid }: any) => {
   const deleteLanguage = async () => {
     const res = await Api.projectLanguageDeleteApi(item.id);
     projectView(branchId);
-    message.success(res && res.data);
+    if (res.success) {
+      message.success('Delete successfully!');
+    }
   };
 
   const AddNamespace = (
