@@ -58,7 +58,7 @@ export const columns = (onDelete: Function, onReset: Function, setAdmin: Functio
       render: (_text: any, record: any) => {
         let permissions: any[] = [];
         const { permission } = record;
-        if (permission.includes(',')) {
+        if (permission && permission.includes(',')) {
           let auth = permission.split(',');
           permissions = permissions.concat(auth);
         } else {
