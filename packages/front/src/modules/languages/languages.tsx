@@ -54,7 +54,9 @@ const Languages = (props: LanguagesProps) => {
       });
       const res = await Api.projectLanguageSaveApi(content);
       projectView(branchId);
-      message.success(res && res.data);
+      if (res.success) {
+        message.success('Save successfully!');
+      }
     }
   };
 

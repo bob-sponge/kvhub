@@ -22,7 +22,10 @@ const LanguageBox: React.FC<LanguageBoxProps> = ({
 }: LanguageBoxProps) => {
   const [visible, setVisible] = useState<boolean>(false);
   const [currentKeyData, setCurrentKeyData] = useState<ItemKey>(keyData);
-
+  const [errorTips, setErrorTips] = useState({
+    show: true,
+    tips: '',
+  });
   const handleKeyOperate = useCallback(
     async flag => {
       switch (flag) {
@@ -61,31 +64,50 @@ const LanguageBox: React.FC<LanguageBoxProps> = ({
 
   const editKey = useCallback(() => {
     setShowDrawer(EDIT, true, currentKeyData);
-  }, []);
+  }, [currentKeyData]);
 
   const handleDiscard = useCallback(() => {
     setCurrentKeyData(keyData);
-  }, [keyData]);
+    if (errorTips.show) {
+      setErrorTips({
+        show: false,
+        tips: '',
+      });
+    }
+  }, [keyData, errorTips]);
 
   const handleSave = useCallback(async () => {
-    const targetLanguageValue = currentKeyData.targetLanguageValue;
-    const modifyKeyReq: ModifyKeyReq = {
-      keyvalue: targetLanguageValue.keyValue,
-      valueId: targetLanguageValue.valueId,
-    };
-    const res: any = await Api.modifyValue(
-      branchId,
-      targetLanguageValue.languageId,
-      currentKeyData.keyId,
-      modifyKeyReq,
-    );
-    if (res.statusCode === 0) {
-      refreshList();
+    if (!errorTips.show) {
+      const targetLanguageValue = currentKeyData.targetLanguageValue;
+      const modifyKeyReq: ModifyKeyReq = {
+        keyvalue: targetLanguageValue.keyValue,
+        valueId: targetLanguageValue.valueId,
+      };
+      const res: any = await Api.modifyValue(
+        branchId,
+        targetLanguageValue.languageId,
+        currentKeyData.keyId,
+        modifyKeyReq,
+      );
+      if (res.statusCode === 0) {
+        refreshList();
+      }
     }
-  }, [currentKeyData]);
+  }, [currentKeyData, errorTips]);
 
   const handleChange = useCallback(
     e => {
+      if (e.target.value && e.target.value.length > 500) {
+        setErrorTips({
+          show: true,
+          tips: 'Can contain at most 500 characters',
+        });
+      } else {
+        setErrorTips({
+          show: false,
+          tips: '',
+        });
+      }
       setCurrentKeyData({
         ...currentKeyData,
         targetLanguageValue: {
@@ -110,9 +132,11 @@ const LanguageBox: React.FC<LanguageBoxProps> = ({
     <>
       <div className={css.box}>
         <div className={css.key}>
-          <div onClick={editKey}>
+          <div style={{ display: 'flex', width: '94%' }} onClick={editKey}>
             <KeyOutlined />
-            <label className={css.boxTitle}>{currentKeyData ? currentKeyData.keyName : ''}</label>
+            <div title={currentKeyData ? currentKeyData.keyName : ''} className={css.boxTitle}>
+              {currentKeyData ? currentKeyData.keyName : ''}
+            </div>
           </div>
           {currentKeyData.branchId === branchId ? (
             <Popover
@@ -143,7 +167,9 @@ const LanguageBox: React.FC<LanguageBoxProps> = ({
                 <SwapRightOutlined />
               </div>
             </div>
-            <div className={css.translate}>{currentKeyData ? currentKeyData.refreLanguageValue.keyValue : ''}</div>
+            <div title={currentKeyData ? currentKeyData.refreLanguageValue.keyValue : ''} className={css.translate}>
+              {currentKeyData ? currentKeyData.refreLanguageValue.keyValue : ''}
+            </div>
           </div>
           <div className={css.right}>
             <span className={css.label}>{currentKeyData ? currentKeyData.targetLanguageValue.languageName : ''}</span>
@@ -154,6 +180,7 @@ const LanguageBox: React.FC<LanguageBoxProps> = ({
                 onChange={handleChange}
               />
             </div>
+            {errorTips.show && <div style={{ color: 'red' }}>{errorTips.tips}</div>}
           </div>
         </div>
         {keyData.targetLanguageValue.keyValue !== currentKeyData.targetLanguageValue.keyValue && (
