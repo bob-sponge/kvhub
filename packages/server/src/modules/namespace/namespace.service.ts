@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/quotes */
+/* eslint-disable prettier/prettier */
 /* eslint-disable max-len */
 /* eslint-disable no-multi-str */
 import { Injectable, BadRequestException } from '@nestjs/common';
@@ -507,7 +509,21 @@ export class NamespaceService {
     const pageSize = namespaceViewDetail.pageSize;
     let condition = namespaceViewDetail.condition;
     // eslint-disable-next-line @typescript-eslint/quotes
-    condition = condition.replace("'", "\\'");
+    let rcondition = '';
+    for (let index = 0; index < condition.length; index++) {
+      let tmp = condition.charAt(index);
+      if (tmp === "'") {
+        tmp = "\\'";
+      } else if (tmp === '%') {
+        tmp = '/%';
+      } else if (tmp === '_') {
+        tmp = '/_';
+      } else if (tmp === '/') {
+        tmp = '//';
+      }
+      rcondition += tmp;
+    }
+    condition = rcondition;
     const keyTranslateProgressStatus = namespaceViewDetail.KeyTranslateProgressStatus;
     const branchId = namespaceViewDetail.branchId;
     const offset = (page - 1) * pageSize;
@@ -650,7 +666,21 @@ export class NamespaceService {
     let condition = namespaceViewDetail.condition;
     // 需要处理 condition 中包含 ' 的情况
     // eslint-disable-next-line @typescript-eslint/quotes
-    condition = condition.replace("'", "\\'");
+    let rcondition = '';
+    for (let index = 0; index < condition.length; index++) {
+      let tmp = condition.charAt(index);
+      if (tmp === "'") {
+        tmp = "\\'";
+      } else if (tmp === '%') {
+        tmp = '/%';
+      } else if (tmp === '_') {
+        tmp = '/_';
+      } else if (tmp === '/') {
+        tmp = '//';
+      }
+      rcondition += tmp;
+    }
+    condition = rcondition;
     const keyTranslateProgressStatus = namespaceViewDetail.KeyTranslateProgressStatus;
     const branchId = namespaceViewDetail.branchId;
     let statusCondition = '';
@@ -795,7 +825,7 @@ export class NamespaceService {
           JOIN (
             SELECT kn.id AS keynameid, key_id, kn.name AS keyname
             FROM keyname kn
-            WHERE name LIKE '%${searchCondition}%' and latest = true
+            WHERE name LIKE '%${searchCondition}%' escape '/' and latest = true
           ) s3
           ON s2.key_id = s3.key_id) s4
           LEFT JOIN (
