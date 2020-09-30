@@ -11,7 +11,7 @@ const Header = () => {
   const [selectTab, setSelectTab] = useState<string>('translation');
 
   useEffect(() => {
-    if (window.location.pathname === '/user') {
+    if (window.location.pathname === '/user' || window.location.pathname === '/profile') {
       setSelectTab('user');
     } else {
       setSelectTab('translation');
