@@ -278,7 +278,7 @@ export class NamespaceService {
         branchCommit.commitTime = modifyTime;
         await this.branchCommitRepository.save(branchCommit);
         // 根据 key id 查询比较
-        const keyNameInfo = await this.keyRepository.query(`select * from keyname where key_id = ${keyId}`);
+        const keyNameInfo = await this.keyRepository.query(`select * from keyname where key_id = ${keyId} and latest = true`);
         const keyIdGetName = keyNameInfo[0].name;
         if (keyIdGetName !== keyName) {
           throw new Error(`Key id get name ${keyIdGetName} not equals key name ${keyName}`);
@@ -912,11 +912,12 @@ export class NamespaceService {
               FROM key
               WHERE id = ${keyId}
             )
-          )
+          ) and delete=false
         ) t3
       ) t2
       ON t1.language_id = t2.language_id
     `;
+    // logger.info(`key view ${query2}`);
     const keyValue = await this.keynameRepository.query(query2);
     const result = {
       keyName: keyNameTrue,
