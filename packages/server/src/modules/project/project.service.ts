@@ -115,7 +115,7 @@ export class ProjectService {
     const dashboards: Dashboard[] = [];
 
     // 获取全部的projects转换成dashboards
-    const projects: Project[] = await this.projectRepository.find();
+    const projects: Project[] = await this.projectRepository.find({ delete: false });
     projects.forEach(p => {
       let d = new Dashboard();
       d.id = p.id;
@@ -300,5 +300,9 @@ export class ProjectService {
         'project_language pl LEFT JOIN language l on l.id = pl.language_id WHERE ' +
         'pl.delete = FALSE) b ON p.id = b.project_id WHERE p.delete = FALSE ORDER BY p.id',
     );
+  }
+
+  async deleteProject(id: number) {
+    await this.projectRepository.query(`update project set delete=true where id=${id}`);
   }
 }
