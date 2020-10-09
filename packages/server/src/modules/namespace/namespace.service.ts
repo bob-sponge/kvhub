@@ -912,11 +912,12 @@ export class NamespaceService {
               FROM key
               WHERE id = ${keyId}
             )
-          )
+          ) and delete=false
         ) t3
       ) t2
       ON t1.language_id = t2.language_id
     `;
+    // logger.info(`key view ${query2}`);
     const keyValue = await this.keynameRepository.query(query2);
     const result = {
       keyName: keyNameTrue,
