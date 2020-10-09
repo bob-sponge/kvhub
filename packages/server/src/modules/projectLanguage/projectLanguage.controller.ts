@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Post, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Post, Body, UseGuards, Request } from '@nestjs/common';
 import { ProjectLanguageService } from './projectLanguage.service';
 import { ResponseBody } from 'src/vo/ResponseBody';
 import { ProjectLanguage } from 'src/entities/ProjectLanguage';
@@ -17,8 +17,9 @@ export class ProjectLanguageController {
    */
   @Get('/delete/:id')
   @Permission(PermissionCtl.DELETE_PROJECT_LANGUAGE)
-  async deleteProjectLanguage(@Param('id') id: number): Promise<ResponseBody> {
-    await this.projectLanguageService.delete(id);
+  async deleteProjectLanguage(@Param('id') id: number, @Request() req): Promise<ResponseBody> {
+    const currentUser = req.cookies.token;
+    await this.projectLanguageService.delete(id, currentUser);
     return ResponseBody.okWithMsg('delete success!');
   }
 
