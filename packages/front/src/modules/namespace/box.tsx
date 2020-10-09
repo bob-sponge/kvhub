@@ -171,6 +171,7 @@ const LanguageBox: React.FC<LanguageBoxProps> = ({
               {currentKeyData ? currentKeyData.refreLanguageValue.keyValue : ''}
             </div>
           </div>
+          <div className={css.middle} />
           <div className={css.right}>
             <span className={css.label}>{currentKeyData ? currentKeyData.targetLanguageValue.languageName : ''}</span>
             <span>{currentKeyData ? currentKeyData.targetLanguageValue.languageName : ''}</span>
