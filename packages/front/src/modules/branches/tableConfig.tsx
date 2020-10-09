@@ -83,7 +83,7 @@ export const columns = (onCompare: Function, onDelete: Function) => {
       render: (_text: any, record: any) => (
         <div className={css.operation}>
           <span onClick={() => onCompare(record)}>Compare</span>
-          {sessionStorage.getItem('userType') === '0' && (
+          {sessionStorage.getItem('userType') === '0' && !record.isMaster && (
             <Popconfirm title="Are you sure？" okText="Yes" cancelText="No" onConfirm={() => onDelete(record)}>
               <span>Delete</span>
             </Popconfirm>
