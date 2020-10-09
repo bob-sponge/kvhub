@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import * as css from './style/dashboard.modules.less';
-import { Button, Progress, Empty, Spin } from 'antd';
-import { UploadOutlined, PlusOutlined } from '@ant-design/icons';
+import { Button, Progress, Empty, Spin, Modal } from 'antd';
+import { UploadOutlined, PlusOutlined, DeleteOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import Container from '../../container';
 import { doneColor, processColor, formatNumber, timeAgo } from './constant';
 import AddOrEditProject from './addOrEditProject';
 import * as Api from '../../api';
 import { history as browserHistory } from '@ofm/history';
+
+const { confirm } = Modal;
 
 const Dashboard: React.SFC = () => {
   const [visible, setVisible] = useState<boolean>(false);
@@ -35,6 +37,19 @@ const Dashboard: React.SFC = () => {
     browserHistory.push(`/languages/${id}`);
   };
 
+  const deleteProject = (e: any, id: any) => {
+    confirm({
+      title: 'Do you want to delete the project?',
+      icon: <ExclamationCircleOutlined />,
+      onOk() {
+        window.console.log('id', id);
+      },
+    });
+    if (e) {
+      e.stopPropagation();
+    }
+  };
+
   return (
     <Spin spinning={loading}>
       <Container>
@@ -59,8 +74,13 @@ const Dashboard: React.SFC = () => {
                 return (
                   <div className={css.cardWapper} key={index} onClick={() => handleClick(item.id)}>
                     <div className={css.cardList}>
-                      <div className={css.cardTitle} style={{ WebkitBoxOrient: 'vertical' }} title={item.name}>
-                        {item.name}
+                      <div className={css.cardTitle}>
+                        <div className={css.label} style={{ WebkitBoxOrient: 'vertical' }} title={item.name}>
+                          {item.name}
+                        </div>
+                        <div onClick={e => deleteProject(e, item.id)}>
+                          <DeleteOutlined />
+                        </div>
                       </div>
                       <div className={css.cardTranslate}>
                         <div className={css.keys}>

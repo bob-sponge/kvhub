@@ -174,17 +174,15 @@ const NamespaceView: React.FC = () => {
                 ))}
               </Select>
             )}
-            {sessionStorage.getItem('userId') === '0' && (
-              <Popconfirm
-                title="Are you sure delete this namespace?"
-                onConfirm={deletNamespace}
-                okText="Yes"
-                cancelText="No">
-                <Button className={css.operationBtn} icon={<DeleteFilled />}>
-                  Delete Namespace
-                </Button>
-              </Popconfirm>
-            )}
+            <Popconfirm
+              title="Are you sure delete this namespace?"
+              onConfirm={deletNamespace}
+              okText="Yes"
+              cancelText="No">
+              <Button className={css.operationBtn} icon={<DeleteFilled />}>
+                Delete Namespace
+              </Button>
+            </Popconfirm>
             <Button onClick={() => window.history.go(-1)} className={css.operationBtn} icon={<ArrowLeftOutlined />}>
               Back
             </Button>
