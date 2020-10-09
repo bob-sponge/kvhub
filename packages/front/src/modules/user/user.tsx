@@ -123,6 +123,16 @@ const User: React.SFC<UserProps> = (_props: UserProps) => {
     });
   };
 
+  const checkValue = (_: any, value: any) => {
+    if (!value) {
+      return Promise.reject('Please input your new password!');
+    } else if (value && value.length > 256) {
+      return Promise.reject('Can contain at most 256 characters');
+    } else {
+      return Promise.resolve();
+    }
+  };
+
   return (
     <Container>
       <div className={css.user}>
@@ -150,7 +160,11 @@ const User: React.SFC<UserProps> = (_props: UserProps) => {
             <Form.Item
               label="New Password"
               name="newPass"
-              rules={[{ required: true, message: 'Please input your new password!' }]}>
+              rules={[
+                {
+                  validator: checkValue,
+                },
+              ]}>
               <Input onChange={() => onContentChange('newPass')} />
             </Form.Item>
           </Form>

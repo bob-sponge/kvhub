@@ -1,4 +1,5 @@
 import React from 'react';
+import { Popconfirm } from 'antd';
 import * as css from './index.modules.less';
 import { timeAgo } from '../dashboard/constant';
 
@@ -68,7 +69,9 @@ export const columns = (onDelete: Function, onReset: Function, setAdmin: Functio
           <>
             {sessionStorage.getItem('userType') === '0' && (
               <div className={css.operation}>
-                <span onClick={() => onDelete(record)}>Delete</span>
+                <Popconfirm title="Are you sure delete the user?" onConfirm={() => onDelete(record)}>
+                  <span>Delete</span>
+                </Popconfirm>
                 <span onClick={() => onReset(record)}>Reset</span>
                 <span onClick={() => setAdmin(record)}>{record.admin === 0 ? 'Set to General' : 'Set to Admin'}</span>
               </div>
