@@ -73,7 +73,7 @@ export class ProjectService {
       throw new BadRequestException('Reference language is not exist');
     }
     // 判断名称是否重复
-    if ((await this.projectRepository.findOne({ name: projectVO.name.trim() })) !== undefined) {
+    if ((await this.projectRepository.findOne({ name: projectVO.name.trim(), delete: false })) !== undefined) {
       throw new BadRequestException('Project name is exist');
     }
     // save project
