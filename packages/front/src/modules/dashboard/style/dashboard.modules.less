@@ -45,10 +45,15 @@
     }
 
     &-title {
-      color: @black;
-      font-size: 16px;
-      font-weight: bold;
-      .block-with-text-1();
+      display: flex;
+      justify-content: space-between;
+
+      .label {
+        color: @black;
+        font-size: 16px;
+        font-weight: bold;
+        .block-with-text-1();
+      }
     }
 
     &-translate {
