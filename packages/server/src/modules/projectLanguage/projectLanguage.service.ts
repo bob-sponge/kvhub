@@ -48,7 +48,7 @@ export class ProjectLanguageService {
     );
   }
 
-  async delete(id: number): Promise<void> {
+  async delete(id: number, user: any): Promise<void> {
     const projectLanguage = await this.projectLanguageRepository.findOne(id);
     if (projectLanguage === undefined) {
       throw new BadRequestException('project language is not exist');
@@ -63,6 +63,12 @@ export class ProjectLanguageService {
       }
       projectLanguage.delete = true;
       await this.projectLanguageRepository.save(projectLanguage);
+      const now = new Date().toLocaleString();
+      // 删除工程语言下的值
+      const query = `UPDATE keyvalue set latest=false, modifier='${user}', midify_time='${now}' where key_id in(
+        select key_id from branch_key where branch_id in ( select id from branch where project_id=${projectId})
+        and delete=false) and language_id=${projectLanguage.languageId}`;
+      await this.projectLanguageRepository.query(query);
     }
   }
 }
