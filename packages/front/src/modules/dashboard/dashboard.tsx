@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import * as css from './style/dashboard.modules.less';
-import { Button, Progress, Empty, Spin, Modal } from 'antd';
+import { Button, Progress, Empty, Spin, Modal, message } from 'antd';
 import { UploadOutlined, PlusOutlined, DeleteOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import Container from '../../container';
 import { doneColor, processColor, formatNumber, timeAgo } from './constant';
@@ -41,8 +41,12 @@ const Dashboard: React.SFC = () => {
     confirm({
       title: 'Do you want to delete the project?',
       icon: <ExclamationCircleOutlined />,
-      onOk() {
-        window.console.log('id', id);
+      async onOk() {
+        let result = await Api.deleteProjectApi(id);
+        if (result.success) {
+          getProjectAll();
+          message.success('Delete project successfully!');
+        }
       },
     });
     if (e) {
