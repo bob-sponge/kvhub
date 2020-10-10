@@ -102,7 +102,7 @@ const User: React.SFC<UserProps> = (_props: UserProps) => {
         const { newPass, newPass1 } = values;
         if (newPass !== newPass1) {
           Modal.error({
-            title: '两次密码输入不一致！',
+            title: 'The two passwords do not match.',
           });
         } else {
           let params = Object.assign({}, resetPwd, values);
@@ -187,7 +187,7 @@ const User: React.SFC<UserProps> = (_props: UserProps) => {
                   validator: checkValue,
                 },
               ]}>
-              <Input onChange={() => onContentChange('newPass1')} />
+              <Input onChange={() => onContentChange('newPass1')} type="password" />
             </Form.Item>
           </Form>
         </Modal>
