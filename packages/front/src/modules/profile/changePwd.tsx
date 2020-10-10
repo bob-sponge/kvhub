@@ -56,7 +56,7 @@ const ChangePwd: React.SFC = () => {
     } else if (!reg.test(value)) {
       return Promise.reject(
         // eslint-disable-next-line max-len
-        'The password must contain letters, numbers, and special characters (!@#$%^&*) and contains 6 to 16 characters.',
+        'The password must contain letters, numbers, and special characters (~!@#$%^&*) and contains 6 to 16 characters.',
       );
     } else {
       return Promise.resolve();
