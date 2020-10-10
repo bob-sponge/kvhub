@@ -346,9 +346,9 @@ export class NamespaceService {
     }
 
     // 需要处理， 保证在A 分支创建的key， 在B分支修改，必须重新生成key, key 与分支对应关系为 key : branch = 1 ：1
-    const branchKeyByKeyId = await this.branchKeyRepository.query(`select * from branch_key where key_id = ${keyId}`);
+    const branchKeyByKeyId = await this.branchKeyRepository.query(`select * from branch_key where key_id = ${keyId} and delete=false`);
     const namespaceByKeyId = await this.keyRepository.findByIds([keyId]);
-    const keynameByKeyId = await this.keynameRepository.query(`select * from keyname where key_id = ${keyId}`);
+    const keynameByKeyId = await this.keynameRepository.query(`select * from keyname where key_id = ${keyId} and latest=true`);
     const keyName = keynameByKeyId[0].name;
     const namespaceId = namespaceByKeyId[0].namespaceId;
     if (branchKeyByKeyId[0].branch_id !== branchId) {
@@ -391,7 +391,7 @@ export class NamespaceService {
       logger.info(`insert key name id: ${keyNameId}`);
       // this.keyRepository.query(`update key set actual_id=${keyNameId} where id=${keyEntityId}`);
       // 插入key Value 表,修改的是该语言下的，直接用新值插入，如果老的key 下面还有其他语言的，也需要用之前的值插入
-      const data = await this.keyvalueRepository.query(`select * from keyvalue where key_id = ${keyId}`);
+      const data = await this.keyvalueRepository.query(`select * from keyvalue where key_id = ${keyId} and latest=true`);
       let keyValueEntitys = [];
       const keyValueEntity = new Keyvalue();
       if (keyvalue === null || keyvalue === '' || keyvalue === undefined) {

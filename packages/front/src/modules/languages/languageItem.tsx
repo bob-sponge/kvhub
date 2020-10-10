@@ -105,11 +105,13 @@ const LanguageItem = ({ item, index, projectView, branchId, pid }: any) => {
             {index === 0 && <span>{' (Reference Language)'}</span>}
           </p>
           <div className={css.languageIocnList}>
-            <Popconfirm title="Are you sure？" okText="Yes" cancelText="No" onConfirm={deleteLanguage}>
-              <Button>
-                <DeleteOutlined />
-              </Button>
-            </Popconfirm>
+            {sessionStorage.getItem('userType') === '0' && (
+              <Popconfirm title="Are you sure？" okText="Yes" cancelText="No" onConfirm={deleteLanguage}>
+                <Button>
+                  <DeleteOutlined />
+                </Button>
+              </Popconfirm>
+            )}
             <Popover
               content={AddNamespace}
               trigger="click"

@@ -162,6 +162,7 @@ export class BranchService {
               sourceValueList.push(diffValue);
             });
           }
+          sourceValueList.sort((v1, v2) => v1.languageId - v2.languageId);
           sourceCompare.valueList = sourceValueList;
 
           const targetValueList: CompareValueVO[] = [];
@@ -175,8 +176,8 @@ export class BranchService {
               targetValueList.push(diffValue);
             });
           }
+          targetValueList.sort((v1, v2) => v1.languageId - v2.languageId);
           targetCompare.valueList = targetValueList;
-
           compareBranchVO.source = sourceCompare;
           compareBranchVO.target = targetCompare;
           result.push(compareBranchVO);
