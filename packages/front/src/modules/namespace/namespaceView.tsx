@@ -176,7 +176,7 @@ const NamespaceView: React.FC = () => {
             )}
             {localStorage.getItem('userType') === '0' && (
               <Popconfirm
-                title="Are you sure delete this namespace?"
+                title="Are you sure to delete the namespace?"
                 onConfirm={deletNamespace}
                 okText="Yes"
                 cancelText="No">

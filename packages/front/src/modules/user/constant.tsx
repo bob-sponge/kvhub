@@ -61,7 +61,7 @@ export const columns = (onDelete: Function, onReset: Function, setAdmin: Functio
           <>
             {localStorage.getItem('userType') === '0' && (
               <div className={css.operation}>
-                <Popconfirm title="Are you sure delete the user?" onConfirm={() => onDelete(record)}>
+                <Popconfirm title="Are you sure to delete the user?" onConfirm={() => onDelete(record)}>
                   <span>Delete</span>
                 </Popconfirm>
                 <span onClick={() => onReset(record)}>Reset</span>
