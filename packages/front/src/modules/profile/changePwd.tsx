@@ -27,7 +27,7 @@ const ChangePwd: React.SFC = () => {
           });
         } else {
           let params = Object.assign({}, resetPwd, {
-            userId: Number(sessionStorage.getItem('userId')),
+            userId: Number(localStorage.getItem('userId')),
             oldPass: values.oldPass,
             newPass: values.newPass,
           });
@@ -43,7 +43,7 @@ const ChangePwd: React.SFC = () => {
     if (success) {
       message.success(data);
       form.resetFields();
-      sessionStorage.clear();
+      localStorage.clear();
       browserHistory.push('/login');
     }
   };

@@ -4,31 +4,19 @@ import { UserOutlined, ImportOutlined } from '@ant-design/icons';
 import { Menu } from 'antd';
 import { history as browserHistory } from '@ofm/history';
 import * as Api from '../../api/login';
-import * as UserApi from '../../api/user';
 
 const imgSrc = require('./header.png');
 
 const Header = () => {
   const [selectTab, setSelectTab] = useState<string>('translation');
-  const [userInfo, setUserInfo] = useState<any>({});
 
   useEffect(() => {
-    getUserInfo();
     if (window.location.pathname === '/user' || window.location.pathname === '/profile') {
       setSelectTab('user');
     } else {
       setSelectTab('translation');
     }
   }, []);
-
-  const getUserInfo = async () => {
-    let useId = Number(sessionStorage.getItem('userId'));
-    const result = await UserApi.getUserInfoApi(useId);
-    const { success, data } = result;
-    if (success) {
-      setUserInfo(data);
-    }
-  };
 
   const handleClick = (e: any) => {
     setSelectTab(e.key);
@@ -46,7 +34,7 @@ const Header = () => {
   const handleLogOut = async () => {
     const result = await Api.logoutApi();
     if (result.success) {
-      sessionStorage.clear();
+      localStorage.clear();
       browserHistory.push('/login');
     }
   };
@@ -57,13 +45,13 @@ const Header = () => {
         <img src={imgSrc} />
         <Menu onClick={handleClick} selectedKeys={[selectTab]} mode="horizontal">
           <Menu.Item key="translation">Translation</Menu.Item>
-          {sessionStorage.getItem('userType') === '0' && <Menu.Item key="user">User Management</Menu.Item>}
+          {localStorage.getItem('userType') === '0' && <Menu.Item key="user">User Management</Menu.Item>}
         </Menu>
       </div>
       <div className={css.headerRight}>
         <div className={css.headerToolItem} onClick={getUser}>
           <UserOutlined />
-          <span>{userInfo.name}</span>
+          <span>{localStorage.getItem('userName')}</span>
         </div>
         <div className={css.headerToolItem} onClick={handleLogOut}>
           <ImportOutlined />

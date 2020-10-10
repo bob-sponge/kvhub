@@ -11,7 +11,7 @@ const profileInfo: React.SFC = () => {
   }, []);
 
   const getUserInfo = async () => {
-    let useId = Number(sessionStorage.getItem('userId'));
+    let useId = Number(localStorage.getItem('userId'));
     const result = await Api.getUserInfoApi(useId);
     const { success, data } = result;
     if (success) {

@@ -82,7 +82,7 @@ const Dashboard: React.SFC = () => {
                         <div className={css.label} style={{ WebkitBoxOrient: 'vertical' }} title={item.name}>
                           {item.name}
                         </div>
-                        {sessionStorage.getItem('userType') === '0' && (
+                        {localStorage.getItem('userType') === '0' && (
                           <div onClick={e => deleteProject(e, item.id)}>
                             <DeleteOutlined />
                           </div>

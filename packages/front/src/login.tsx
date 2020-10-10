@@ -23,9 +23,10 @@ const Login: React.FC<LoginProps> = () => {
     let result = await Api.loginApi({ loginName: values.username, password: values.password });
     const { success, data } = result;
     if (success) {
-      sessionStorage.setItem('userId', data.id);
-      sessionStorage.setItem('userName', data.name);
-      sessionStorage.setItem('userType', data.admin);
+      localStorage.clear();
+      localStorage.setItem('userId', data.id);
+      localStorage.setItem('userName', data.name);
+      localStorage.setItem('userType', data.admin);
       history.push('/dashboard');
     }
     // setErrorTips(true);

@@ -59,7 +59,7 @@ export const columns = (onDelete: Function, onReset: Function, setAdmin: Functio
       render: (_text: any, record: any) => {
         return (
           <>
-            {sessionStorage.getItem('userType') === '0' && (
+            {localStorage.getItem('userType') === '0' && (
               <div className={css.operation}>
                 <Popconfirm title="Are you sure delete the user?" onConfirm={() => onDelete(record)}>
                   <span>Delete</span>

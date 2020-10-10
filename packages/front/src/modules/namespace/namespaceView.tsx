@@ -174,7 +174,7 @@ const NamespaceView: React.FC = () => {
                 ))}
               </Select>
             )}
-            {sessionStorage.getItem('userType') === '0' && (
+            {localStorage.getItem('userType') === '0' && (
               <Popconfirm
                 title="Are you sure delete this namespace?"
                 onConfirm={deletNamespace}
