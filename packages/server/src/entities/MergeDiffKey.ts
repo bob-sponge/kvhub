@@ -14,6 +14,6 @@ export class MergeDiffKey {
   @Column('integer', { name: 'key' })
   key: number;
 
-  @Column('integer', { name: 'select_branch_id', nullable: false })
+  @Column('integer', { name: 'select_branch_id', nullable: true })
   selectBranchId: number;
 }
