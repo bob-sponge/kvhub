@@ -23,6 +23,7 @@ const Login: React.FC<LoginProps> = () => {
     let result = await Api.loginApi({ loginName: values.username, password: values.password });
     const { success, data } = result;
     if (success) {
+      sessionStorage.clear();
       sessionStorage.setItem('userId', data.id);
       sessionStorage.setItem('userName', data.name);
       sessionStorage.setItem('userType', data.admin);

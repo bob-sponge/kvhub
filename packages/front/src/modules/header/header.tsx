@@ -34,8 +34,7 @@ const Header = () => {
   const handleLogOut = async () => {
     const result = await Api.logoutApi();
     if (result.success) {
-      sessionStorage.removeItem('userId');
-      sessionStorage.removeItem('userType');
+      sessionStorage.clear();
       browserHistory.push('/login');
     }
   };
