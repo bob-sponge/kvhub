@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import * as css from './style/index.modules.less';
 import * as Api from '../../api/user';
-import { timeAgo } from '../dashboard/constant';
+import moment from 'moment';
 
 const profileInfo: React.SFC = () => {
   const [userInfo, setUserInfo] = useState<any>({});
@@ -33,7 +33,9 @@ const profileInfo: React.SFC = () => {
         </div>
         <div className={css.itemList}>
           <div className={css.title}>Lastest Login</div>
-          <div className={css.content}>{userInfo.lastTimestamp ? timeAgo(userInfo.lastTimestamp) : '(Null)'}</div>
+          <div className={css.content}>
+            {userInfo.lastTimestamp ? moment(userInfo.lastTimestamp).format('YYYY-MM-DD HH:mm:ss') : '(Null)'}
+          </div>
         </div>
       </div>
     </div>

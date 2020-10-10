@@ -66,7 +66,7 @@ export const columns = (onCompare: Function, onDelete: Function) => {
       dataIndex: 'time',
       key: 'time',
       render: (text: any) => {
-        return moment(text).format('YYYY/MM/DD HH:mm:ss');
+        return moment(text).format('YYYY-MM-DD HH:mm:ss');
       },
       width: '15%',
     },
