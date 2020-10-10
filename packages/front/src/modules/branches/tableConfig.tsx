@@ -66,7 +66,7 @@ export const columns = (onCompare: Function, onDelete: Function) => {
       dataIndex: 'time',
       key: 'time',
       render: (text: any) => {
-        return moment(text).format('YYYY/MM/DD HH:mm:ss');
+        return moment(text).format('YYYY-MM-DD HH:mm:ss');
       },
       width: '15%',
     },
@@ -83,8 +83,12 @@ export const columns = (onCompare: Function, onDelete: Function) => {
       render: (_text: any, record: any) => (
         <div className={css.operation}>
           <span onClick={() => onCompare(record)}>Compare</span>
-          {sessionStorage.getItem('userType') === '0' && !record.isMaster && (
-            <Popconfirm title="Are you sure？" okText="Yes" cancelText="No" onConfirm={() => onDelete(record)}>
+          {localStorage.getItem('userType') === '0' && !record.isMaster && (
+            <Popconfirm
+              title="Are you sure to delete the branch？"
+              okText="Yes"
+              cancelText="No"
+              onConfirm={() => onDelete(record)}>
               <span>Delete</span>
             </Popconfirm>
           )}

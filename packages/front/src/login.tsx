@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { Input, Form, Button } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import * as css from '../src/style/login.modules.less';
@@ -23,10 +23,10 @@ const Login: React.FC<LoginProps> = () => {
     let result = await Api.loginApi({ loginName: values.username, password: values.password });
     const { success, data } = result;
     if (success) {
-      sessionStorage.clear();
-      sessionStorage.setItem('userId', data.id);
-      sessionStorage.setItem('userName', data.name);
-      sessionStorage.setItem('userType', data.admin);
+      localStorage.clear();
+      localStorage.setItem('userId', data.id);
+      localStorage.setItem('userName', data.name);
+      localStorage.setItem('userType', data.admin);
       history.push('/dashboard');
     }
     // setErrorTips(true);
@@ -37,6 +37,21 @@ const Login: React.FC<LoginProps> = () => {
     // eslint-disable-next-line no-console
     console.log('type', type);
   };
+
+  const handleKeyDown = (e: any) => {
+    if (e.keyCode === 13) {
+      form.validateFields().then(async (values: any) => {
+        getLogin(values);
+      });
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
 
   return (
     <>

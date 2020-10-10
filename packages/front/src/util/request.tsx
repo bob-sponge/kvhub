@@ -76,8 +76,7 @@ ajax.interceptors.request.use(
 );
 
 const jumpLogin = () => {
-  sessionStorage.removeItem('userId');
-  sessionStorage.removeItem('userType');
+  localStorage.clear();
   history.replace('/login');
 };
 

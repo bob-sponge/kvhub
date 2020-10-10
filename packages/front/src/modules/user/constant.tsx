@@ -1,7 +1,7 @@
 import React from 'react';
 import { Popconfirm } from 'antd';
 import * as css from './index.modules.less';
-import { timeAgo } from '../dashboard/constant';
+import moment from 'moment';
 
 const TYPE_STATE = {
   '0': 'Normal',
@@ -47,7 +47,7 @@ export const columns = (onDelete: Function, onReset: Function, setAdmin: Functio
       dataIndex: 'lastTimestamp',
       render: (text: any) => {
         if (text) {
-          return timeAgo(text);
+          return moment(text).format('YYYY-MM-DD HH:mm:ss');
         } else {
           return text;
         }
@@ -57,19 +57,11 @@ export const columns = (onDelete: Function, onReset: Function, setAdmin: Functio
       title: 'Opeartion',
       key: 'operation',
       render: (_text: any, record: any) => {
-        let permissions: any[] = [];
-        const { permission } = record;
-        if (permission && permission.includes(',')) {
-          let auth = permission.split(',');
-          permissions = permissions.concat(auth);
-        } else {
-          permissions.push(permissions);
-        }
         return (
           <>
-            {sessionStorage.getItem('userType') === '0' && (
+            {localStorage.getItem('userType') === '0' && (
               <div className={css.operation}>
-                <Popconfirm title="Are you sure delete the user?" onConfirm={() => onDelete(record)}>
+                <Popconfirm title="Are you sure to delete the user?" onConfirm={() => onDelete(record)}>
                   <span>Delete</span>
                 </Popconfirm>
                 <span onClick={() => onReset(record)}>Reset</span>

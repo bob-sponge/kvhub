@@ -99,8 +99,15 @@ const User: React.SFC<UserProps> = (_props: UserProps) => {
   const handleOk = useCallback(() => {
     form.validateFields().then(values => {
       if (!values.outOfDate) {
-        let params = Object.assign({}, resetPwd, values);
-        reset(params);
+        const { newPass, newPass1 } = values;
+        if (newPass !== newPass1) {
+          Modal.error({
+            title: 'The two passwords do not match.',
+          });
+        } else {
+          let params = Object.assign({}, resetPwd, values);
+          reset(params);
+        }
       }
     });
   }, [resetPwd]);
@@ -124,10 +131,15 @@ const User: React.SFC<UserProps> = (_props: UserProps) => {
   };
 
   const checkValue = (_: any, value: any) => {
+    const regStr = /^(?=.*\d)(?=.*[a-zA-Z])(?=.*[~!@#$%^&*])[\da-zA-Z~!@#$%^&*]{6,16}$/g;
+    const reg = new RegExp(regStr);
     if (!value) {
       return Promise.reject('Please input your new password!');
-    } else if (value && value.length > 256) {
-      return Promise.reject('Can contain at most 256 characters');
+    } else if (!reg.test(value)) {
+      return Promise.reject(
+        // eslint-disable-next-line max-len
+        'The password must contain letters, numbers, and special characters (~!@#$%^&*) and contains 6 to 16 characters.',
+      );
     } else {
       return Promise.resolve();
     }
@@ -165,7 +177,17 @@ const User: React.SFC<UserProps> = (_props: UserProps) => {
                   validator: checkValue,
                 },
               ]}>
-              <Input onChange={() => onContentChange('newPass')} />
+              <Input onChange={() => onContentChange('newPass')} type="password" />
+            </Form.Item>
+            <Form.Item
+              label="Confirm New Password"
+              name="newPass1"
+              rules={[
+                {
+                  validator: checkValue,
+                },
+              ]}>
+              <Input onChange={() => onContentChange('newPass1')} type="password" />
             </Form.Item>
           </Form>
         </Modal>

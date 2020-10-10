@@ -54,10 +54,14 @@ export const columns = (onMerge: Function, onResufe: Function) => {
       key: 'operation',
       render: (_text: any, record: any) => (
         <div className={css.operation}>
-          {record.type === '0' && sessionStorage.getItem('userType') === '0' && (
+          {record.type === '0' && localStorage.getItem('userType') === '0' && (
             <>
               <span onClick={() => onMerge(record)}>Merge</span>
-              <Popconfirm title="Are you sure？" okText="Yes" cancelText="No" onConfirm={() => onResufe(record)}>
+              <Popconfirm
+                title="Are you sure to refuse the merge？"
+                okText="Yes"
+                cancelText="No"
+                onConfirm={() => onResufe(record)}>
                 <span>Refused</span>
               </Popconfirm>
             </>

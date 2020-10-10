@@ -20,6 +20,7 @@ const NamespaceView: React.FC = () => {
 
   const [total, setTotal] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
+  const [currPageSize, setCurrPageSize] = useState(10);
   const [mode, setMode] = useState<string>(ADD);
   const [keyItem, setKeyItem] = useState<any>(null);
   const [keys, setKeys] = useState<Array<any>>([]);
@@ -68,6 +69,10 @@ const NamespaceView: React.FC = () => {
   const handleConditionChange = useCallback(
     async e => {
       filter.condition = e.target.value;
+      filter.page = 1;
+      filter.pageSize = 10;
+      setCurrentPage(1);
+      setCurrPageSize(10);
       setFilter(filter);
       getList(filter);
     },
@@ -77,7 +82,11 @@ const NamespaceView: React.FC = () => {
   const handleRadioChange = useCallback(
     async e => {
       filter.KeyTranslateProgressStatus = e.target.value;
+      filter.page = 1;
+      filter.pageSize = 10;
       setFilter(filter);
+      setCurrentPage(1);
+      setCurrPageSize(10);
       getList(filter);
     },
     [filter],
@@ -86,6 +95,10 @@ const NamespaceView: React.FC = () => {
   const handleLangChange = useCallback(
     async value => {
       filter.targetLanguageId = value;
+      filter.page = 1;
+      filter.pageSize = 10;
+      setCurrentPage(1);
+      setCurrPageSize(10);
       setFilter(filter);
       getList(filter);
     },
@@ -95,6 +108,10 @@ const NamespaceView: React.FC = () => {
   const handleBranchChange = useCallback(
     async value => {
       filter.branchId = value;
+      filter.page = 1;
+      filter.pageSize = 10;
+      setCurrentPage(1);
+      setCurrPageSize(10);
       setFilter(filter);
       getList(filter);
     },
@@ -106,6 +123,7 @@ const NamespaceView: React.FC = () => {
       filter.page = current === 0 ? 1 : current;
       filter.pageSize = pageSize;
       getList(filter);
+      setCurrPageSize(pageSize);
       setCurrentPage(current === 0 ? 1 : current);
     },
     [filter],
@@ -117,6 +135,7 @@ const NamespaceView: React.FC = () => {
       filter.pageSize = pageSize;
       getList(filter);
       setCurrentPage(current);
+      setCurrPageSize(pageSize);
     },
     [filter],
   );
@@ -174,9 +193,9 @@ const NamespaceView: React.FC = () => {
                 ))}
               </Select>
             )}
-            {sessionStorage.getItem('userType') === '0' && (
+            {localStorage.getItem('userType') === '0' && (
               <Popconfirm
-                title="Are you sure delete this namespace?"
+                title="Are you sure to delete the namespace?"
                 onConfirm={deletNamespace}
                 okText="Yes"
                 cancelText="No">
@@ -244,6 +263,7 @@ const NamespaceView: React.FC = () => {
             onChange={onPageChange}
             onShowSizeChange={onShowSizeChange}
             current={currentPage}
+            pageSize={currPageSize}
             total={total}
           />
           <div className={css.total}>{`Total ${total}`}</div>
@@ -269,7 +289,7 @@ const NamespaceView: React.FC = () => {
           onCancel={() => setDeleteKeyModal(false)}
           okText="ok"
           cancelText="cancle">
-          Are you sure delete the key?
+          Are you sure to delete the key?
         </Modal>
       </Container>
     </Spin>

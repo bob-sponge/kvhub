@@ -27,14 +27,14 @@ const Header = () => {
     }
   };
 
-  const getUserInfo = () => {
+  const getUser = () => {
     browserHistory.push('/profile');
   };
 
   const handleLogOut = async () => {
     const result = await Api.logoutApi();
     if (result.success) {
-      sessionStorage.clear();
+      localStorage.clear();
       browserHistory.push('/login');
     }
   };
@@ -45,13 +45,13 @@ const Header = () => {
         <img src={imgSrc} />
         <Menu onClick={handleClick} selectedKeys={[selectTab]} mode="horizontal">
           <Menu.Item key="translation">Translation</Menu.Item>
-          {sessionStorage.getItem('userType') === '0' && <Menu.Item key="user">User Management</Menu.Item>}
+          {localStorage.getItem('userType') === '0' && <Menu.Item key="user">User Management</Menu.Item>}
         </Menu>
       </div>
       <div className={css.headerRight}>
-        <div className={css.headerToolItem} onClick={getUserInfo}>
+        <div className={css.headerToolItem} onClick={getUser}>
           <UserOutlined />
-          <span>{sessionStorage.getItem('userName')}</span>
+          <span>{localStorage.getItem('userName')}</span>
         </div>
         <div className={css.headerToolItem} onClick={handleLogOut}>
           <ImportOutlined />

@@ -105,8 +105,12 @@ const LanguageItem = ({ item, index, projectView, branchId, pid }: any) => {
             {index === 0 && <span>{' (Reference Language)'}</span>}
           </p>
           <div className={css.languageIocnList}>
-            {sessionStorage.getItem('userType') === '0' && (
-              <Popconfirm title="Are you sure？" okText="Yes" cancelText="No" onConfirm={deleteLanguage}>
+            {localStorage.getItem('userType') === '0' && (
+              <Popconfirm
+                title="Are you sure to delete the language？"
+                okText="Yes"
+                cancelText="No"
+                onConfirm={deleteLanguage}>
                 <Button>
                   <DeleteOutlined />
                 </Button>
