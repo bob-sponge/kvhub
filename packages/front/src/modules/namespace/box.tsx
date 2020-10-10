@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Input, Button, Popover } from 'antd';
-import { ItemKey, ModifyKeyReq, EDIT, RENAME, DELETE } from './constant';
+import { ItemKey, ModifyKeyReq, EDIT, DELETE } from './constant';
 import * as Api from '../../api/namespace';
 import * as css from './styles/namespace.modules.less';
 import { KeyOutlined, SettingOutlined, SwapRightOutlined } from '@ant-design/icons';
@@ -32,9 +32,6 @@ const LanguageBox: React.FC<LanguageBoxProps> = ({
         case EDIT:
           setShowDrawer(EDIT, true, currentKeyData);
           break;
-        case RENAME:
-          setShowDrawer(EDIT, true, currentKeyData);
-          break;
         case DELETE:
           setShowDrawer(DELETE, false, currentKeyData);
           setVisible(false);
@@ -50,9 +47,6 @@ const LanguageBox: React.FC<LanguageBoxProps> = ({
       <div onMouseLeave={() => setVisible(false)}>
         <p className={css.settingOperate} onClick={() => handleKeyOperate(EDIT)}>
           Edit Key
-        </p>
-        <p className={css.settingOperate} onClick={() => handleKeyOperate(RENAME)}>
-          Rename Key
         </p>
         <p className={css.settingOperate} onClick={() => handleKeyOperate(DELETE)}>
           Delete Key

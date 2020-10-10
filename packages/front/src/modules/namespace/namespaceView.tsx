@@ -269,7 +269,7 @@ const NamespaceView: React.FC = () => {
           onCancel={() => setDeleteKeyModal(false)}
           okText="ok"
           cancelText="cancle">
-          Are you sure delete the key?
+          Are you sure to delete the key?
         </Modal>
       </Container>
     </Spin>
