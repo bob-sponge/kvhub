@@ -12,3 +12,5 @@ export const projectAllListApi = () => ajax.get(projectAllListAddress);
 export const languagesApi = () => ajax.get(languagesAddress);
 
 export const projectDetailApi = (id: any) => ajax.get(`${projectDetailAddress}/${id}`);
+
+export const deleteProjectApi = (id: any) => ajax.delete(`/project/${id}`);

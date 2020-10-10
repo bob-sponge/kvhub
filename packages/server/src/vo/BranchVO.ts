@@ -3,4 +3,5 @@ export class BranchVO {
   name: string;
   time: number;
   merge: string;
+  isMaster:boolean;
 }

@@ -39,6 +39,8 @@ export class ErrorMessage {
   static BRANCH_NOT_SAME = 'Branch can not be the same!';
   static BRANCH_NAME_DUPLICATE = 'Branch name is duplicate!';
   static BRANCH_IS_MERGING = 'Branch is merging!';
+  static BRANCH_IS_MASTER = 'Branch is master,can not delete!';
+  static BRANCH_IS_DELETED = 'Branch has been deleted!';
 
   // branch merge
   static BRANCH_MERGE_NOT_EXIST = 'Branch merge is not exist!';
@@ -69,4 +71,14 @@ export class ErrorMessage {
   static VALUE_NOT_BLANK = 'value is not blank!';
   static USER_OR_PASSWORD_IS_WRONG = 'Username or password is wrong!';
   static USER_NOT_EXIST_IN_DB = 'User not exist!';
+  static NAMESPACE_ALREADY_EXISTED = 'namespace alredy existed!';
+}
+
+export class PermissionCtl {
+  static EDIT_PASSWORD = 'E_PD';
+  static DELETE_PROJECT_LANGUAGE = 'D_PL';
+  static DELETE_KEY = 'D_KEY';
+  static DELETE_BRANCH = 'D_BR';
+  static DELETE_PROJECT = 'D_PJ';
+  static MERGE_BRANCH = 'M_BR';
 }

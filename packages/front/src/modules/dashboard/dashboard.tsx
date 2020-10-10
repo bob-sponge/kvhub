@@ -1,31 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import * as css from './style/dashboard.modules.less';
-import { Button, Progress, Empty, Spin } from 'antd';
-import { UploadOutlined, PlusOutlined } from '@ant-design/icons';
+import { Button, Progress, Empty, Spin, Modal, message } from 'antd';
+import { UploadOutlined, PlusOutlined, DeleteOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import Container from '../../container';
 import { doneColor, processColor, formatNumber, timeAgo } from './constant';
 import AddOrEditProject from './addOrEditProject';
 import * as Api from '../../api';
 import { history as browserHistory } from '@ofm/history';
 
+const { confirm } = Modal;
+
 const Dashboard: React.SFC = () => {
   const [visible, setVisible] = useState<boolean>(false);
   const [projectList, setProjectList] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const [navs, setNavs] = useState<any[]>([]);
 
   useEffect(() => {
     getProjectAll();
-    setNavs([
-      {
-        name: 'Home',
-        url: '/',
-      },
-      {
-        name: 'Project Dashboard',
-        url: '',
-      },
-    ]);
   }, []);
 
   const getProjectAll = async () => {
@@ -46,9 +37,26 @@ const Dashboard: React.SFC = () => {
     browserHistory.push(`/languages/${id}`);
   };
 
+  const deleteProject = (e: any, id: any) => {
+    confirm({
+      title: 'Do you want to delete the project?',
+      icon: <ExclamationCircleOutlined />,
+      async onOk() {
+        let result = await Api.deleteProjectApi(id);
+        if (result.success) {
+          getProjectAll();
+          message.success('Delete project successfully!');
+        }
+      },
+    });
+    if (e) {
+      e.stopPropagation();
+    }
+  };
+
   return (
     <Spin spinning={loading}>
-      <Container navs={navs}>
+      <Container>
         <div>
           <div className={css.dashboardTitle}>
             <div className={css.title}>Project Dashboard</div>
@@ -70,8 +78,13 @@ const Dashboard: React.SFC = () => {
                 return (
                   <div className={css.cardWapper} key={index} onClick={() => handleClick(item.id)}>
                     <div className={css.cardList}>
-                      <div className={css.cardTitle} style={{ WebkitBoxOrient: 'vertical' }} title={item.name}>
-                        {item.name}
+                      <div className={css.cardTitle}>
+                        <div className={css.label} style={{ WebkitBoxOrient: 'vertical' }} title={item.name}>
+                          {item.name}
+                        </div>
+                        <div onClick={e => deleteProject(e, item.id)}>
+                          <DeleteOutlined />
+                        </div>
                       </div>
                       <div className={css.cardTranslate}>
                         <div className={css.keys}>

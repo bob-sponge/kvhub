@@ -38,6 +38,16 @@ const ChangePwd: React.SFC = () => {
     }
   };
 
+  const checkValue = (_: any, value: any) => {
+    if (!value) {
+      return Promise.reject('Please input your new password!');
+    } else if (value && value.length > 256) {
+      return Promise.reject('Can contain at most 256 characters');
+    } else {
+      return Promise.resolve();
+    }
+  };
+
   return (
     <div className={css.changPwd}>
       <Form form={form} name="basic" layout="vertical" initialValues={{ remember: true }}>
@@ -51,7 +61,11 @@ const ChangePwd: React.SFC = () => {
         <Form.Item
           label="New Password"
           name="newPass"
-          rules={[{ required: true, message: 'Please input your new password!' }]}>
+          rules={[
+            {
+              validator: checkValue,
+            },
+          ]}>
           <Input onChange={() => onContentChange('newPass')} />
         </Form.Item>
         <Button type="primary" onClick={onSave}>

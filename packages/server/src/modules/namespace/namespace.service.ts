@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/quotes */
+/* eslint-disable prettier/prettier */
 /* eslint-disable max-len */
 /* eslint-disable no-multi-str */
 import { Injectable, BadRequestException } from '@nestjs/common';
@@ -276,7 +278,7 @@ export class NamespaceService {
         branchCommit.commitTime = modifyTime;
         await this.branchCommitRepository.save(branchCommit);
         // 根据 key id 查询比较
-        const keyNameInfo = await this.keyRepository.query(`select * from keyname where key_id = ${keyId}`);
+        const keyNameInfo = await this.keyRepository.query(`select * from keyname where key_id = ${keyId} and latest = true`);
         const keyIdGetName = keyNameInfo[0].name;
         if (keyIdGetName !== keyName) {
           throw new Error(`Key id get name ${keyIdGetName} not equals key name ${keyName}`);
@@ -344,9 +346,9 @@ export class NamespaceService {
     }
 
     // 需要处理， 保证在A 分支创建的key， 在B分支修改，必须重新生成key, key 与分支对应关系为 key : branch = 1 ：1
-    const branchKeyByKeyId = await this.branchKeyRepository.query(`select * from branch_key where key_id = ${keyId}`);
+    const branchKeyByKeyId = await this.branchKeyRepository.query(`select * from branch_key where key_id = ${keyId} and delete=false`);
     const namespaceByKeyId = await this.keyRepository.findByIds([keyId]);
-    const keynameByKeyId = await this.keynameRepository.query(`select * from keyname where key_id = ${keyId}`);
+    const keynameByKeyId = await this.keynameRepository.query(`select * from keyname where key_id = ${keyId} and latest=true`);
     const keyName = keynameByKeyId[0].name;
     const namespaceId = namespaceByKeyId[0].namespaceId;
     if (branchKeyByKeyId[0].branch_id !== branchId) {
@@ -389,7 +391,7 @@ export class NamespaceService {
       logger.info(`insert key name id: ${keyNameId}`);
       // this.keyRepository.query(`update key set actual_id=${keyNameId} where id=${keyEntityId}`);
       // 插入key Value 表,修改的是该语言下的，直接用新值插入，如果老的key 下面还有其他语言的，也需要用之前的值插入
-      const data = await this.keyvalueRepository.query(`select * from keyvalue where key_id = ${keyId}`);
+      const data = await this.keyvalueRepository.query(`select * from keyvalue where key_id = ${keyId} and latest=true`);
       let keyValueEntitys = [];
       const keyValueEntity = new Keyvalue();
       if (keyvalue === null || keyvalue === '' || keyvalue === undefined) {
@@ -469,7 +471,7 @@ export class NamespaceService {
         SELECT project_id
         FROM namespace
         WHERE id = ${id}
-      )
+      ) and delete = false
     )
     `;
     logger.info(`query2 is ${languageQuery}`);
@@ -507,7 +509,21 @@ export class NamespaceService {
     const pageSize = namespaceViewDetail.pageSize;
     let condition = namespaceViewDetail.condition;
     // eslint-disable-next-line @typescript-eslint/quotes
-    condition = condition.replace("'", "\\'");
+    let rcondition = '';
+    for (let index = 0; index < condition.length; index++) {
+      let tmp = condition.charAt(index);
+      if (tmp === "'") {
+        tmp = "\\'";
+      } else if (tmp === '%') {
+        tmp = '/%';
+      } else if (tmp === '_') {
+        tmp = '/_';
+      } else if (tmp === '/') {
+        tmp = '//';
+      }
+      rcondition += tmp;
+    }
+    condition = rcondition;
     const keyTranslateProgressStatus = namespaceViewDetail.KeyTranslateProgressStatus;
     const branchId = namespaceViewDetail.branchId;
     const offset = (page - 1) * pageSize;
@@ -650,7 +666,21 @@ export class NamespaceService {
     let condition = namespaceViewDetail.condition;
     // 需要处理 condition 中包含 ' 的情况
     // eslint-disable-next-line @typescript-eslint/quotes
-    condition = condition.replace("'", "\\'");
+    let rcondition = '';
+    for (let index = 0; index < condition.length; index++) {
+      let tmp = condition.charAt(index);
+      if (tmp === "'") {
+        tmp = "\\'";
+      } else if (tmp === '%') {
+        tmp = '/%';
+      } else if (tmp === '_') {
+        tmp = '/_';
+      } else if (tmp === '/') {
+        tmp = '//';
+      }
+      rcondition += tmp;
+    }
+    condition = rcondition;
     const keyTranslateProgressStatus = namespaceViewDetail.KeyTranslateProgressStatus;
     const branchId = namespaceViewDetail.branchId;
     let statusCondition = '';
@@ -795,7 +825,7 @@ export class NamespaceService {
           JOIN (
             SELECT kn.id AS keynameid, key_id, kn.name AS keyname
             FROM keyname kn
-            WHERE name LIKE '%${searchCondition}%' and latest = true
+            WHERE name LIKE '%${searchCondition}%' escape '/' and latest = true
           ) s3
           ON s2.key_id = s3.key_id) s4
           LEFT JOIN (
@@ -837,7 +867,11 @@ export class NamespaceService {
     if (project === undefined || project.delete) {
       throw new BadRequestException(ErrorMessage.PROJECT_NOT_EXIST);
     }
-
+    // 判断名字是否重复
+    const namespaces = await this.namespaceRepository.find({ projectId: project.id });
+    if (namespaces.find(item => item.name === vo.name.trim()) !== undefined) {
+      throw new BadRequestException(ErrorMessage.NAMESPACE_ALREADY_EXISTED);
+    }
     vo.delete = false;
     vo.modifyTime = new Date();
     vo.name = vo.name.trim();
@@ -878,11 +912,12 @@ export class NamespaceService {
               FROM key
               WHERE id = ${keyId}
             )
-          )
+          ) and delete=false
         ) t3
       ) t2
       ON t1.language_id = t2.language_id
     `;
+    // logger.info(`key view ${query2}`);
     const keyValue = await this.keynameRepository.query(query2);
     const result = {
       keyName: keyNameTrue,

@@ -5,7 +5,6 @@ import { Button, Select, message } from 'antd';
 import LanguageItem from './languageItem';
 import AddNewLanguage from './addNewLanguage';
 import * as Api from '../../api/languages';
-import { projectDetailApi } from '../../api';
 
 const Option = Select.Option;
 
@@ -19,39 +18,6 @@ const Languages = (props: LanguagesProps) => {
   const [languageList, setLanguageList] = useState([]);
   const [branchList, setBranchList] = useState([]);
   const [branchId, setBranchId] = useState('');
-  const [navs, setNavs] = useState<any[]>([]);
-  const [projectDetail, setProjectDetail] = useState<any>({});
-
-  const getProjectDetail = async (id: any) => {
-    let result = await projectDetailApi(id);
-    const { success, data } = result;
-    if (success && data) {
-      setProjectDetail(data);
-    }
-  };
-
-  useEffect(() => {
-    const projectid = match.params.projectId;
-    getProjectDetail(projectid);
-  }, [match]);
-
-  useEffect(() => {
-    const { name } = projectDetail;
-    setNavs([
-      {
-        name: 'Home',
-        url: '/',
-      },
-      {
-        name: 'Project Dashboard',
-        url: '/dashboard',
-      },
-      {
-        name,
-        url: '',
-      },
-    ]);
-  }, [projectDetail]);
 
   const getBranchList = useCallback(async () => {
     const projectId = match.params.projectId;
@@ -88,12 +54,14 @@ const Languages = (props: LanguagesProps) => {
       });
       const res = await Api.projectLanguageSaveApi(content);
       projectView(branchId);
-      message.success(res && res.data);
+      if (res.success) {
+        message.success('Save successfully!');
+      }
     }
   };
 
   return (
-    <ContainerMenu match={match} navs={navs}>
+    <ContainerMenu match={match}>
       <div className={css.main}>
         <div className={css.languages}>
           <div className={css.languagesTitle}>

@@ -18,6 +18,7 @@ import { BranchBody } from 'src/vo/BranchBody';
 import { CompareVO } from 'src/vo/CompareVO';
 import { PermissionGuard } from 'src/permission/permission.guard';
 import { Permission } from 'src/permission/permission.decorator';
+import { PermissionCtl } from 'src/constant/constant';
 
 @Controller('branch')
 @UseGuards(PermissionGuard)
@@ -60,9 +61,10 @@ export class BranchController {
    * @param id id
    */
   @Delete('/delete/:id')
-  @Permission('delete')
-  async deleteBranch(@Param('id') id: number): Promise<ResponseBody> {
-    await this.branchService.deleteBranch(id);
+  @Permission(PermissionCtl.DELETE_BRANCH)
+  async deleteBranch(@Param('id') id: number, @Request() req): Promise<ResponseBody> {
+    const user = req.cookies.token;
+    await this.branchService.deleteBranch(id, user);
     return ResponseBody.okWithData('delete success');
   }
 

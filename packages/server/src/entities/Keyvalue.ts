@@ -1,14 +1,15 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('keyvalue', { schema: 'public' })
 export class Keyvalue {
   @PrimaryGeneratedColumn({ type: 'integer', name: 'id' })
   id: number;
 
-  @Column('character varying', { name: 'value', length: 255 })
+  @Column('character varying', { name: 'value', length: 500 })
   value: string;
 
   @Column('integer', { name: 'key_id' })
+  @Index()
   keyId: number;
 
   @Column('integer', { name: 'language_id' })
@@ -17,8 +18,7 @@ export class Keyvalue {
   @Column('integer', { name: 'merge_id', nullable: true })
   mergeId: number | null;
 
-
-  @Column('character varying', { name: 'commit_id', length: 255 ,nullable:true})
+  @Column('character varying', { name: 'commit_id', length: 255, nullable: true })
   commitId: string;
 
   @Column('character varying', {
@@ -34,6 +34,6 @@ export class Keyvalue {
   })
   midifyTime: Date | null;
 
-  @Column('boolean', { name: 'latest', nullable: true })
+  @Column('boolean', { name: 'latest', nullable: true, default: true })
   latest: boolean | null;
 }

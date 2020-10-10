@@ -17,6 +17,7 @@ import { ProjectLanguage } from 'src/entities/ProjectLanguage';
 import { LanguagesService } from '../languages/languages.service';
 import { Branch } from 'src/entities/Branch';
 import { ConfigService } from '@ofm/nestjs-utils';
+import { ErrorMessage } from 'src/constant/constant';
 
 @Injectable()
 export class ProjectService {
@@ -72,7 +73,7 @@ export class ProjectService {
       throw new BadRequestException('Reference language is not exist');
     }
     // 判断名称是否重复
-    if ((await this.projectRepository.findOne({ name: projectVO.name.trim() })) !== undefined) {
+    if ((await this.projectRepository.findOne({ name: projectVO.name.trim(), delete: false })) !== undefined) {
       throw new BadRequestException('Project name is exist');
     }
     // save project
@@ -114,7 +115,7 @@ export class ProjectService {
     const dashboards: Dashboard[] = [];
 
     // 获取全部的projects转换成dashboards
-    const projects: Project[] = await this.projectRepository.find();
+    const projects: Project[] = await this.projectRepository.find({ delete: false });
     projects.forEach(p => {
       let d = new Dashboard();
       d.id = p.id;
@@ -181,11 +182,11 @@ export class ProjectService {
     // 数据校验
     const project = await this.projectRepository.find({ id, delete: false });
     if (null === project || project.length === 0) {
-      throw new BadRequestException('Project is not exist');
+      throw new BadRequestException(ErrorMessage.PROJECT_NOT_EXIST);
     }
     const branch = await this.branchService.getBranchById(branchId);
     if (undefined === branch) {
-      throw new BadRequestException('Branch is not exist');
+      throw new BadRequestException(ErrorMessage.BRANCH_NOT_EXIST);
     } else {
       if (branch.master !== null && branch.master) {
         masterBranchId = branchId;
@@ -299,5 +300,9 @@ export class ProjectService {
         'project_language pl LEFT JOIN language l on l.id = pl.language_id WHERE ' +
         'pl.delete = FALSE) b ON p.id = b.project_id WHERE p.delete = FALSE ORDER BY p.id',
     );
+  }
+
+  async deleteProject(id: number) {
+    await this.projectRepository.query(`update project set delete=true where id=${id}`);
   }
 }

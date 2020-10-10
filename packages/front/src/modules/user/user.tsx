@@ -9,7 +9,6 @@ interface UserProps {}
 
 const User: React.SFC<UserProps> = (_props: UserProps) => {
   const [form] = Form.useForm();
-  const [navs, setNavs] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [userList, setUserList] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
@@ -19,19 +18,6 @@ const User: React.SFC<UserProps> = (_props: UserProps) => {
   });
   const [visible, setVisible] = useState<boolean>(false);
   const [resetPwd, setResetPwd] = useState<any>({});
-
-  useEffect(() => {
-    setNavs([
-      {
-        name: 'Home',
-        url: '/',
-      },
-      {
-        name: 'User Management',
-        url: '',
-      },
-    ]);
-  }, []);
 
   useEffect(() => {
     getUser(filter);
@@ -137,8 +123,18 @@ const User: React.SFC<UserProps> = (_props: UserProps) => {
     });
   };
 
+  const checkValue = (_: any, value: any) => {
+    if (!value) {
+      return Promise.reject('Please input your new password!');
+    } else if (value && value.length > 256) {
+      return Promise.reject('Can contain at most 256 characters');
+    } else {
+      return Promise.resolve();
+    }
+  };
+
   return (
-    <Container navs={navs}>
+    <Container>
       <div className={css.user}>
         <div className={css.userTitle}>User Management</div>
         <div className={css.userTable}>
@@ -164,7 +160,11 @@ const User: React.SFC<UserProps> = (_props: UserProps) => {
             <Form.Item
               label="New Password"
               name="newPass"
-              rules={[{ required: true, message: 'Please input your new password!' }]}>
+              rules={[
+                {
+                  validator: checkValue,
+                },
+              ]}>
               <Input onChange={() => onContentChange('newPass')} />
             </Form.Item>
           </Form>
