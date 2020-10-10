@@ -1,7 +1,8 @@
 import React, { useState, useCallback } from 'react';
-import { Form, Input, Button, message } from 'antd';
+import { Form, Input, Button, message, Modal } from 'antd';
 import * as css from './style/index.modules.less';
 import * as Api from '../../api/user';
+import { history as browserHistory } from '@ofm/history';
 
 const ChangePwd: React.SFC = () => {
   const [form] = Form.useForm();
@@ -19,12 +20,19 @@ const ChangePwd: React.SFC = () => {
   const onSave = useCallback(() => {
     form.validateFields().then(values => {
       if (!values.outOfDate) {
-        let params = Object.assign({}, resetPwd, {
-          userId: Number(sessionStorage.getItem('userId')),
-          oldPass: values.oldPass,
-          newPass: values.newPass,
-        });
-        reset(params);
+        const { newPass, newPass1 } = values;
+        if (newPass !== newPass1) {
+          Modal.error({
+            title: '两次密码输入不一致！',
+          });
+        } else {
+          let params = Object.assign({}, resetPwd, {
+            userId: Number(sessionStorage.getItem('userId')),
+            oldPass: values.oldPass,
+            newPass: values.newPass,
+          });
+          reset(params);
+        }
       }
     });
   }, [resetPwd]);
@@ -35,6 +43,8 @@ const ChangePwd: React.SFC = () => {
     if (success) {
       message.success(data);
       form.resetFields();
+      sessionStorage.clear();
+      browserHistory.push('/login');
     }
   };
 
@@ -67,6 +77,16 @@ const ChangePwd: React.SFC = () => {
             },
           ]}>
           <Input onChange={() => onContentChange('newPass')} />
+        </Form.Item>
+        <Form.Item
+          label="Confirm New Password"
+          name="newPass1"
+          rules={[
+            {
+              validator: checkValue,
+            },
+          ]}>
+          <Input onChange={() => onContentChange('newPass1')} />
         </Form.Item>
         <Button type="primary" onClick={onSave}>
           Save

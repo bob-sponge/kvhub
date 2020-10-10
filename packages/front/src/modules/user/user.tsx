@@ -99,8 +99,15 @@ const User: React.SFC<UserProps> = (_props: UserProps) => {
   const handleOk = useCallback(() => {
     form.validateFields().then(values => {
       if (!values.outOfDate) {
-        let params = Object.assign({}, resetPwd, values);
-        reset(params);
+        const { newPass, newPass1 } = values;
+        if (newPass !== newPass1) {
+          Modal.error({
+            title: '两次密码输入不一致！',
+          });
+        } else {
+          let params = Object.assign({}, resetPwd, values);
+          reset(params);
+        }
       }
     });
   }, [resetPwd]);
@@ -166,6 +173,16 @@ const User: React.SFC<UserProps> = (_props: UserProps) => {
                 },
               ]}>
               <Input onChange={() => onContentChange('newPass')} />
+            </Form.Item>
+            <Form.Item
+              label="Confirm New Password"
+              name="newPass1"
+              rules={[
+                {
+                  validator: checkValue,
+                },
+              ]}>
+              <Input onChange={() => onContentChange('newPass1')} />
             </Form.Item>
           </Form>
         </Modal>

@@ -4,19 +4,31 @@ import { UserOutlined, ImportOutlined } from '@ant-design/icons';
 import { Menu } from 'antd';
 import { history as browserHistory } from '@ofm/history';
 import * as Api from '../../api/login';
+import * as UserApi from '../../api/user';
 
 const imgSrc = require('./header.png');
 
 const Header = () => {
   const [selectTab, setSelectTab] = useState<string>('translation');
+  const [userInfo, setUserInfo] = useState<any>({});
 
   useEffect(() => {
+    getUserInfo();
     if (window.location.pathname === '/user' || window.location.pathname === '/profile') {
       setSelectTab('user');
     } else {
       setSelectTab('translation');
     }
   }, []);
+
+  const getUserInfo = async () => {
+    let useId = Number(sessionStorage.getItem('userId'));
+    const result = await UserApi.getUserInfoApi(useId);
+    const { success, data } = result;
+    if (success) {
+      setUserInfo(data);
+    }
+  };
 
   const handleClick = (e: any) => {
     setSelectTab(e.key);
@@ -27,7 +39,7 @@ const Header = () => {
     }
   };
 
-  const getUserInfo = () => {
+  const getUser = () => {
     browserHistory.push('/profile');
   };
 
@@ -49,9 +61,9 @@ const Header = () => {
         </Menu>
       </div>
       <div className={css.headerRight}>
-        <div className={css.headerToolItem} onClick={getUserInfo}>
+        <div className={css.headerToolItem} onClick={getUser}>
           <UserOutlined />
-          <span>{sessionStorage.getItem('userName')}</span>
+          <span>{userInfo.name}</span>
         </div>
         <div className={css.headerToolItem} onClick={handleLogOut}>
           <ImportOutlined />

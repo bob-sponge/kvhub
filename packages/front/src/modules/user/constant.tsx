@@ -57,14 +57,6 @@ export const columns = (onDelete: Function, onReset: Function, setAdmin: Functio
       title: 'Opeartion',
       key: 'operation',
       render: (_text: any, record: any) => {
-        let permissions: any[] = [];
-        const { permission } = record;
-        if (permission && permission.includes(',')) {
-          let auth = permission.split(',');
-          permissions = permissions.concat(auth);
-        } else {
-          permissions.push(permissions);
-        }
         return (
           <>
             {sessionStorage.getItem('userType') === '0' && (
