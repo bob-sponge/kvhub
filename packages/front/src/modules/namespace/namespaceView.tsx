@@ -176,7 +176,7 @@ const NamespaceView: React.FC = () => {
             )}
             {localStorage.getItem('userType') === '0' && (
               <Popconfirm
-                title="Are you sure delete this namespace?"
+                title="Are you sure to delete the namespace?"
                 onConfirm={deletNamespace}
                 okText="Yes"
                 cancelText="No">
@@ -269,7 +269,7 @@ const NamespaceView: React.FC = () => {
           onCancel={() => setDeleteKeyModal(false)}
           okText="ok"
           cancelText="cancle">
-          Are you sure delete the key?
+          Are you sure to delete the key?
         </Modal>
       </Container>
     </Spin>
