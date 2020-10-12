@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Input, Popover, Drawer, Form, Col, Row, Button } from 'antd';
+import { Input, Popover, Drawer, Form, Col, Row, Button, Modal, Popconfirm } from 'antd';
 import * as css from './styles/namespace.modules.less';
 import * as Api from '../../api/namespace';
-import { EDIT, ADD } from './constant';
-import { FormOutlined } from '@ant-design/icons';
+import { EDIT, ADD, checkValue, checkMax } from './constant';
+import { ExclamationCircleOutlined, FormOutlined } from '@ant-design/icons';
 const { TextArea } = Input;
 
 interface EditKeyDrawerProps {
@@ -36,6 +36,10 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
   });
   const [currKeyName, setKeyName] = useState(keyItem ? keyItem.keyName : '');
   const [form] = Form.useForm();
+
+  useEffect(() => {
+    getLanguageInfo();
+  }, []);
 
   const modifyKeyName = useCallback(async () => {
     if (!errorTips.show) {
@@ -210,29 +214,15 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
     });
   }, [keyItem]);
 
-  const checkValue = (label: string) => {
-    let validator: any[] = [
-      {
-        required: true,
-        message: label === 'key' ? `Please enter ${label}!` : `Please enter ${label} language!`,
+  const showPopConfirm = () => {
+    Modal.confirm({
+      icon: <ExclamationCircleOutlined />,
+      content: 'Changes have been made. Exit?',
+      onOk() {
+        onClose();
       },
-      {
-        max: 500,
-        message: 'Can contain at most 500 characters',
-      },
-    ];
-    return validator;
+    });
   };
-
-  const checkMax: any[] = [
-    {
-      max: 500,
-      message: 'Can contain at most 500 characters',
-    },
-  ];
-  useEffect(() => {
-    getLanguageInfo();
-  }, []);
 
   return (
     <div>
@@ -240,7 +230,7 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
         maskClosable={false}
         title={mode === ADD ? 'Add New Item' : getEditTitle()}
         width={590}
-        onClose={() => onClose()}
+        onClose={() => showPopConfirm()}
         visible={visible}
         bodyStyle={{ paddingBottom: 80 }}
         footer={
@@ -248,9 +238,9 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
             style={{
               textAlign: 'right',
             }}>
-            <Button onClick={() => onClose()} style={{ marginRight: 8 }}>
-              Cancel
-            </Button>
+            <Popconfirm title="Changes have been made. Exit?" onConfirm={() => onClose()}>
+              <Button style={{ marginRight: 8 }}>Cancel</Button>
+            </Popconfirm>
             <Button onClick={() => modifyLanguage()} type="primary">
               Submit
             </Button>

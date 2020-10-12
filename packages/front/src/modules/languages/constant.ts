@@ -39,12 +39,12 @@ export const Rule = () => {
   return [
     { required: true, message: 'Please input Namespace Name!' },
     {
-      validator: (_rule: any, value: any) => {
-        if ((value && value.length <= 20) || !value) {
-          return Promise.resolve();
-        }
-        return Promise.reject('Name can contain at most 20 characters');
-      },
+      max: 20,
+      message: 'Name can contain at most 20 characters',
     },
   ];
+};
+
+export const defaultLanguage = {
+  languageId: undefined,
 };

@@ -1,20 +1,30 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Drawer, Form, Button, Select } from 'antd';
-import { CheckOutlined } from '@ant-design/icons';
+import { Drawer, Form, Button, Select, Modal, Popconfirm } from 'antd';
+import { CheckOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import { languagesAllApi } from '../../api/languages';
 import * as css from './styles/addNewLanguage.modules.less';
+import { defaultLanguage } from './constant';
+import { compareObject } from '../dashboard/constant';
+
+const { confirm } = Modal;
 
 const Option = Select.Option;
 
 interface InjectedProps {
   visible: boolean;
   changeModal: Function;
+  setVisible: Function;
 }
 
-const AddNewLanguage = ({ visible, changeModal }: InjectedProps) => {
+const AddNewLanguage = (props: InjectedProps) => {
   const [form] = Form.useForm();
+  const { setVisible, visible, changeModal } = props;
   const [languageList, setLanguageList] = useState([]);
-  // const [namespaceList, setNamespaceList] = useState([]);
+  const [detail, setDetail] = useState({});
+
+  useEffect(() => {
+    setDetail(Object.assign({}, defaultLanguage));
+  }, []);
 
   const languagesAll = useCallback(async () => {
     const res = await languagesAllApi();
@@ -27,21 +37,6 @@ const AddNewLanguage = ({ visible, changeModal }: InjectedProps) => {
     languagesAll();
   }, [languagesAll]);
 
-  // const addNamespaceList = () => {
-  //   const list: any = Object.assign([], namespaceList);
-  //   list.push({
-  //     key: `namespace${namespaceList.length + 1}`,
-  //     name: `namespace - ${namespaceList.length + 1}`,
-  //   });
-  //   setNamespaceList(list);
-  // };
-
-  // const deleteNamespaceList = (index: number) => {
-  //   const list = Object.assign([], namespaceList);
-  //   list.splice(index);
-  //   setNamespaceList(list);
-  // };
-
   const addLanguage = () => {
     form.validateFields().then(values => {
       if (values && !values.outOfDate) {
@@ -52,9 +47,17 @@ const AddNewLanguage = ({ visible, changeModal }: InjectedProps) => {
     });
   };
 
-  const closeModal = (detail?: any) => {
+  const closeModal = (values?: any) => {
     form.resetFields();
-    changeModal(detail);
+    changeModal(values);
+    setVisible(false);
+    setDetail({});
+  };
+
+  const handleSelect = (value: any) => {
+    setDetail({
+      languageId: value,
+    });
   };
 
   const renderFooter = () => {
@@ -63,9 +66,7 @@ const AddNewLanguage = ({ visible, changeModal }: InjectedProps) => {
         style={{
           textAlign: 'right',
         }}>
-        <Button onClick={() => closeModal()} style={{ marginRight: 8 }}>
-          Cancel
-        </Button>
+        {renderCancel()}
         <Button icon={<CheckOutlined />} onClick={() => addLanguage()} type="primary">
           Submit
         </Button>
@@ -73,25 +74,53 @@ const AddNewLanguage = ({ visible, changeModal }: InjectedProps) => {
     );
   };
 
+  const renderCancel = useCallback(() => {
+    if (!compareObject(defaultLanguage, detail)) {
+      return (
+        <Popconfirm
+          title="Changes have been made. Exit?"
+          onConfirm={() => {
+            closeModal();
+          }}>
+          <Button style={{ marginRight: 8 }}>Cancel</Button>
+        </Popconfirm>
+      );
+    } else {
+      return (
+        <Button style={{ marginRight: 8 }} onClick={() => closeModal()}>
+          Cancel
+        </Button>
+      );
+    }
+  }, [detail]);
+
+  const onClose = useCallback(() => {
+    if (!compareObject(defaultLanguage, detail)) {
+      confirm({
+        icon: <ExclamationCircleOutlined />,
+        content: 'Changes have been made. Exit?',
+        onOk() {
+          closeModal();
+        },
+      });
+    } else {
+      closeModal();
+    }
+  }, [detail]);
+
   return (
     <Drawer
       title="Add New Language"
       placement="right"
       width={590}
-      onClose={() => closeModal()}
+      onClose={onClose}
       visible={visible}
       destroyOnClose={true}
       closable={true}
-      // bodyStyle={{ paddingBottom: 80 }}
-      // headerStyle={{ display: 'none' }}
       footer={renderFooter()}>
       <Form layout="vertical" form={form} className={css.main}>
-        {/* <div className={css.title}>
-            <p>{'Add New Language'}</p>
-            <CloseOutlined className={css.icon} />
-          </div> */}
         <Form.Item name="Language" label="Language" rules={[{ required: true, message: 'Please select language' }]}>
-          <Select placeholder="Please select language">
+          <Select placeholder="Please select language" onChange={handleSelect}>
             {languageList &&
               languageList.map((item: any) => {
                 return (
@@ -102,29 +131,7 @@ const AddNewLanguage = ({ visible, changeModal }: InjectedProps) => {
               })}
           </Select>
         </Form.Item>
-
-        {/* <div className={css.title}>
-            <p>{'Namespace'}</p>
-          </div> */}
-
-        {/* {namespaceList &&
-            namespaceList.map((item: any, index) => {
-              return (
-                <Form.Item name={item.key} label={item.name} key={item.key}>
-                  <div className={css.namespaceForm}>
-                    <Input placeholder="Please enter namespace" />
-                    {namespaceList.length > 1 && (
-                      <CloseOutlined onClick={() => deleteNamespaceList(index)} className={css.icon} />
-                    )}
-                  </div>
-                </Form.Item>
-              );
-            })} */}
       </Form>
-      {/* <Button onClick={addNamespaceList}>
-          <PlusOutlined />
-          {'Add Namespace'}
-        </Button> */}
     </Drawer>
   );
 };

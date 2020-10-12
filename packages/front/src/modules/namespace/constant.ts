@@ -228,3 +228,21 @@ export interface KeyName {
   keyId: number;
   keyName: string;
 }
+
+export const checkValue = (label: string) => {
+  let validator: any[] = [
+    {
+      required: true,
+      message: label === 'key' ? `Please enter ${label}!` : `Please enter ${label} language!`,
+    },
+  ];
+  validator = validator.concat(checkMax);
+  return validator;
+};
+
+export const checkMax: any[] = [
+  {
+    max: 500,
+    message: 'Can contain at most 500 characters',
+  },
+];

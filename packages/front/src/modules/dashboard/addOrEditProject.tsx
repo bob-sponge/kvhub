@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Drawer, Button, Form, Input, Select, Modal, message } from 'antd';
+import { Drawer, Button, Form, Input, Select, Modal, message, Popconfirm } from 'antd';
 import * as css from './style/addOrEditProject.modules.less';
 import { CheckOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import * as Api from '../../api';
@@ -16,10 +16,11 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
   const { visible, setVisible, getProjectAll } = props;
   const [form] = Form.useForm();
   const [languages, setLanguages] = useState<any[]>([]);
-  const [detail, setDetail] = useState<any>(defaultDetail);
+  const [detail, setDetail] = useState<any>();
 
   useEffect(() => {
     getLanguages();
+    setDetail(Object.assign({}, defaultDetail));
   }, []);
 
   const getLanguages = async () => {
@@ -61,7 +62,7 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
   const renderFooter = () => {
     return (
       <div className={css.drawerFooter}>
-        <Button onClick={onClose}>Cancel</Button>
+        {renderCancel()}
         <Button icon={<CheckOutlined />} type="primary" onClick={handleAdd}>
           Submit
         </Button>
@@ -69,11 +70,33 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
     );
   };
 
+  const renderCancel = useCallback(() => {
+    let formDetail = {
+      name: form.getFieldValue('name'),
+      referenceId: form.getFieldValue('referenceId'),
+    };
+    if (!compareObject(defaultDetail, formDetail)) {
+      return (
+        <Popconfirm
+          title="Changes have been made. Exit?"
+          onConfirm={() => {
+            setVisible(false);
+            form.resetFields();
+          }}>
+          <Button>Cancel</Button>
+        </Popconfirm>
+      );
+    } else {
+      return <Button onClick={() => setVisible(false)}>Cancel</Button>;
+    }
+  }, [form]);
+
   const onClose = useCallback(() => {
     let formDetail = {
       name: form.getFieldValue('name'),
       referenceId: form.getFieldValue('referenceId'),
     };
+
     if (!compareObject(defaultDetail, formDetail)) {
       showPopConfirm(() => {
         setVisible(false);
@@ -82,7 +105,7 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
     } else {
       setVisible(false);
     }
-  }, [detail, form]);
+  }, [form]);
 
   const showPopConfirm = (onPopOk: Function) => {
     confirm({

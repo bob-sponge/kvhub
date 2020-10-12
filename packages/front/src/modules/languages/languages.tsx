@@ -49,7 +49,6 @@ const Languages = (props: LanguagesProps) => {
     if (detail) {
       const projectId = match.params.projectId;
       const content = Object.assign({}, detail, {
-        // id: branchId,
         projectId: parseInt(projectId),
       });
       const res = await Api.projectLanguageSaveApi(content);
@@ -97,7 +96,7 @@ const Languages = (props: LanguagesProps) => {
                     branchId={branchId}
                     item={item}
                     index={index}
-                    key={item.id}
+                    key={index}
                     projectView={projectView}
                   />
                 );
@@ -105,7 +104,7 @@ const Languages = (props: LanguagesProps) => {
           </div>
         </div>
       </div>
-      <AddNewLanguage visible={visible} changeModal={changeModal} />
+      <AddNewLanguage visible={visible} setVisible={setVisible} changeModal={changeModal} />
     </ContainerMenu>
   );
 };
