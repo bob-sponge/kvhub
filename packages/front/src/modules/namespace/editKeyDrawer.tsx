@@ -210,19 +210,12 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
     });
   }, [keyItem]);
 
-  // const checkValue = (_: any, value: any) => {
-  //   if (!value) {
-  //     return Promise.reject('Please enter reference language');
-  //   } else if (value && value.length > 500) {
-  //     return Promise.reject('Can contain at most 500 characters');
-  //   } else {
-  //     return Promise.resolve();
-  //   }
-  // };
-
   const checkValue = (label: string) => {
     let validator: any[] = [
-      { required: true, message: `Please enter ${label} language!` },
+      {
+        required: true,
+        message: label === 'key' ? `Please enter ${label}!` : `Please enter ${label} language!`,
+      },
       {
         max: 500,
         message: 'Can contain at most 500 characters',
@@ -287,7 +280,7 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
                       <Form.Item
                         name={ele.name}
                         label={
-                          <div>
+                          <div className="reference">
                             <span className={css.label}>{ele.name}</span>
                             <span>{ele.name}</span>
                             {ele.referenceLanguage && <span className={css.refLanguage}>(Reference Language)</span>}
@@ -313,7 +306,7 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
                           initialValue={ele.value}
                           name={ele.name}
                           label={
-                            <div>
+                            <div className="reference">
                               <span className={css.label}>{ele.name}</span>
                               <span>{ele.name}</span>
                               {ele.referenceLanguage && <span className={css.refLanguage}>(Reference Language)</span>}
