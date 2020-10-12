@@ -94,13 +94,6 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
     });
   };
 
-  const checkProjectName = (_rule: any, value: any) => {
-    if (value && value.length <= 100) {
-      return Promise.resolve();
-    }
-    return Promise.reject('Project name can contain at most 100 characters');
-  };
-
   return (
     <Drawer
       title="Add New Project"
@@ -116,7 +109,13 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
         <Form.Item
           label="Project Name"
           name="name"
-          rules={[{ required: true, message: 'Please input your project name!' }, { validator: checkProjectName }]}>
+          rules={[
+            { required: true, message: 'Please input your project name!' },
+            {
+              max: 100,
+              message: 'Project name can contain at most 100 characters',
+            },
+          ]}>
           <Input onChange={e => onContentChange('name', e)} />
         </Form.Item>
         <Form.Item

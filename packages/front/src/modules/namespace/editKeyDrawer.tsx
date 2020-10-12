@@ -210,16 +210,33 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
     });
   }, [keyItem]);
 
-  const checkValue = (_: any, value: any) => {
-    if (!value) {
-      return Promise.reject('Please enter reference language');
-    } else if (value && value.length > 500) {
-      return Promise.reject('Can contain at most 500 characters');
-    } else {
-      return Promise.resolve();
-    }
+  // const checkValue = (_: any, value: any) => {
+  //   if (!value) {
+  //     return Promise.reject('Please enter reference language');
+  //   } else if (value && value.length > 500) {
+  //     return Promise.reject('Can contain at most 500 characters');
+  //   } else {
+  //     return Promise.resolve();
+  //   }
+  // };
+
+  const checkValue = (label: string) => {
+    let validator: any[] = [
+      { required: true, message: `Please enter ${label} language!` },
+      {
+        max: 500,
+        message: 'Can contain at most 500 characters',
+      },
+    ];
+    return validator;
   };
 
+  const checkMax: any[] = [
+    {
+      max: 500,
+      message: 'Can contain at most 500 characters',
+    },
+  ];
   useEffect(() => {
     getLanguageInfo();
   }, []);
@@ -258,11 +275,7 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
                         <span className={css.keyLabel}>key</span>
                       </div>
                     }
-                    rules={[
-                      {
-                        validator: checkValue,
-                      },
-                    ]}>
+                    rules={checkValue('key')}>
                     <TextArea />
                   </Form.Item>
                 </Col>
@@ -280,25 +293,7 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
                             {ele.referenceLanguage && <span className={css.refLanguage}>(Reference Language)</span>}
                           </div>
                         }
-                        rules={
-                          ele.referenceLanguage
-                            ? [
-                                {
-                                  validator: checkValue,
-                                },
-                              ]
-                            : [
-                                {
-                                  validator: (_: any, value: any) => {
-                                    if (value && value.length > 500) {
-                                      return Promise.reject('Can contain at most 500 characters');
-                                    } else {
-                                      return Promise.resolve();
-                                    }
-                                  },
-                                },
-                              ]
-                        }>
+                        rules={ele.referenceLanguage ? checkValue('reference') : checkMax}>
                         <TextArea />
                       </Form.Item>
                     </Col>
@@ -324,25 +319,7 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
                               {ele.referenceLanguage && <span className={css.refLanguage}>(Reference Language)</span>}
                             </div>
                           }
-                          rules={
-                            ele.referenceLanguage
-                              ? [
-                                  {
-                                    validator: checkValue,
-                                  },
-                                ]
-                              : [
-                                  {
-                                    validator: (_: any, value: any) => {
-                                      if (value && value.length > 500) {
-                                        return Promise.reject('Can contain at most 500 characters');
-                                      } else {
-                                        return Promise.resolve();
-                                      }
-                                    },
-                                  },
-                                ]
-                          }>
+                          rules={ele.referenceLanguage ? checkValue('reference') : checkMax}>
                           <TextArea value={ele.value} />
                         </Form.Item>
                       </Col>

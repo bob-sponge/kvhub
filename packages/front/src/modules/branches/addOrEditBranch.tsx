@@ -90,13 +90,6 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
     form.resetFields();
   };
 
-  const checkBranchName = (_rule: any, value: any) => {
-    if (value && value.length <= 100) {
-      return Promise.resolve();
-    }
-    return Promise.reject('Branch name can contain at most 100 characters');
-  };
-
   return (
     <Drawer
       title="Create Branch"
@@ -138,7 +131,13 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
         <Form.Item
           label="Branch Name"
           name="name"
-          rules={[{ required: true, message: 'Please input Branch Name!' }, { validator: checkBranchName }]}>
+          rules={[
+            { required: true, message: 'Please input Branch Name!' },
+            {
+              max: 100,
+              message: 'Branch name can contain at most 100 characters',
+            },
+          ]}>
           <Input />
         </Form.Item>
       </Form>
