@@ -56,7 +56,7 @@ export class BranchService {
    * 查询全部branch
    */
   async findAllBranch(): Promise<Branch[]> {
-    return await this.branchRepository.find();
+    return await this.branchRepository.find({delete: false});
   }
 
   /**
@@ -327,7 +327,7 @@ export class BranchService {
     let data: [Branch[], number] = [[], 0];
     if (page.content === null || page.content === CommonConstant.STRING_BLANK) {
       data = await this.branchRepository.findAndCount({
-        where: { projectId: page.projectId },
+        where: { projectId: page.projectId, delete: false },
         order: { name: 'ASC' },
         skip: start,
         take: page.size,
@@ -335,7 +335,7 @@ export class BranchService {
     } else {
       // 查询不区分大小写
       data = await this.branchRepository.findAndCount({
-        where: { projectId: page.projectId, name: Like('%' + page.content + '%') },
+        where: { projectId: page.projectId, name: Like('%' + page.content + '%'), delete: false },
         order: { name: 'ASC' },
         skip: start,
         take: page.size,
@@ -409,7 +409,7 @@ export class BranchService {
    * @param projectId
    */
   async findBranchByProjectId(projectId: number): Promise<Branch[]> {
-    return await this.branchRepository.find({ projectId });
+    return await this.branchRepository.find({ projectId, delete: false });
   }
 
   /**
@@ -436,7 +436,7 @@ export class BranchService {
     let isMaster = false;
     // check branch exist?
     if (branchBody.branchId !== null && branchBody.branchId !== undefined) {
-      const branch = await this.branchRepository.findOne({ id: branchBody.branchId });
+      const branch = await this.branchRepository.findOne({ id: branchBody.branchId, delete: false });
       if (branch === undefined) {
         throw new BadRequestException(ErrorMessage.BRANCH_NOT_EXIST);
       } else {
@@ -454,7 +454,7 @@ export class BranchService {
 
     // check branch name duplicate
     const dupBranch = await this.branchRepository.find({
-      where: { name: branchBody.name.trim(), projectId: branchBody.projectId },
+      where: { name: branchBody.name.trim(), projectId: branchBody.projectId, delete: false },
     });
     if (dupBranch !== null && dupBranch.length > 0) {
       throw new BadRequestException(ErrorMessage.BRANCH_NAME_DUPLICATE);
