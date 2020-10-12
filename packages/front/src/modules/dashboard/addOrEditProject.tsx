@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Drawer, Button, Form, Input, Select, message, Modal } from 'antd';
+import { Drawer, Button, Form, Input, Select, Modal, message } from 'antd';
 import * as css from './style/addOrEditProject.modules.less';
 import { CheckOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import * as Api from '../../api';
@@ -30,13 +30,9 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
     }
   };
 
-  const onContentChange = (label: string) => {
-    form.validateFields().then(values => {
-      if (!values.outOfDate) {
-        detail[label] = label === 'name' ? values[label].trim() : values[label];
-        setDetail({ ...detail });
-      }
-    });
+  const onContentChange = (label: string, e: any) => {
+    detail[label] = label === 'name' ? e.target.value : e;
+    setDetail({ ...detail });
   };
 
   const addProject = async (params: any) => {
@@ -116,18 +112,18 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
       destroyOnClose={true}
       className={css.addProjectDrawer}
       footer={renderFooter()}>
-      <Form form={form} name="basic" layout="vertical" initialValues={{ remember: true }}>
+      <Form form={form} name="basic" layout="vertical">
         <Form.Item
           label="Project Name"
           name="name"
           rules={[{ required: true, message: 'Please input your project name!' }, { validator: checkProjectName }]}>
-          <Input onChange={() => onContentChange('name')} />
+          <Input onChange={e => onContentChange('name', e)} />
         </Form.Item>
         <Form.Item
           label="Reference Language"
           name="referenceId"
           rules={[{ required: true, message: 'Please select reference language!' }]}>
-          <Select onChange={() => onContentChange('referenceId')}>
+          <Select onChange={e => onContentChange('referenceId', e)}>
             {languages &&
               languages.length > 0 &&
               languages.map(item => {
