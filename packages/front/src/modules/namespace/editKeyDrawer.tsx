@@ -2,8 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Input, Popover, Drawer, Form, Col, Row, Button, Modal, Popconfirm } from 'antd';
 import * as css from './styles/namespace.modules.less';
 import * as Api from '../../api/namespace';
-import { EDIT, ADD, checkValue, checkMax } from './constant';
+import { EDIT, ADD, checkValue, checkMax, defaultKeyDetail } from './constant';
 import { ExclamationCircleOutlined, FormOutlined } from '@ant-design/icons';
+import { compareObject } from '../dashboard/constant';
 const { TextArea } = Input;
 
 interface EditKeyDrawerProps {
@@ -15,6 +16,7 @@ interface EditKeyDrawerProps {
   namespaceId: number;
   languages: any;
   refreshList: Function;
+  onCancle: Function;
 }
 
 const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
@@ -26,6 +28,7 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
   namespaceId,
   languages,
   refreshList,
+  onCancle,
 }: EditKeyDrawerProps) => {
   const [language, setLanguage] = useState<any>(null);
   const [popoverVisible, setPopoverVisible] = useState(false);
@@ -35,10 +38,14 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
     tips: '',
   });
   const [currKeyName, setKeyName] = useState(keyItem ? keyItem.keyName : '');
+  const [detail, setDetail] = useState<any>({});
+  const [defaultEditDetail, setDefaultEditDetail] = useState<any>({});
+  const [editDetail, setEditDetail] = useState<any>({});
   const [form] = Form.useForm();
 
   useEffect(() => {
     getLanguageInfo();
+    setDetail(Object.assign({}, defaultKeyDetail));
   }, []);
 
   const modifyKeyName = useCallback(async () => {
@@ -148,6 +155,7 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
       const languageRes = await Api.getLanguagesByKeyId(keyItem.keyId);
       if (languageRes.success) {
         const editLanguages: any = [];
+        const detailLanguages: any[] = [];
         languageRes.data.value.map((ele: any) => {
           const lang = languages.find((t: any) => t.id === ele.language_id);
           if (lang) {
@@ -158,8 +166,11 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
               referenceLanguage: lang.referenceLanguage,
             };
             editLanguages.push(obj);
+            detailLanguages.push(obj);
           }
         });
+        setDefaultEditDetail([...detailLanguages]);
+        setEditDetail([...detailLanguages]);
         setLanguage([...editLanguages]);
       }
     }
@@ -214,15 +225,101 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
     });
   }, [keyItem]);
 
-  const showPopConfirm = () => {
-    Modal.confirm({
-      icon: <ExclamationCircleOutlined />,
-      content: 'Changes have been made. Exit?',
-      onOk() {
-        onClose();
-      },
-    });
+  const onContentChange = (e: any, flag: string, id?: number) => {
+    if (flag === 'keyName') {
+      detail[flag] = e.target.value;
+    } else {
+      const kv: any = [];
+      const lang: any = languages.find((t: any) => t.id === id);
+      kv.push({
+        languageId: lang.id,
+        value: e.target.value,
+      });
+      detail.kv = kv;
+    }
+    setDetail({ ...detail });
   };
+
+  const onContentEditChange = useCallback(
+    (e: any, item?: any) => {
+      const index = editDetail.findIndex((t: any) => t.name === item.name);
+      if (index !== -1) {
+        editDetail[index] = Object.assign({}, editDetail[index], {
+          value: e.target.value,
+        });
+      }
+      setEditDetail([...editDetail]);
+    },
+    [editDetail],
+  );
+
+  const onCloseDrawer = useCallback(() => {
+    if (!compareObject(defaultKeyDetail, detail)) {
+      Modal.confirm({
+        icon: <ExclamationCircleOutlined />,
+        content: 'Changes have been made. Exit?',
+        onOk() {
+          onCancle();
+        },
+      });
+    } else {
+      onCancle();
+    }
+  }, [detail]);
+
+  const onEditCloseDrawer = useCallback(() => {
+    if (!compareObject(defaultEditDetail, editDetail)) {
+      Modal.confirm({
+        icon: <ExclamationCircleOutlined />,
+        content: 'Changes have been made. Exit?',
+        onOk() {
+          onCancle();
+        },
+      });
+    } else {
+      onCancle();
+    }
+  }, [defaultEditDetail, editDetail]);
+
+  const renderCancel = useCallback(() => {
+    if (!compareObject(defaultKeyDetail, detail)) {
+      return (
+        <Popconfirm
+          title="Changes have been made. Exit?"
+          onConfirm={() => {
+            onCancle();
+          }}>
+          <Button style={{ marginRight: 8 }}>Cancel</Button>
+        </Popconfirm>
+      );
+    } else {
+      return (
+        <Button style={{ marginRight: 8 }} onClick={() => onCancle()}>
+          Cancel
+        </Button>
+      );
+    }
+  }, [detail]);
+
+  const renderEditCancel = useCallback(() => {
+    if (!compareObject(defaultEditDetail, editDetail)) {
+      return (
+        <Popconfirm
+          title="Changes have been made. Exit?"
+          onConfirm={() => {
+            onCancle();
+          }}>
+          <Button style={{ marginRight: 8 }}>Cancel</Button>
+        </Popconfirm>
+      );
+    } else {
+      return (
+        <Button style={{ marginRight: 8 }} onClick={() => onCancle()}>
+          Cancel
+        </Button>
+      );
+    }
+  }, [defaultEditDetail, editDetail]);
 
   return (
     <div>
@@ -230,7 +327,7 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
         maskClosable={false}
         title={mode === ADD ? 'Add New Item' : getEditTitle()}
         width={590}
-        onClose={() => showPopConfirm()}
+        onClose={mode === ADD ? onCloseDrawer : onEditCloseDrawer}
         visible={visible}
         bodyStyle={{ paddingBottom: 80 }}
         footer={
@@ -238,9 +335,7 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
             style={{
               textAlign: 'right',
             }}>
-            <Popconfirm title="Changes have been made. Exit?" onConfirm={() => onClose()}>
-              <Button style={{ marginRight: 8 }}>Cancel</Button>
-            </Popconfirm>
+            {mode === ADD ? renderCancel() : renderEditCancel()}
             <Button onClick={() => modifyLanguage()} type="primary">
               Submit
             </Button>
@@ -259,7 +354,7 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
                       </div>
                     }
                     rules={checkValue('key')}>
-                    <TextArea />
+                    <TextArea onChange={e => onContentChange(e, 'keyName')} />
                   </Form.Item>
                 </Col>
               </Row>
@@ -277,7 +372,7 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
                           </div>
                         }
                         rules={ele.referenceLanguage ? checkValue('reference') : checkMax}>
-                        <TextArea />
+                        <TextArea onChange={e => onContentChange(e, ele.name, ele.id)} />
                       </Form.Item>
                     </Col>
                   </Row>
@@ -303,7 +398,7 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
                             </div>
                           }
                           rules={ele.referenceLanguage ? checkValue('reference') : checkMax}>
-                          <TextArea value={ele.value} />
+                          <TextArea value={ele.value} onChange={e => onContentEditChange(e, ele)} />
                         </Form.Item>
                       </Col>
                     </Row>

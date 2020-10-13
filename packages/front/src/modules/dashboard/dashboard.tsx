@@ -109,8 +109,8 @@ const Dashboard: React.SFC = () => {
                       </div>
                       <div className={css.cardUpdate}>
                         <div className={css.language}>
-                          {item.languages.map((list: string) => {
-                            return <span>{list}</span>;
+                          {item.languages.map((list: string, i: number) => {
+                            return <span key={i}>{list}</span>;
                           })}
                           {` ${item.languages.length} languages`}
                         </div>
@@ -122,7 +122,7 @@ const Dashboard: React.SFC = () => {
               })}
           </div>
           {projectList.length === 0 && <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />}
-          <AddOrEditProject visible={visible} setVisible={setVisible} getProjectAll={getProjectAll} />
+          {visible && <AddOrEditProject visible={visible} setVisible={setVisible} getProjectAll={getProjectAll} />}
         </div>
       </Container>
     </Spin>

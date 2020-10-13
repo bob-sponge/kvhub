@@ -246,3 +246,8 @@ export const checkMax: any[] = [
     message: 'Can contain at most 500 characters',
   },
 ];
+
+export const defaultKeyDetail = {
+  keyName: undefined,
+  kv: [],
+};

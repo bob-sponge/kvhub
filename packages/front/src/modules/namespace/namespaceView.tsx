@@ -281,6 +281,9 @@ const NamespaceView: React.FC = () => {
               setShowDrawer(false);
               handleRefreshList();
             }}
+            onCancle={() => {
+              setShowDrawer(false);
+            }}
           />
         )}
         <Modal

@@ -34,7 +34,6 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
 
   const handleAdd = () => {
     form.validateFields().then(async values => {
-      window.console.log(values);
       if (values) {
         const { destination, source } = values;
         const detail = {
