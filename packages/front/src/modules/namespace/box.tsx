@@ -56,10 +56,6 @@ const LanguageBox: React.FC<LanguageBoxProps> = ({
     return content;
   }, [handleKeyOperate]);
 
-  const editKey = useCallback(() => {
-    setShowDrawer(EDIT, true, currentKeyData);
-  }, [currentKeyData]);
-
   const handleDiscard = useCallback(() => {
     setCurrentKeyData(keyData);
     if (errorTips.show) {
@@ -126,7 +122,7 @@ const LanguageBox: React.FC<LanguageBoxProps> = ({
     <>
       <div className={css.box}>
         <div className={css.key}>
-          <div style={{ display: 'flex', width: '94%' }} onClick={editKey}>
+          <div style={{ display: 'flex', width: '94%' }}>
             <KeyOutlined />
             <div title={currentKeyData ? currentKeyData.keyName : ''} className={css.boxTitle}>
               {currentKeyData ? currentKeyData.keyName : ''}
