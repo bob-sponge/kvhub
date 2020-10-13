@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { Drawer, Button, Form, Input, Select, message } from 'antd';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Drawer, Button, Form, Input, Select, message, Modal, Popconfirm } from 'antd';
 import * as css from './style/addorEditBranch.modules.less';
-import { CheckOutlined } from '@ant-design/icons';
+import { CheckOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import * as Api from '../../api/branch';
+import { compareObject } from '../dashboard/constant';
+import { defaultDetail } from './constant';
 
 interface AddOrEditProjectProps {
   visible: boolean;
@@ -17,6 +19,8 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
   const [form] = Form.useForm();
   const [project, setProject] = useState<any[]>([]);
   const [branchList, setBranchList] = useState<any[]>([]);
+  const [defaultBranch, setDefaultBranch] = useState<any>(defaultDetail);
+  const [branchDetail, setBranchDetail] = useState<any>(defaultDetail);
 
   useEffect(() => {
     if (visible) {
@@ -31,6 +35,7 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
       setProject(data);
     }
   };
+
   useEffect(() => {
     if (visible && match) {
       const projectid = Number(match.params.projectId);
@@ -45,6 +50,10 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
       setBranchList(data);
       let selectBranch = data.filter((item: any) => item.master)[0];
       form.setFieldsValue({ branchId: selectBranch.id });
+      defaultBranch.branchId = selectBranch.id;
+      setDefaultBranch({ ...defaultBranch });
+      branchDetail.branchId = selectBranch.id;
+      setBranchDetail({ ...branchDetail });
     }
   };
 
@@ -52,6 +61,10 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
     if (visible && project && project.length > 0) {
       const projectid = Number(match.params.projectId);
       form.setFieldsValue({ projectId: projectid });
+      defaultBranch.projectId = projectid;
+      setDefaultBranch({ ...defaultBranch });
+      branchDetail.projectId = projectid;
+      setBranchDetail({ ...branchDetail });
     }
   }, [visible, match, project]);
 
@@ -77,7 +90,7 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
   const renderFooter = () => {
     return (
       <div className={css.drawerFooter}>
-        <Button onClick={() => onClose()}>Cancel</Button>
+        {renderCancel()}
         <Button icon={<CheckOutlined />} type="primary" onClick={handleAdd}>
           Submit
         </Button>
@@ -85,9 +98,51 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
     );
   };
 
+  const renderCancel = useCallback(() => {
+    if (!compareObject(defaultBranch, branchDetail)) {
+      return (
+        <Popconfirm
+          title="Changes have been made. Exit?"
+          onConfirm={() => {
+            onClose();
+          }}>
+          <Button>Cancel</Button>
+        </Popconfirm>
+      );
+    } else {
+      return <Button onClick={() => onClose()}>Cancel</Button>;
+    }
+  }, [branchDetail, defaultBranch]);
+
   const onClose = () => {
     setVisible(false);
     form.resetFields();
+    setDefaultBranch({});
+    setBranchDetail({});
+  };
+
+  const onCloseDrawer = useCallback(() => {
+    if (!compareObject(defaultBranch, branchDetail)) {
+      Modal.confirm({
+        icon: <ExclamationCircleOutlined />,
+        content: 'Changes have been made. Exit?',
+        onOk() {
+          onClose();
+        },
+      });
+    } else {
+      onClose();
+    }
+  }, [branchDetail, defaultBranch]);
+
+  const onSelect = (flag: string, value: any) => {
+    if (flag === 'name') {
+      branchDetail[flag] = value.target.value;
+      setBranchDetail({ ...branchDetail });
+    } else {
+      branchDetail[flag] = value;
+      setBranchDetail({ ...branchDetail });
+    }
   };
 
   return (
@@ -95,7 +150,7 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
       title="Create Branch"
       placement="right"
       closable={true}
-      onClose={onClose}
+      onClose={onCloseDrawer}
       visible={visible}
       width={590}
       destroyOnClose={true}
@@ -103,7 +158,7 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
       footer={renderFooter()}>
       <Form form={form} name="basic" layout="vertical" initialValues={{ remember: true }}>
         <Form.Item label="project" name="projectId" rules={[{ required: true, message: 'Please select project!' }]}>
-          <Select disabled={true}>
+          <Select disabled={true} onChange={value => onSelect('projectId', value)}>
             {project &&
               project.length > 0 &&
               project.map(item => {
@@ -116,7 +171,7 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
           </Select>
         </Form.Item>
         <Form.Item label="branch" name="branchId">
-          <Select>
+          <Select onChange={value => onSelect('branchId', value)}>
             {branchList &&
               branchList.length > 0 &&
               branchList.map(item => {
@@ -138,7 +193,7 @@ const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProj
               message: 'Branch name can contain at most 100 characters',
             },
           ]}>
-          <Input />
+          <Input onChange={value => onSelect('name', value)} />
         </Form.Item>
       </Form>
     </Drawer>
