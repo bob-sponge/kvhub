@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Input, Popover, Drawer, Form, Col, Row, Button } from 'antd';
+import { Input, Popover, Drawer, Form, Col, Row, Button, Modal, Popconfirm } from 'antd';
 import * as css from './styles/namespace.modules.less';
 import * as Api from '../../api/namespace';
-import { EDIT, ADD } from './constant';
-import { FormOutlined } from '@ant-design/icons';
+import { EDIT, ADD, checkValue, checkMax } from './constant';
+import { ExclamationCircleOutlined, FormOutlined } from '@ant-design/icons';
 const { TextArea } = Input;
 
 interface EditKeyDrawerProps {
@@ -36,6 +36,10 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
   });
   const [currKeyName, setKeyName] = useState(keyItem ? keyItem.keyName : '');
   const [form] = Form.useForm();
+
+  useEffect(() => {
+    getLanguageInfo();
+  }, []);
 
   const modifyKeyName = useCallback(async () => {
     if (!errorTips.show) {
@@ -210,19 +214,15 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
     });
   }, [keyItem]);
 
-  const checkValue = (_: any, value: any) => {
-    if (!value) {
-      return Promise.reject('Please enter reference language');
-    } else if (value && value.length > 500) {
-      return Promise.reject('Can contain at most 500 characters');
-    } else {
-      return Promise.resolve();
-    }
+  const showPopConfirm = () => {
+    Modal.confirm({
+      icon: <ExclamationCircleOutlined />,
+      content: 'Changes have been made. Exit?',
+      onOk() {
+        onClose();
+      },
+    });
   };
-
-  useEffect(() => {
-    getLanguageInfo();
-  }, []);
 
   return (
     <div>
@@ -230,7 +230,7 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
         maskClosable={false}
         title={mode === ADD ? 'Add New Item' : getEditTitle()}
         width={590}
-        onClose={() => onClose()}
+        onClose={() => showPopConfirm()}
         visible={visible}
         bodyStyle={{ paddingBottom: 80 }}
         footer={
@@ -238,9 +238,9 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
             style={{
               textAlign: 'right',
             }}>
-            <Button onClick={() => onClose()} style={{ marginRight: 8 }}>
-              Cancel
-            </Button>
+            <Popconfirm title="Changes have been made. Exit?" onConfirm={() => onClose()}>
+              <Button style={{ marginRight: 8 }}>Cancel</Button>
+            </Popconfirm>
             <Button onClick={() => modifyLanguage()} type="primary">
               Submit
             </Button>
@@ -258,11 +258,7 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
                         <span className={css.keyLabel}>key</span>
                       </div>
                     }
-                    rules={[
-                      {
-                        validator: checkValue,
-                      },
-                    ]}>
+                    rules={checkValue('key')}>
                     <TextArea />
                   </Form.Item>
                 </Col>
@@ -274,31 +270,13 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
                       <Form.Item
                         name={ele.name}
                         label={
-                          <div>
+                          <div className="reference">
                             <span className={css.label}>{ele.name}</span>
                             <span>{ele.name}</span>
                             {ele.referenceLanguage && <span className={css.refLanguage}>(Reference Language)</span>}
                           </div>
                         }
-                        rules={
-                          ele.referenceLanguage
-                            ? [
-                                {
-                                  validator: checkValue,
-                                },
-                              ]
-                            : [
-                                {
-                                  validator: (_: any, value: any) => {
-                                    if (value && value.length > 500) {
-                                      return Promise.reject('Can contain at most 500 characters');
-                                    } else {
-                                      return Promise.resolve();
-                                    }
-                                  },
-                                },
-                              ]
-                        }>
+                        rules={ele.referenceLanguage ? checkValue('reference') : checkMax}>
                         <TextArea />
                       </Form.Item>
                     </Col>
@@ -318,31 +296,13 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
                           initialValue={ele.value}
                           name={ele.name}
                           label={
-                            <div>
+                            <div className="reference">
                               <span className={css.label}>{ele.name}</span>
                               <span>{ele.name}</span>
                               {ele.referenceLanguage && <span className={css.refLanguage}>(Reference Language)</span>}
                             </div>
                           }
-                          rules={
-                            ele.referenceLanguage
-                              ? [
-                                  {
-                                    validator: checkValue,
-                                  },
-                                ]
-                              : [
-                                  {
-                                    validator: (_: any, value: any) => {
-                                      if (value && value.length > 500) {
-                                        return Promise.reject('Can contain at most 500 characters');
-                                      } else {
-                                        return Promise.resolve();
-                                      }
-                                    },
-                                  },
-                                ]
-                          }>
+                          rules={ele.referenceLanguage ? checkValue('reference') : checkMax}>
                           <TextArea value={ele.value} />
                         </Form.Item>
                       </Col>

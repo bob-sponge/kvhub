@@ -74,12 +74,7 @@ const LanguageItem = ({ item, index, projectView, branchId, pid }: any) => {
       <p className={css.title}>{'Add New Namespace'}</p>
       <Form form={form} name="basic" layout="horizontal">
         <Form.Item label="name" name="name" rules={Rule()}>
-          <Input
-          // value={addNamespaceName}
-          // onChange={e => {
-          //   setAddNamespaceName(e.target.value);
-          // }}
-          />
+          <Input />
         </Form.Item>
       </Form>
       <div className={css.buttonList}>
@@ -131,11 +126,11 @@ const LanguageItem = ({ item, index, projectView, branchId, pid }: any) => {
         {progressRender('large', item.translatedKeys, item.totalKeys)}
         <div className={css.languageNamespacesProgress}>
           {item.namespaceList &&
-            item.namespaceList.map((detail: any) => {
+            item.namespaceList.map((detail: any, i: number) => {
               return (
                 <div
                   className={css.languageNamespacesProgressItem}
-                  key={item.id}
+                  key={`${item.id}${i}`}
                   onClick={() => handleJump(detail.id, item.languageId, detail.name)}>
                   <p style={{ WebkitBoxOrient: 'vertical' }} className={css.languageNamespacesProgressTitle}>
                     {detail.name}

@@ -1,8 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { Menu } from 'antd';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Menu, message, Modal } from 'antd';
 import * as css from './styles/sideBar.modules.less';
 import { history as browserHistory } from '@ofm/history';
 import { menuRoute } from './constant';
+import * as Api from '../../api';
+import { ExclamationCircleOutlined } from '@ant-design/icons';
+
+const { confirm } = Modal;
 
 interface SideBarProps {
   match: any;
@@ -29,7 +33,28 @@ const SideBar: React.SFC<SideBarProps> = (props: SideBarProps) => {
     let projectId = match.params.projectId;
     let linkUrl = menuRoute(Number(projectId))[Number(e.key) - 1];
     browserHistory.push(linkUrl);
+    if (e.key === '5') {
+      confirmDelete();
+    }
   };
+
+  const confirmDelete = useCallback(async () => {
+    if (match) {
+      let projectId = match.params.projectId;
+      confirm({
+        title: 'Do you want to delete the project?',
+        icon: <ExclamationCircleOutlined />,
+        async onOk() {
+          let result = await Api.deleteProjectApi(projectId);
+          const { success } = result;
+          if (success) {
+            message.success('Delete project successfully!');
+            browserHistory.push('/dashobard');
+          }
+        },
+      });
+    }
+  }, [match]);
 
   return (
     <Menu
