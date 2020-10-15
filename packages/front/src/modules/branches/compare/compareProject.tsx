@@ -4,7 +4,6 @@ import { Select, Col, Row, Button, Form, Spin, message } from 'antd';
 import { SwapOutlined, PlusOutlined } from '@ant-design/icons';
 import DiffItem from './diffItem';
 import * as Api from '../../../api/branch';
-import clsx from 'clsx';
 import { history as browserHistory } from '@ofm/history';
 
 interface CompareProjectProps {
@@ -17,7 +16,6 @@ const CompareProject: React.SFC<CompareProjectProps> = (props: CompareProjectPro
   const { detail } = props;
   const [branchList, setBranchList] = useState<any>([]);
   const [diffData, setDiffData] = useState<any>([]);
-  const [isChange, setIsChange] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
@@ -46,7 +44,7 @@ const CompareProject: React.SFC<CompareProjectProps> = (props: CompareProjectPro
     form.validateFields().then(values => {
       if (values && !values.outOfDate) {
         let params = Object.assign({}, values, {
-          crosMerge: isChange,
+          crosMerge: false,
         });
         getDiffData(params);
       }
@@ -59,13 +57,13 @@ const CompareProject: React.SFC<CompareProjectProps> = (props: CompareProjectPro
         let params = {
           sourceBranchId: values.source,
           targetBranchId: values.destination,
-          crosMerge: isChange,
+          crosMerge: false,
           projectId: detail.projectId,
         };
         getCreateMerge(params);
       }
     });
-  }, [detail, isChange]);
+  }, [detail]);
 
   const getCreateMerge = async (params: any) => {
     setLoading(true);
@@ -98,10 +96,10 @@ const CompareProject: React.SFC<CompareProjectProps> = (props: CompareProjectPro
     }
   };
 
-  const handleChange = () => {
-    setIsChange(!isChange);
-    setDiffData([]);
-  };
+  // const handleChange = () => {
+  //   setIsChange(!isChange);
+  //   setDiffData([]);
+  // };
 
   const handleSource = () => {
     setDiffData([]);
@@ -135,14 +133,14 @@ const CompareProject: React.SFC<CompareProjectProps> = (props: CompareProjectPro
               </Form.Item>
             </Col>
             <Col span={2}>
-              <div className={css.operation} onClick={handleChange}>
+              <div className={css.operation}>
                 <div className={css.title}>
                   <SwapOutlined />
                   <span>Exchange</span>
                 </div>
-                <div className={clsx(css.content, isChange && css.transform)}>
-                  {!isChange && <div className={css.circle} />}
-                  {isChange && <div className={css.trangle} style={{ transform: 'rotate(180deg)' }} />}
+                <div className={css.content}>
+                  <div className={css.circle} />
+                  {/* {isChange && <div className={css.trangle} style={{ transform: 'rotate(180deg)' }} />} */}
                   <div className={css.square} />
                   <div className={css.trangle} />
                 </div>
@@ -186,7 +184,7 @@ const CompareProject: React.SFC<CompareProjectProps> = (props: CompareProjectPro
         {diffData &&
           diffData.length > 0 &&
           diffData.map((item: any) => {
-            return <DiffItem diffData={item} isChange={isChange} />;
+            return <DiffItem diffData={item} />;
           })}
       </>
     </Spin>

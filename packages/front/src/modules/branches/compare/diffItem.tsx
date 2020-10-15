@@ -5,16 +5,15 @@ import CompareDiff from './compareDiff';
 
 interface DiffProps {
   diffData: any;
-  isChange: boolean;
 }
 
 const DiffItem: React.SFC<DiffProps> = (props: DiffProps) => {
-  const { diffData, isChange } = props;
+  const { diffData } = props;
   const { source, target } = diffData;
 
   return (
     <div className={css.diffPanel}>
-      <div className={css.namespace}>{isChange ? target.namespaceName : source.namespaceName}</div>
+      <div className={css.namespace}>{source.namespaceName}</div>
       <div className={css.diffWapper}>
         <div className={css.diffItem}>
           {source && source.keyname && (
