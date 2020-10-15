@@ -1,9 +1,10 @@
+/* eslint-disable @typescript-eslint/quotes */
 /* eslint-disable no-shadow */
 /* eslint-disable @typescript-eslint/member-ordering */
 import { Injectable, BadRequestException, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Branch } from 'src/entities/Branch';
-import { Repository, DeleteResult, Like, In } from 'typeorm';
+import { Repository, Like, In } from 'typeorm';
 import { Project } from 'src/entities/Project';
 import { ConfigService } from '@ofm/nestjs-utils';
 import { BranchPage } from 'src/vo/Page';
@@ -27,7 +28,7 @@ import { KeyValueDetailVO } from 'src/vo/KeyValueDetailVO';
 import { CompareKeyVO } from 'src/vo/CompareKeyVO';
 import { ValueVO } from 'src/vo/ValueVO';
 import { CompareValueVO } from 'src/vo/CompareValueVO';
-
+import * as Log4js from 'log4js';
 @Injectable()
 export class BranchService {
   private constant: Map<string, string>;
@@ -56,7 +57,7 @@ export class BranchService {
    * 查询全部branch
    */
   async findAllBranch(): Promise<Branch[]> {
-    return await this.branchRepository.find({delete: false});
+    return await this.branchRepository.find({ delete: false });
   }
 
   /**
@@ -322,30 +323,52 @@ export class BranchService {
    * @param page page
    */
   async findAllWithPage(page: BranchPage): Promise<PageResult> {
+    const logger = Log4js.getLogger();
+    logger.level = 'INFO';
     let pageResult = new PageResult();
     const start: number = (page.page - 1) * page.size;
-    let data: [Branch[], number] = [[], 0];
+    let data = [];
     if (page.content === null || page.content === CommonConstant.STRING_BLANK) {
-      data = await this.branchRepository.findAndCount({
-        where: { projectId: page.projectId, delete: false },
-        order: { name: 'ASC' },
-        skip: start,
-        take: page.size,
-      });
+      const query = `select * from branch where project_id=${page.projectId} and delete=false and name like
+       '%%' escape '/' ORDER BY name ASC LIMIT ${page.size} OFFSET ${start}`;
+      data = await this.branchRepository.query(query);
     } else {
+      // eslint-disable-next-line @typescript-eslint/quotes
+      let condition = page.content;
+      let rcondition = '';
+      for (let index = 0; index < condition.length; index++) {
+        let tmp = condition.charAt(index);
+        if (tmp === "'") {
+          tmp = "\\'";
+        } else if (tmp === '%') {
+          tmp = '/%';
+        } else if (tmp === '_') {
+          tmp = '/_';
+        } else if (tmp === '/') {
+          tmp = '//';
+        } else if (tmp === '\\') {
+          tmp = '\\\\';
+        }
+        rcondition += tmp;
+      }
+      page.content = rcondition;
       // 查询不区分大小写
-      data = await this.branchRepository.findAndCount({
-        where: { projectId: page.projectId, name: Like('%' + page.content + '%'), delete: false },
-        order: { name: 'ASC' },
-        skip: start,
-        take: page.size,
-      });
+      const query = `select * from branch where project_id=${page.projectId} and delete=false and name like
+       '%${page.content}%' escape '/' ORDER BY name ASC LIMIT ${page.size} OFFSET ${start}`;
+      logger.info(`query: ${query}`);
+      data = await this.branchRepository.query(query);
+      // data = await this.branchRepository.findAndCount({
+      //   where: { projectId: page.projectId, name: Like('%' + page.content + '%'), delete: false },
+      //   order: { name: 'ASC' },
+      //   skip: start,
+      //   take: page.size,
+      // });
     }
     pageResult.size = page.size;
     pageResult.page = page.page;
-    pageResult.total = data[1];
+    pageResult.total = data.length;
     if (pageResult.total > 0) {
-      pageResult.data = await this.calculateMerge(data[0], page.projectId);
+      pageResult.data = await this.calculateMerge(data, page.projectId);
     } else {
       pageResult.data = [];
     }
@@ -356,7 +379,7 @@ export class BranchService {
    * 获取branch merge参数状态
    * @param data data
    */
-  private async calculateMerge(data: Branch[], projectId: number): Promise<BranchVO[]> {
+  private async calculateMerge(data, projectId: number): Promise<BranchVO[]> {
     // merge table source & target 都不存在
     const mergeResult: BranchMerge[] = await this.branchMergeRepository.find({
       where: { projectId, type: In(['0', '3']) },
@@ -387,7 +410,7 @@ export class BranchService {
       let branchVO = new BranchVO();
       branchVO.id = d.id;
       branchVO.name = d.name;
-      branchVO.time = d.modifyTime === null || d.modifyTime === undefined ? null : d.modifyTime.valueOf();
+      branchVO.time = d.modify_time === null || d.modify_time === undefined ? null : d.modify_time.valueOf();
       branchVO.isMaster = d.master;
       // 默认是 0 -> open
       branchVO.merge = this.constant.get('0');
