@@ -868,7 +868,7 @@ export class NamespaceService {
       throw new BadRequestException(ErrorMessage.PROJECT_NOT_EXIST);
     }
     // 判断名字是否重复
-    const namespaces = await this.namespaceRepository.find({ projectId: project.id });
+    const namespaces = await this.namespaceRepository.find({ projectId: project.id, delete: false });
     if (namespaces.find(item => item.name === vo.name.trim()) !== undefined) {
       throw new BadRequestException(ErrorMessage.NAMESPACE_ALREADY_EXISTED);
     }

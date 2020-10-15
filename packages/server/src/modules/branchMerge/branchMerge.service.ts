@@ -169,8 +169,8 @@ export class BranchMergeService {
       let vo = new BranchMergeDiffVO();
       vo.mergeDiffKey = mergeBranchKeyList[i];
       vo.keyActualId = vo.mergeDiffKey.key;
-      vo.source = await this.getMergeDiffInfo(vo.mergeDiffKey.id, sourceBranchId, vo.mergeDiffKey.key);
-      vo.target = await this.getMergeDiffInfo(vo.mergeDiffKey.id, targetBranchId, vo.mergeDiffKey.key);
+      vo.source = await this.getMergeDiffInfo(vo.mergeDiffKey.id, sourceBranchId);
+      vo.target = await this.getMergeDiffInfo(vo.mergeDiffKey.id, targetBranchId);
       if (vo.source === undefined) {
         vo.source = new MergeDiffShowVO();
         vo.source.branchId = sourceBranchId;
@@ -217,11 +217,7 @@ export class BranchMergeService {
     });
     return result;
   }
-  private async getMergeDiffInfo(
-    mergeDiffKeyId: number,
-    branchId: number,
-    keyActualId: number,
-  ): Promise<MergeDiffShowVO> | undefined {
+  private async getMergeDiffInfo(mergeDiffKeyId: number, branchId: number): Promise<MergeDiffShowVO> | undefined {
     const languages: Language[] = await this.getAllLanguage();
     const languageMap = new Map();
     languages.forEach(item => {
@@ -229,7 +225,17 @@ export class BranchMergeService {
     });
     let vo = new MergeDiffShowVO();
     let valueList: MergeDiffValueShowVO[] = [];
-    let key = await this.keyService.getKeyByBranchIdAndKeyActualId(branchId, keyActualId);
+    // let key = await this.keyService.getKeyByBranchIdAndKeyActualId(branchId, keyActualId);
+    // 获取key 信息
+    const mergeDiffValueItem = await this.mergeDiffValueRepository.findOne({
+      mergeDiffKeyId: mergeDiffKeyId,
+      branchId: branchId,
+    });
+    let key = undefined;
+    if (mergeDiffValueItem !== undefined) {
+      key = await this.keyRepository.findOne({ id: mergeDiffValueItem.keyId, delete: false });
+    }
+
     if (key === undefined) {
       return undefined;
     } else {
@@ -579,16 +585,15 @@ export class BranchMergeService {
           bk.delete = true;
           await this.branchKeyRepository.save(bk);
         }
-
       } else if (selectBranchId !== masterBranchId && notSelectBranchId === masterBranchId) {
         let masterKeyName = null;
         let noMasterKeyName = null;
-        
+
         if (target.keyNameId !== undefined && target.keyNameId !== null) {
           masterKeyName = await this.keynameRepository.findOne(target.keyNameId);
         }
         noMasterKeyName = await this.keynameRepository.findOne(source.keyNameId);
-      
+
         let newKeyname = new Keyname();
         if (masterKeyName !== null) {
           masterKeyName.modifyTime = time;
@@ -625,12 +630,12 @@ export class BranchMergeService {
         //  处理值
         // 标记原来 master的值删除
         let masterValues = [];
-        
+
         if (target.valueList !== undefined && target.valueList !== null) {
           const ids = target.valueList.map(item => item.valueId);
           masterValues = await this.keyvalueRepository.findByIds(ids);
         }
-        
+
         if (masterValues.length > 0) {
           masterValues.forEach(item => {
             item.latest = false;
@@ -698,11 +703,11 @@ export class BranchMergeService {
         }
 
         let targetKeyName = null;
-        
+
         if (target.keyNameId !== undefined && target.keyNameId !== null) {
           targetKeyName = await this.keynameRepository.findOne(target.keyNameId);
         }
-        
+
         let newKeyname = new Keyname();
         if (targetKeyName !== null) {
           targetKeyName.modifyTime = time;
@@ -721,7 +726,7 @@ export class BranchMergeService {
           newKey = await this.keyRepository.save(newKey);
 
           const branchKey = new BranchKey();
-          branchKey.branchId = masterBranchId;
+          branchKey.branchId = target.branchId;
           branchKey.delete = false;
           branchKey.keyId = newKey.id;
           await this.branchKeyRepository.save(branchKey);
