@@ -412,6 +412,10 @@ export class BranchService {
     return await this.branchRepository.find({ projectId, delete: false });
   }
 
+  async findAllBranchByProjectId(projectId: number): Promise<Branch[]> {
+    return await this.branchRepository.find({ projectId });
+  }
+
   /**
    * 通过项目id查询分支
    * @param projectId

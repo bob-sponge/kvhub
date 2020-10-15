@@ -69,10 +69,10 @@ export class NamespaceService {
     const bk = `update branch_key set delete=true where key_id = ${keyId}`;
     await this.branchKeyRepository.query(bk);
     // 删除 key name
-    const kn = `update keyname set latest=false where key_id=${keyId}`;
+    const kn = `update keyname set latest=false, modifier='${modifier}', modify_time='${modifyTime}' where key_id=${keyId}`;
     await this.keynameRepository.query(kn);
     // 删除 key value
-    const kv = `update keyvalue set latest=false where key_id=${keyId}`;
+    const kv = `update keyvalue set latest=false, modifier='${modifier}', midify_time='${modifyTime}' where key_id=${keyId}`;
     await this.keyvalueRepository.query(kv);
   }
 
