@@ -19,9 +19,7 @@ const DiffItem: React.SFC<DiffItemProps> = (props: DiffItemProps) => {
     (id: any) => {
       if (mergeList && mergeList.length > 0) {
         let index = mergeList.findIndex(item => item.keyActualId === keyActualId);
-        mergeList[index].mergeDiffKey = Object.assign({}, mergeList[index].mergeDiffKey, {
-          selectBranchId: id,
-        });
+        mergeList[index].mergeDiffKey.selectBranchId = id;
         setMergeList([...mergeList]);
       }
     },
@@ -35,7 +33,16 @@ const DiffItem: React.SFC<DiffItemProps> = (props: DiffItemProps) => {
         <div className={css.diffItem}>
           {source && source.keyname && (
             <>
-              <div className={css.itemList}>
+              <div
+                className={css.itemList}
+                style={{
+                  height:
+                    source.valueList && source.valueList.length > 0
+                      ? 42 + source.valueList.length * 26 + (source.valueList.length - 1) * 16
+                      : target.valueList && target.valueList.length > 0
+                      ? 42 + target.valueList.length * 26 + (target.valueList.length - 1) * 16
+                      : 42,
+                }}>
                 <div className={css.title}>
                   <KeyOutlined />
                   <span>{source.keyname}</span>
@@ -82,7 +89,16 @@ const DiffItem: React.SFC<DiffItemProps> = (props: DiffItemProps) => {
         <div className={css.diffItem}>
           {target && target.keyname && (
             <>
-              <div className={css.itemList}>
+              <div
+                className={css.itemList}
+                style={{
+                  height:
+                    source.valueList && source.valueList.length > 0
+                      ? 42 + source.valueList.length * 26 + (source.valueList.length - 1) * 16
+                      : target.valueList && target.valueList.length > 0
+                      ? 42 + target.valueList.length * 26 + (target.valueList.length - 1) * 16
+                      : 42,
+                }}>
                 <div className={css.title}>
                   <KeyOutlined />
                   <span>{target.keyname}</span>
