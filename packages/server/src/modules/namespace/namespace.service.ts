@@ -58,13 +58,22 @@ export class NamespaceService {
   }
 
   async deleteKey(keyId: number, modifier: any) {
-    // todo
     const logger = Log4js.getLogger();
     logger.level = 'INFO';
     const modifyTime = new Date().toLocaleString();
+    // 删除 key
     const q = `update key set delete=true, modifier='${modifier}', modify_time='${modifyTime}' where id=${keyId}`;
     logger.info(`q: ${q}`);
     await this.keyRepository.query(q);
+    // 删除 branch key
+    const bk = `update branch_key set delete=true where key_id = ${keyId}`;
+    await this.branchKeyRepository.query(bk);
+    // 删除 key name
+    const kn = `update keyname set latest=false where key_id=${keyId}`;
+    await this.keynameRepository.query(kn);
+    // 删除 key value
+    const kv = `update keyvalue set latest=false where key_id=${keyId}`;
+    await this.keyvalueRepository.query(kv);
   }
 
   async editKeyname(keyId: any, keyName: any, modifier: any, modifyTime: any) {
