@@ -397,7 +397,7 @@ export class BranchMergeService {
         if (!valueCheck) {
           let mergeDiffKey = new MergeDiffKey();
           mergeDiffKey.mergeId = mergeId;
-          mergeDiffKey.key = sourceKey.keyActualId;
+          mergeDiffKey.key = sourceKey.keyId;
           mergeDiffKey = await this.mergeDiffKeyRepository.save(mergeDiffKey);
 
           if (sourceKey.valueList !== null && sourceKey.valueList.length > 0) {
