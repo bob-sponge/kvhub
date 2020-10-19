@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import * as css from '../style/compare.modules.less';
 import { Select, Col, Row, Button, Form, Spin, message } from 'antd';
-import { SwapOutlined, PlusOutlined } from '@ant-design/icons';
+import { PlusOutlined } from '@ant-design/icons';
 import DiffItem from './diffItem';
 import * as Api from '../../../api/branch';
 import { history as browserHistory } from '@ofm/history';
@@ -134,10 +134,10 @@ const CompareProject: React.SFC<CompareProjectProps> = (props: CompareProjectPro
             </Col>
             <Col span={2}>
               <div className={css.operation}>
-                <div className={css.title}>
+                {/* <div className={css.title}>
                   <SwapOutlined />
                   <span>Exchange</span>
-                </div>
+                </div> */}
                 <div className={css.content}>
                   <div className={css.circle} />
                   {/* {isChange && <div className={css.trangle} style={{ transform: 'rotate(180deg)' }} />} */}
