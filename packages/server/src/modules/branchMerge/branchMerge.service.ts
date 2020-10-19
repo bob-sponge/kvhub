@@ -169,9 +169,9 @@ export class BranchMergeService {
     for (let i = 0; i < mergeBranchKeyList.length; i++) {
       let vo = new BranchMergeDiffVO();
       vo.mergeDiffKey = mergeBranchKeyList[i];
-      vo.keyActualId = vo.mergeDiffKey.key;
       vo.source = await this.getMergeDiffInfo(vo.mergeDiffKey.id, sourceBranchId);
       vo.target = await this.getMergeDiffInfo(vo.mergeDiffKey.id, targetBranchId);
+      vo.keyActualId = vo.source.keyId;
       if (vo.source === undefined) {
         vo.source = new MergeDiffShowVO();
         vo.source.branchId = sourceBranchId;
