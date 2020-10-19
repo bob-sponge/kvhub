@@ -397,7 +397,7 @@ export class BranchMergeService {
         if (!valueCheck) {
           let mergeDiffKey = new MergeDiffKey();
           mergeDiffKey.mergeId = mergeId;
-          mergeDiffKey.key = sourceKey.keyActualId;
+          mergeDiffKey.key = sourceKey.keyId;
           mergeDiffKey = await this.mergeDiffKeyRepository.save(mergeDiffKey);
 
           if (sourceKey.valueList !== null && sourceKey.valueList.length > 0) {
@@ -519,7 +519,7 @@ export class BranchMergeService {
       logger.info(`merge fail. details: ${error}`);
       branchMerge.type = CommonConstant.MERGE_TYPE_FAILED;
       await this.branchMergeRepository.save(branchMerge);
-      throw new BadRequestException(ErrorMessage.BRANCH_MERGE_FAILED);
+      throw new BadRequestException(error.message);
     }
   }
 
@@ -729,7 +729,7 @@ export class BranchMergeService {
 
         let targetKeyName = null;
 
-        if (target.keyId !== undefined && target.keyId !== null){
+        if (target.keyId !== undefined && target.keyId !== null) {
           // 删除 key
           const q = `update key set delete=true, modifier='${user}', modify_time='${modifyTime}' where id=${target.keyId}`;
           await this.keyRepository.query(q);
@@ -811,13 +811,15 @@ export class BranchMergeService {
     result.keyNameId = dto.keyNameId;
 
     let valueList: SelectedValueDTO[] = [];
-    dto.valueList.forEach(v => {
-      let value = new SelectedValueDTO();
-      value.valueId = v.valueId;
-      value.value = v.value;
-      value.languageId = v.languageId;
-      valueList.push(value);
-    });
+    if (dto.valueList !== null) {
+      dto.valueList.forEach(v => {
+        let value = new SelectedValueDTO();
+        value.valueId = v.valueId;
+        value.value = v.value;
+        value.languageId = v.languageId;
+        valueList.push(value);
+      });
+    }
     result.valueList = valueList;
     return result;
   }
