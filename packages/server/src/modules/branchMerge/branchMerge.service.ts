@@ -519,7 +519,7 @@ export class BranchMergeService {
       logger.info(`merge fail. details: ${error}`);
       branchMerge.type = CommonConstant.MERGE_TYPE_FAILED;
       await this.branchMergeRepository.save(branchMerge);
-      throw new BadRequestException(ErrorMessage.BRANCH_MERGE_FAILED);
+      throw new BadRequestException(error.message);
     }
   }
 
