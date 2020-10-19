@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import * as css from '../styles/merge.modules.less';
-import { Button, message } from 'antd';
+import { Button, message, Modal } from 'antd';
 import Container from '../../../container';
 import DiffItem from './diffItem';
 import { history } from '@ofm/history';
@@ -54,6 +54,18 @@ const Merge = (props: ContainerProps) => {
 
   const handleSubmit = useCallback(async () => {
     const { id, projectId } = mergeDetail;
+    let isSelected = true;
+    mergeList.map((item: any) => {
+      if (item.mergeDiffKey.selectBranchId === null) {
+        isSelected = false;
+      }
+    });
+    if (!isSelected) {
+      Modal.error({
+        title: 'Please select diff key',
+      });
+      return;
+    }
     let params = {
       mergeId: id,
       branchMergeDiffList: mergeList,

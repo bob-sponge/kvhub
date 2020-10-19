@@ -181,7 +181,7 @@ const NamespaceView: React.FC = () => {
       <Container>
         <div className={css.title}>
           <div>
-            <span>{decodeURI(name)}</span>
+            <span>{decodeURIComponent(name)}</span>
           </div>
           <div>
             {branches.length > 0 && (
