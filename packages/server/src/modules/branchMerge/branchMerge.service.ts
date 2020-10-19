@@ -729,7 +729,7 @@ export class BranchMergeService {
 
         let targetKeyName = null;
 
-        if (target.keyId !== undefined && target.keyId !== null){
+        if (target.keyId !== undefined && target.keyId !== null) {
           // 删除 key
           const q = `update key set delete=true, modifier='${user}', modify_time='${modifyTime}' where id=${target.keyId}`;
           await this.keyRepository.query(q);
@@ -811,13 +811,15 @@ export class BranchMergeService {
     result.keyNameId = dto.keyNameId;
 
     let valueList: SelectedValueDTO[] = [];
-    dto.valueList.forEach(v => {
-      let value = new SelectedValueDTO();
-      value.valueId = v.valueId;
-      value.value = v.value;
-      value.languageId = v.languageId;
-      valueList.push(value);
-    });
+    if (dto.valueList !== null) {
+      dto.valueList.forEach(v => {
+        let value = new SelectedValueDTO();
+        value.valueId = v.valueId;
+        value.value = v.value;
+        value.languageId = v.languageId;
+        valueList.push(value);
+      });
+    }
     result.valueList = valueList;
     return result;
   }
