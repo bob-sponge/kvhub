@@ -15,6 +15,7 @@ import { Project } from 'src/entities/Project';
 import { BranchService } from '../branch/branch.service';
 import { KeyService } from '../key/key.service';
 import { Language } from 'src/entities/Language';
+import { ProjectLanguage } from 'src/entities/ProjectLanguage';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { Language } from 'src/entities/Language';
       Project,
       MergeDiffChangeKey,
       Language,
+      ProjectLanguage,
     ]),
   ],
   controllers: [NamespaceController],
