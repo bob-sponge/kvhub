@@ -361,6 +361,11 @@ export class NamespaceService {
     const keyName = keynameByKeyId[0].name;
     const namespaceId = namespaceByKeyId[0].namespaceId;
     if (branchKeyByKeyId[0].branch_id !== branchId) {
+      const existOn = await this.checkKeyIsExist(branchId, keyName, namespaceId);
+      if(existOn){
+        // 表明已经存在，抛出异常
+        throw new BadRequestException(ErrorMessage.VALUE_CHANGED);
+      }
       const commitId = UUIDUtils.generateUUID();
       // 重新生成key
       // 插入key 表, 获取 key id.
