@@ -10,7 +10,7 @@ interface CompareProps {
   match: any;
 }
 
-const Compare: React.SFC<CompareProps> = (props: CompareProps) => {
+const Compare: React.FC<CompareProps> = (props: CompareProps) => {
   const {
     match: {
       params: { id },

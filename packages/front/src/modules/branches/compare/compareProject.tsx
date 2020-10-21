@@ -11,7 +11,7 @@ interface CompareProjectProps {
   detail: any;
 }
 
-const CompareProject: React.SFC<CompareProjectProps> = (props: CompareProjectProps) => {
+const CompareProject: React.FC<CompareProjectProps> = (props: CompareProjectProps) => {
   const [form] = Form.useForm();
   const { detail } = props;
   const [branchList, setBranchList] = useState<any>([]);

@@ -26,6 +26,8 @@ const DiffItem: React.SFC<DiffItemProps> = (props: DiffItemProps) => {
     [mergeList],
   );
 
+  // const calcHeight = (source: any, target: any) => {};
+
   return (
     <div className={css.diffPanel}>
       <div className={css.namespace}>{target.namespaceName}</div>
@@ -33,16 +35,7 @@ const DiffItem: React.SFC<DiffItemProps> = (props: DiffItemProps) => {
         <div className={css.diffItem}>
           {source && source.keyname && (
             <>
-              <div
-                className={css.itemList}
-                style={{
-                  height:
-                    source.valueList && source.valueList.length > 0
-                      ? 42 + source.valueList.length * 26 + (source.valueList.length - 1) * 16
-                      : target.valueList && target.valueList.length > 0
-                      ? 42 + target.valueList.length * 26 + (target.valueList.length - 1) * 16
-                      : 42,
-                }}>
+              <div className={css.itemList}>
                 <div className={css.title}>
                   <KeyOutlined />
                   <span>{source.keyname}</span>
@@ -89,16 +82,7 @@ const DiffItem: React.SFC<DiffItemProps> = (props: DiffItemProps) => {
         <div className={css.diffItem}>
           {target && target.keyname && (
             <>
-              <div
-                className={css.itemList}
-                style={{
-                  height:
-                    source.valueList && source.valueList.length > 0
-                      ? 42 + source.valueList.length * 26 + (source.valueList.length - 1) * 16
-                      : target.valueList && target.valueList.length > 0
-                      ? 42 + target.valueList.length * 26 + (target.valueList.length - 1) * 16
-                      : 42,
-                }}>
+              <div className={css.itemList}>
                 <div className={css.title}>
                   <KeyOutlined />
                   <span>{target.keyname}</span>
