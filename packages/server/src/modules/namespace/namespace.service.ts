@@ -55,12 +55,15 @@ export class NamespaceService {
   ) {}
 
   async deleteNamespace(namespaceId: number, modifier: any) {
-    const logger = Log4js.getLogger();
-    logger.level = 'INFO';
     const modifyTime = new Date().toLocaleString();
     const q = `update namespace set delete=true, modifier='${modifier}', modify_time='${modifyTime}' where id=${namespaceId}`;
     // logger.info(`q: ${q}`);
     await this.namespaceRepository.query(q);
+    // 找出命名空间下的key,并删除
+    const keys = await this.keyRepository.find({namespaceId: namespaceId});
+    for(const key of keys){
+      this.deleteKey(key.id, modifier);
+    }
   }
 
   async deleteKey(keyId: number, modifier: any) {
