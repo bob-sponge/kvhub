@@ -108,6 +108,9 @@
 
   .diff-item {
     width: 50%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 
     .item-list {
       padding: 8px 0 0 16px;
@@ -147,13 +150,14 @@
         .name {
           font-size: 16px;
           color: @black;
+          word-break: break-all;
         }
       }
     }
   }
 
   .select {
-    margin: 16px;
+    margin: 0 16px 16px 16px;
   }
 
 }
