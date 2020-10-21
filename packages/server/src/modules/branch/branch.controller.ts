@@ -19,11 +19,15 @@ import { CompareVO } from 'src/vo/CompareVO';
 import { PermissionGuard } from 'src/permission/permission.guard';
 import { Permission } from 'src/permission/permission.decorator';
 import { PermissionCtl } from 'src/constant/constant';
+import * as Log4js from 'log4js';
 
 @Controller('branch')
 @UseGuards(PermissionGuard)
 export class BranchController {
-  constructor(private readonly branchService: BranchService) {}
+  logger = Log4js.getLogger();
+  constructor(private readonly branchService: BranchService) {
+    this.logger.level = 'info';
+  }
 
   /**
    * 根据projectId查询branch
@@ -65,6 +69,7 @@ export class BranchController {
   async deleteBranch(@Param('id') id: number, @Request() req): Promise<ResponseBody> {
     const user = req.cookies.token;
     await this.branchService.deleteBranch(id, user);
+    this.logger.info(`user ${user} delete branch, branch id: ${id}.`);
     return ResponseBody.okWithData('delete success');
   }
 

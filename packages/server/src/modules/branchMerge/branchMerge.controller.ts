@@ -7,11 +7,15 @@ import { ResponseBody } from 'src/vo/ResponseBody';
 import { PermissionGuard } from 'src/permission/permission.guard';
 import { Permission } from 'src/permission/permission.decorator';
 import { PermissionCtl } from 'src/constant/constant';
+import * as Log4js from 'log4js';
 
 @Controller('branchMerge')
 @UseGuards(PermissionGuard)
 export class BranchMergeController {
-  constructor(private readonly branchMergeService: BranchMergeService) {}
+  logger = Log4js.getLogger();
+  constructor(private readonly branchMergeService: BranchMergeService) {
+    this.logger.level = 'info';
+  }
   // find all languages
   @Post('/list')
   async list(@Body() vo: BranchMergeSearchVO): Promise<ResponseBody> {
@@ -24,8 +28,10 @@ export class BranchMergeController {
   }
 
   @Get('/refuse/:id')
-  async refuseById(@Param('id') id: number): Promise<ResponseBody> {
+  async refuseById(@Param('id') id: number, @Request() req): Promise<ResponseBody> {
+    const currentUser = req.cookies.token;
     await this.branchMergeService.refuse(id);
+    this.logger.info(`user ${currentUser} refuse merge, merge id: ${id}.`);
     return ResponseBody.ok();
   }
 
@@ -39,7 +45,9 @@ export class BranchMergeController {
   @Permission(PermissionCtl.MERGE_BRANCH)
   async save(@Body() vo: BranchMerge, @Request() req): Promise<ResponseBody> {
     vo.modifier = req.cookies.token;
-    return ResponseBody.okWithData(await this.branchMergeService.save(vo));
+    const mergeId = await this.branchMergeService.save(vo);
+    this.logger.info(`user ${vo.modifier} save merge, merge id: ${mergeId}.`);
+    return ResponseBody.okWithData(mergeId);
   }
 
   @Get('/diffkey/generate/:mergeId')
@@ -54,6 +62,7 @@ export class BranchMergeController {
   async merge(@Body() vo: BranchMergeSubmitVO, @Request() req): Promise<ResponseBody> {
     const currentUser = req.cookies.token;
     await this.branchMergeService.merge(vo, currentUser);
+    this.logger.info(`user ${currentUser} merge, merge id: ${vo.mergeId}.`);
     return ResponseBody.ok();
   }
 }

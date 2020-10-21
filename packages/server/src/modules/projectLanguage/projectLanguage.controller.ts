@@ -5,11 +5,15 @@ import { ProjectLanguage } from 'src/entities/ProjectLanguage';
 import { PermissionGuard } from 'src/permission/permission.guard';
 import { Permission } from 'src/permission/permission.decorator';
 import { PermissionCtl } from 'src/constant/constant';
+import * as Log4js from 'log4js';
 
 @Controller('projectLanguage')
 @UseGuards(PermissionGuard)
 export class ProjectLanguageController {
-  constructor(private readonly projectLanguageService: ProjectLanguageService) {}
+  logger = Log4js.getLogger();
+  constructor(private readonly projectLanguageService: ProjectLanguageService) {
+    this.logger.level = 'info';
+  }
 
   /**
    * delete project language
@@ -20,6 +24,7 @@ export class ProjectLanguageController {
   async deleteProjectLanguage(@Param('id') id: number, @Request() req): Promise<ResponseBody> {
     const currentUser = req.cookies.token;
     await this.projectLanguageService.delete(id, currentUser);
+    this.logger.info(`user ${currentUser} delete project language id ${id}.`);
     return ResponseBody.okWithMsg('delete success!');
   }
 

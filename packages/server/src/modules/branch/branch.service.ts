@@ -209,8 +209,14 @@ export class BranchService {
     result = Object.keys(unique).map(item => JSON.parse(item));
     // 按照 namespace name 排序
     result.sort((a, b) => {
-      const snn1 = a.source.namespaceName.toUpperCase();
-      const snn2 = b.source.namespaceName.toUpperCase();
+      const asn = a.source.namespaceName;
+      const bsn = b.source.namespaceName;
+      let snn1 = '';
+      let snn2 = '';
+      if (asn !== undefined && asn !== null && bsn !== undefined && bsn !== null) {
+        snn1 = asn.toUpperCase();
+        snn2 = bsn.toUpperCase();
+      }
 
       if (snn1 < snn2) {
         return -1;
@@ -355,7 +361,7 @@ export class BranchService {
       // 查询不区分大小写
       const query = `select * from branch where project_id=${page.projectId} and delete=false and name like
        '%${page.content}%' escape '/' ORDER BY name ASC LIMIT ${page.size} OFFSET ${start}`;
-      logger.info(`query: ${query}`);
+      // logger.info(`query: ${query}`);
       data = await this.branchRepository.query(query);
       // data = await this.branchRepository.findAndCount({
       //   where: { projectId: page.projectId, name: Like('%' + page.content + '%'), delete: false },
