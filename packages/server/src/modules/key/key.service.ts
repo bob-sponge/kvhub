@@ -188,7 +188,7 @@ export class KeyService {
       result.actualId = key.actualId;
     }
 
-    const keyname = await this.keynameRepository.find({ keyId: key.id });
+    const keyname = await this.keynameRepository.find({ keyId: key.id, latest: true });
     if (keyname === null || keyname.length === 0) {
       throw new BadRequestException('key name is not exist!');
     } else {

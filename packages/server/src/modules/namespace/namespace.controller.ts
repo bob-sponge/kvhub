@@ -10,6 +10,7 @@ import { Permission } from 'src/permission/permission.decorator';
 import { PermissionGuard } from 'src/permission/permission.guard';
 import { PermissionCtl } from 'src/constant/constant';
 import { ErrorMessage } from 'src/constant/constant';
+import { ProjectLanguageModule } from '../projectLanguage/projectLanguage.module';
 
 @Controller('namespace')
 @UseGuards(PermissionGuard)
@@ -468,5 +469,29 @@ export class NamespaceController {
       return ResponseBody.error(error.message, 500);
     }
     return ResponseBody.okWithMsg(data);
+  }
+
+  /**
+   * 客户端获取key value
+   * @param ProjectName 工程名
+   * @param branchName 分支名
+   * @retuen
+   * {"data":{
+   *   "en":{
+   *      "backend":{}
+   *      "common":{}
+   *    },
+   *   "zh":{}
+   * }}
+   */
+  @Get('/api/json/project/:projectName/branch/:branchName')
+  async getProjectData(@Param('projectName') projectName: string, @Param('branchName') branchName: string){
+    let data = {};
+    try {
+      data = await this.namespaceService.getProjectData(projectName, branchName);
+    } catch (error) {
+      return ResponseBody.error(error.message, 500);
+    }
+    return data;
   }
 }

@@ -22,9 +22,11 @@ import * as fs from 'fs';
 import { ConfigService } from '@ofm/nestjs-utils';
 import { Language } from 'src/entities/Language';
 import { BranchService } from '../branch/branch.service';
+import { ProjectLanguage } from 'src/entities/ProjectLanguage';
 
 @Injectable()
 export class NamespaceService {
+
   constructor(
     @InjectRepository(Namespace)
     private readonly namespaceRepository: Repository<Namespace>,
@@ -44,6 +46,10 @@ export class NamespaceService {
     private readonly branchMergeRepository: Repository<BranchMerge>,
     @InjectRepository(Project)
     private readonly projectRepository: Repository<Project>,
+    @InjectRepository(ProjectLanguage)
+    private readonly projectLanguageRepository: Repository<ProjectLanguage>,
+    @InjectRepository(Language)
+    private readonly languageRepository: Repository<Language>,
     private readonly config: ConfigService,
     private readonly branchService: BranchService,
   ) {}
@@ -361,6 +367,11 @@ export class NamespaceService {
     const keyName = keynameByKeyId[0].name;
     const namespaceId = namespaceByKeyId[0].namespaceId;
     if (branchKeyByKeyId[0].branch_id !== branchId) {
+      const existOn = await this.checkKeyIsExist(branchId, keyName, namespaceId);
+      if(existOn){
+        // 表明已经存在，抛出异常
+        throw new BadRequestException(ErrorMessage.VALUE_CHANGED);
+      }
       const commitId = UUIDUtils.generateUUID();
       // 重新生成key
       // 插入key 表, 获取 key id.
@@ -1041,5 +1052,31 @@ export class NamespaceService {
       return true;
     }
     return false;
+  }
+
+  async getProjectData(projectName: string, branchName: string) {
+    const project = await this.projectRepository.findOne({name: projectName, delete: false});
+    if(project === undefined || project === null){
+      throw new BadRequestException(ErrorMessage.PROJECT_NOT_EXIST);
+    }
+    const branch = await this.branchRepository.findOne({name: branchName, delete: false});
+    if(branch === undefined || branch == null){
+      throw new BadRequestException(ErrorMessage.BRANCH_NOT_EXIST);
+    }
+    const projectLanguages = await this.projectLanguageRepository.find({projectId: project.id, delete: false});
+    const namespaces = await this.namespaceRepository.find({projectId: project.id, delete: false});
+    for (const projectLanguage of projectLanguages) {
+      // 获取language name
+      const languageName = this.languageRepository.findOne({id: projectLanguage.languageId});
+      // 获取 工程下面的namespace
+      for (const namespace of namespaces) {
+        const q = `
+        select keyname, keyid, keyvalue from ( 
+          select * from (select key_id as keyid from branch_key where branch_id=${branch.id} and delete=false) a LEFT JOIN (select name as keyname, key_id from keyname) b on a.keyid=b.key_id
+          ) c LEFT JOIN (select value as keyvalue, key_id from keyvalue where language_id=${projectLanguage.languageId} and latest=true) d on c.keyid = d.key_id`;
+      }
+
+    }
+    return {};
   }
 }
