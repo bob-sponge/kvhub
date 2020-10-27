@@ -53,10 +53,41 @@ export class ProjectService {
    * 获取首页相关数据
    */
   async dashboardPorjects(): Promise<Dashboard[]> {
-    const projectBranchs: any[] = await this.findProjectWithBranch();
-    const projectLanguages: any[] = await this.findProjectWithLanguages();
-    const keysMap: any[] = await this.keyService.countKey();
-    return await this.consolidateData(projectBranchs, projectLanguages, keysMap);
+    const projectBranchs: any[] = await this.findProjectWithMasterBranch();
+    const dashboards: Dashboard[] = [];
+    const projectLanguagesCount: any[] = await this.findProjectWithLanguagesCount();
+    // const keysMap: any[] = await this.keyService.countKey();
+    // return await this.consolidateData(projectBranchs, projectLanguages, keysMap);
+    for (const pb of projectBranchs) {
+      let d = new Dashboard();
+      d.id = pb.pid;
+      d.name = pb.pname;
+      d.modifier = pb.pmodifier;
+      d.time = pb.pmodifytime.valueOf();
+      // 查询keyvalue
+      // eslint-disable-next-line max-len
+      const q1 = `select keyId, count(keyId) from ((select key_id from branch_key where branch_id=${pb.id} and delete=false) a LEFT JOIN
+      (SELECT key_id as keyId, language_id as languageId from keyvalue where latest=true)
+      b on a.key_id=b.keyId) c GROUP BY keyId`;
+      const keyCount: any[] = await this.branchRepository.query(q1);
+      d.KeysNumber = keyCount.length;
+      const plc = projectLanguagesCount.filter(item => item.id === pb.pid);
+      const plcn = plc[0].count;
+      const transedKey = keyCount.filter(item => item.count === plcn).length;
+      d.translatedKeysNumber = transedKey;
+
+      const q2 = `select * from (select project_id, language_id from project_language where delete=false and
+        project_id=${pb.pid})
+       a LEFT JOIN language b on a.language_id = b.id`;
+      const pls: any[] = await this.projectRepository.query(q2);
+      const lan = [];
+      pls.forEach(pl => {
+        lan.push(pl.name);
+      });
+      d.languages = lan;
+      dashboards.push(d);
+    }
+    return dashboards;
   }
 
   async projectInfo(id: number): Promise<Project> {
@@ -279,26 +310,23 @@ export class ProjectService {
     return result;
   }
   // project left join branch(only master branch)
-  async findProjectWithBranch(): Promise<any[]> {
+  async findProjectWithMasterBranch(): Promise<any[]> {
     return await this.projectRepository.query(
-      'SELECT x.*, y.* FROM (SELECT p.id, p.name as project_name, p.modifier, p.modify_time, p.type, ' +
-        'b.id as branch_id FROM project p LEFT JOIN branch b ON p.id = b.project_id WHERE p.delete = FALSE' +
-        ' AND b.master = TRUE ORDER BY p.id) x LEFT JOIN (SELECT a.project_id, a.name as branch_name, ' +
-        'a.master as is_master, key.id as key_id, key.actual_id, key.namespace_id FROM (SELECT * FROM ' +
-        'branch LEFT JOIN branch_key ON branch.id = branch_key.branch_id WHERE branch_key.delete = FALSE ' +
-        'AND branch.master = TRUE) a LEFT JOIN key ON a.key_id = key.id WHERE key.delete = FALSE AND key.id ' +
-        '= key.actual_id) y ON x.id = y.project_id ORDER BY x.id',
+      // eslint-disable-next-line max-len
+      `select * from ((select * from branch where project_id in ( select id from project where delete=false)
+      and master=true and delete = false) a
+      LEFT JOIN (SELECT p.id as pid, p.name as pname, p.modifier as pmodifier, p.modify_time as pmodifyTime
+        from project p WHERE delete=false ) b on a.project_id=b.pid) c
+      `,
     );
   }
 
   // project left join language
-  async findProjectWithLanguages(): Promise<any[]> {
+  async findProjectWithLanguagesCount(): Promise<any[]> {
     return await this.projectRepository.query(
-      'SELECT p.id as project_id, p.name as project_name, p.reference_language_id, ' +
-        'p.type, p.modifier, p.modify_time, b.language_id, b.name as language_name FROM' +
-        ' project p LEFT JOIN (SELECT pl.project_id,pl.language_id,l."name" FROM ' +
-        'project_language pl LEFT JOIN language l on l.id = pl.language_id WHERE ' +
-        'pl.delete = FALSE) b ON p.id = b.project_id WHERE p.delete = FALSE ORDER BY p.id',
+      `select id, count(id) from ((select project_id, language_id from project_language where delete=false )
+       a LEFT JOIN (select id from project where delete=false) b on
+      a.project_id=b.id) c GROUP BY id`,
     );
   }
 
