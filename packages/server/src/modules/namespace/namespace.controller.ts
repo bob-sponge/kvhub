@@ -312,7 +312,7 @@ export class NamespaceController {
     }
     this.logger.info(
       // eslint-disable-next-line max-len
-      `user ${currentUser} edit key, key id: ${keyId}, branch id: ${branchId}, namespace id: ${namespaceId}, key name: ${keyvalue}, key value: ${JSON.stringify(
+      `user ${currentUser} edit key, key id: ${keyId}, branch id: ${branchId}, namespace id: ${namespaceId}, key name: ${keyName}, key value: ${JSON.stringify(
         data,
       )}.`,
     );

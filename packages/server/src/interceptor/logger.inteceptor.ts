@@ -5,11 +5,11 @@ import { Observable } from 'rxjs';
 export class LoggerInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler<any>): Observable<any> | Promise<Observable<any>> {
     // print request path
-    Logger.log(
+    /* Logger.log(
       ' ================== ' + context.switchToHttp().getRequest().url + ' ================== ',
       'Request Path',
       true,
-    );
+    ); */
     return next.handle();
   }
 }

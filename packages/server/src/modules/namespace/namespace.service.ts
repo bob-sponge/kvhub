@@ -324,7 +324,7 @@ export class NamespaceService {
         });
         await this.keyvalueRepository.insert(keyValueEntitys);
       }
-      logger.info(`sync key name: ${keyName} done.`);
+      // logger.info(`sync key name: ${keyName} done.`);
       //await queryRunner.commitTransaction();
     } catch (error) {
       //await queryRunner.rollbackTransaction();
