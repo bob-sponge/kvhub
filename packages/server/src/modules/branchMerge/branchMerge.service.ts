@@ -516,7 +516,7 @@ export class BranchMergeService {
       branchMerge.type = CommonConstant.MERGE_TYPE_MERGED;
       await this.branchMergeRepository.save(branchMerge);
     } catch (error) {
-      logger.info(`merge fail. details: ${error}`);
+      logger.error(`merge fail. details: ${error}`);
       branchMerge.type = CommonConstant.MERGE_TYPE_FAILED;
       await this.branchMergeRepository.save(branchMerge);
       throw new BadRequestException(error.message);
@@ -711,6 +711,16 @@ export class BranchMergeService {
           `update keyname set latest=false, modifier='${user}', modify_time='${modifyTime}' where key_id=${source.keyId}`,
         );
       } else {
+        // 有一种情况需要特殊处理：目标分支不是master 分支，但是目标分支的key 是master分支的，产生这种情况的原因是继承
+        let targetIsMasterKey = false;
+        if (target.keyId !== undefined && target.keyId !== null) {
+          const targetKeyId = target.keyId;
+          const tkbranch = await this.branchKeyRepository.findOne({ keyId: targetKeyId, delete: false });
+          const tbranch = await this.branchRepository.findOne({ id: tkbranch.branchId, delete: false });
+          if (tbranch.master === true) {
+            targetIsMasterKey = true;
+          }
+        }
         // 修改 目标分支的值
         // 1. 目标分支的值删除
         let newTargetValues = [];
@@ -718,7 +728,7 @@ export class BranchMergeService {
           const ids = target.valueList.map(item => item.valueId);
           newTargetValues = await this.keyvalueRepository.findByIds(ids);
         }
-        if (newTargetValues.length > 0) {
+        if (newTargetValues.length > 0 && !targetIsMasterKey) {
           newTargetValues.forEach(item => {
             item.latest = false;
             item.modifyTime = time;
@@ -729,7 +739,7 @@ export class BranchMergeService {
 
         let targetKeyName = null;
 
-        if (target.keyId !== undefined && target.keyId !== null) {
+        if (target.keyId !== undefined && target.keyId !== null && !targetIsMasterKey) {
           // 删除 key
           const q = `update key set delete=true, modifier='${user}', modify_time='${modifyTime}' where id=${target.keyId}`;
           await this.keyRepository.query(q);
@@ -748,28 +758,27 @@ export class BranchMergeService {
         }
 
         let newKeyname = new Keyname();
-        if (targetKeyName !== null) {
+
+        if (!targetIsMasterKey && targetKeyName !== null) {
           targetKeyName.modifyTime = time;
           targetKeyName.latest = false;
+          // newKeyname = targetKeyName;
           // 把另一个分支的name 复制过来
-          newKeyname = targetKeyName;
           await this.keynameRepository.save(targetKeyName);
-        } else {
-          // 存在未选择的
-          let newKey = new Key();
-          newKey.delete = false;
-          newKey.namespaceId = target.namespaceId;
-          newKey.modifier = user;
-          newKey.actualId = diffVO.keyActualId;
-          newKey.modifyTime = time;
-          newKey = await this.keyRepository.save(newKey);
-          const branchKey = new BranchKey();
-          branchKey.branchId = target.branchId;
-          branchKey.delete = false;
-          branchKey.keyId = newKey.id;
-          await this.branchKeyRepository.save(branchKey);
-          newKeyname.keyId = newKey.id;
         }
+        let newKey = new Key();
+        newKey.delete = false;
+        newKey.namespaceId = target.namespaceId;
+        newKey.modifier = user;
+        newKey.actualId = diffVO.keyActualId;
+        newKey.modifyTime = time;
+        newKey = await this.keyRepository.save(newKey);
+        const branchKey = new BranchKey();
+        branchKey.branchId = target.branchId;
+        branchKey.delete = false;
+        branchKey.keyId = newKey.id;
+        await this.branchKeyRepository.save(branchKey);
+        newKeyname.keyId = newKey.id;
 
         newKeyname.commitId = branchMerge.commitId;
         newKeyname.name = selectedKey.keyName;

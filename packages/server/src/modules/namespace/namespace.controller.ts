@@ -10,12 +10,14 @@ import { Permission } from 'src/permission/permission.decorator';
 import { PermissionGuard } from 'src/permission/permission.guard';
 import { PermissionCtl } from 'src/constant/constant';
 import { ErrorMessage } from 'src/constant/constant';
-import { ProjectLanguageModule } from '../projectLanguage/projectLanguage.module';
 
 @Controller('namespace')
 @UseGuards(PermissionGuard)
 export class NamespaceController {
-  constructor(private readonly namespaceService: NamespaceService, private readonly branchService: BranchService) {}
+  logger = Log4js.getLogger();
+  constructor(private readonly namespaceService: NamespaceService, private readonly branchService: BranchService) {
+    this.logger.level = 'info';
+  }
 
   @Post('/save')
   async save(@Body() vo: Namespace, @Request() req): Promise<ResponseBody> {
@@ -99,7 +101,7 @@ export class NamespaceController {
       throw new BadRequestException(ErrorMessage.BRANCH_NOT_EXIST);
     }
     const offset = (page - 1) * pageSize;
-    logger.info(`page: ${page}, page size: ${pageSize}, branchID: ${branchId}`);
+    //logger.info(`page: ${page}, page size: ${pageSize}, branchID: ${branchId}`);
     if (branch.master) {
       const namespaceKey = await this.namespaceService.getKeysByCondition(namespaceViewDetail);
       return ResponseBody.okWithData(namespaceKey);
@@ -242,6 +244,13 @@ export class NamespaceController {
         new Date(),
       )
     ).raw;
+    const user = req.cookies.token;
+    this.logger.info(
+      // eslint-disable-next-line max-len
+      `user ${user} edit key value, key id: ${keyId}, branch id: ${branchId}, language id: ${languageId}, value is ${JSON.stringify(
+        keyvalue,
+      )}.`,
+    );
     return ResponseBody.okWithData(data);
   }
 
@@ -286,15 +295,13 @@ export class NamespaceController {
    */
   @Post('/view/keyvalue')
   async addKeyValue(@Body() keyvalue: any, @Request() req) {
-    const logger = Log4js.getLogger();
-    logger.level = 'INFO';
     const branchId = keyvalue.branchId;
     const namespaceId = keyvalue.namespaceId;
     const keyId = keyvalue.keyId;
     const keyName = keyvalue.keyName;
     const data: [] = keyvalue.kv;
     const currentUser = req.cookies.token;
-    logger.info(`view keyvalue: key id: ${keyId}, key name: ${keyName}`);
+    //logger.info(`view keyvalue: key id: ${keyId}, key name: ${keyName}`);
     // 如果key id 有值，则为修改，否则为增加
     let msg = '';
     try {
@@ -303,6 +310,12 @@ export class NamespaceController {
       msg = error.message;
       return ResponseBody.error(msg, 500);
     }
+    this.logger.info(
+      // eslint-disable-next-line max-len
+      `user ${currentUser} edit key, key id: ${keyId}, branch id: ${branchId}, namespace id: ${namespaceId}, key name: ${keyName}, key value: ${JSON.stringify(
+        data,
+      )}.`,
+    );
     return ResponseBody.okWithMsg('success');
   }
 
@@ -340,6 +353,10 @@ export class NamespaceController {
       msg = error.message;
       return ResponseBody.error(msg, 500);
     }
+    this.logger.info(
+      // eslint-disable-next-line max-len
+      `user ${currentUser} edit key name, key id: ${keyId}, key name: ${keyName}`,
+    );
     return ResponseBody.okWithData(res[0]);
   }
 
@@ -361,14 +378,15 @@ export class NamespaceController {
   @Permission(PermissionCtl.DELETE_KEY)
   async deleteKey(@Param('keyId') keyId: number, @Request() req) {
     let msg = '';
+    const currentUser = req.cookies.token;
     try {
       // todo before delete key record,will verify the relationship between Branch and key
-      const currentUser = req.cookies.token;
       await this.namespaceService.deleteKey(keyId, currentUser);
     } catch (error) {
       msg = error.message;
       return ResponseBody.error(msg, 500);
     }
+    this.logger.info(`user ${currentUser} delete key, key id: ${keyId}`);
     return ResponseBody.okWithMsg('success');
   }
 
@@ -389,13 +407,14 @@ export class NamespaceController {
   @Delete('/view/:namespaceId')
   async deleteNamespace(@Param('namespaceId') namespaceId: number, @Request() req) {
     let msg = '';
+    const currentUser = req.cookies.token;
     try {
-      const currentUser = req.cookies.token;
       await this.namespaceService.deleteNamespace(namespaceId, currentUser);
     } catch (error) {
       msg = error.message;
       return ResponseBody.error(msg, 500);
     }
+    this.logger.info(`user ${currentUser} delete namespace, namespace id: ${namespaceId}`);
     return ResponseBody.okWithMsg('success');
   }
 
@@ -484,8 +503,8 @@ export class NamespaceController {
    *   "zh":{}
    * }}
    */
-  @Get('/api/json/project/:projectName/branch/:branchName')
-  async getProjectData(@Param('projectName') projectName: string, @Param('branchName') branchName: string){
+  @Get('/json/project/:projectName/branch/:branchName')
+  async getProjectData(@Param('projectName') projectName: string, @Param('branchName') branchName: string) {
     let data = {};
     try {
       data = await this.namespaceService.getProjectData(projectName, branchName);

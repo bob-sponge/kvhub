@@ -55,12 +55,15 @@ export class NamespaceService {
   ) {}
 
   async deleteNamespace(namespaceId: number, modifier: any) {
-    const logger = Log4js.getLogger();
-    logger.level = 'INFO';
     const modifyTime = new Date().toLocaleString();
     const q = `update namespace set delete=true, modifier='${modifier}', modify_time='${modifyTime}' where id=${namespaceId}`;
-    logger.info(`q: ${q}`);
+    // logger.info(`q: ${q}`);
     await this.namespaceRepository.query(q);
+    // 找出命名空间下的key,并删除
+    const keys = await this.keyRepository.find({namespaceId: namespaceId});
+    for(const key of keys){
+      this.deleteKey(key.id, modifier);
+    }
   }
 
   async deleteKey(keyId: number, modifier: any) {
@@ -69,7 +72,7 @@ export class NamespaceService {
     const modifyTime = new Date().toLocaleString();
     // 删除 key
     const q = `update key set delete=true, modifier='${modifier}', modify_time='${modifyTime}' where id=${keyId}`;
-    logger.info(`q: ${q}`);
+    // logger.info(`q: ${q}`);
     await this.keyRepository.query(q);
     // 删除 branch key
     const bk = `update branch_key set delete=true where key_id = ${keyId}`;
@@ -127,7 +130,7 @@ export class NamespaceService {
       keyNameEntity.latest = true;
       const insertKeyName = await this.keynameRepository.insert(keyNameEntity);
       const keyNameId = insertKeyName.raw[0].id;
-      logger.info(`insert key name id: ${keyNameId}`);
+      // logger.info(`insert key name id: ${keyNameId}`);
       // key value
       const keyvalueInfo = await this.keyvalueRepository.query(
         `select * from keyvalue where key_id = ${keyId} and latest is true`,
@@ -321,7 +324,7 @@ export class NamespaceService {
         });
         await this.keyvalueRepository.insert(keyValueEntitys);
       }
-      logger.info(`sync key name: ${keyName} done.`);
+      // logger.info(`sync key name: ${keyName} done.`);
       //await queryRunner.commitTransaction();
     } catch (error) {
       //await queryRunner.rollbackTransaction();
@@ -341,7 +344,7 @@ export class NamespaceService {
   ) {
     const logger = Log4js.getLogger();
     logger.level = 'INFO';
-    logger.info(languageId, keyId, keyvalue);
+    // logger.info(languageId, keyId, keyvalue);
     languageId = Number.parseInt(languageId.toString());
     branchId = Number.parseInt(branchId.toString());
     // check branch is or not merging status
@@ -383,7 +386,7 @@ export class NamespaceService {
       keyEntity.actualId = keyId;
       const insertKey = await this.keyRepository.insert(keyEntity);
       const keyEntityId = insertKey.raw[0].id;
-      logger.info(`insert key id: ${keyEntityId}`);
+      // logger.info(`insert key id: ${keyEntityId}`);
       // 插入branch commit
       const branchCommit = new BranchCommit();
       branchCommit.type = CommonConstant.COMMIT_TYPE_ADD;
@@ -408,7 +411,7 @@ export class NamespaceService {
       // throw new Error('test transaction.');
       const insertKeyName = await this.keynameRepository.insert([keyNameEntity]);
       const keyNameId = insertKeyName.raw[0].id;
-      logger.info(`insert key name id: ${keyNameId}`);
+      // logger.info(`insert key name id: ${keyNameId}`);
       // this.keyRepository.query(`update key set actual_id=${keyNameId} where id=${keyEntityId}`);
       // 插入key Value 表,修改的是该语言下的，直接用新值插入，如果老的key 下面还有其他语言的，也需要用之前的值插入
       const data = await this.keyvalueRepository.query(`select * from keyvalue where key_id = ${keyId} and latest=true`);
@@ -494,7 +497,7 @@ export class NamespaceService {
       ) and delete = false
     )
     `;
-    logger.info(`query2 is ${languageQuery}`);
+    // logger.info(`query2 is ${languageQuery}`);
     const language: any[] = await this.namespaceRepository.query(languageQuery);
 
     const referenceLanguageQuery = `
@@ -862,7 +865,7 @@ export class NamespaceService {
     ORDER BY keyName ASC
     ${pageCondition}
     `;
-    logger.info(`getNamespaceTargetLanguageKeys is ${query}`);
+    // logger.info(`getNamespaceTargetLanguageKeys is ${query}`);
     return await this.namespaceRepository.query(query);
   }
   async findAll(): Promise<Namespace[]> {
@@ -910,7 +913,7 @@ export class NamespaceService {
     } else {
       keyNameTrue = keyName[0];
     }
-    logger.info(`key name: ${keyName}, ${keyNameTrue}`);
+    // logger.info(`key name: ${keyName}, ${keyNameTrue}`);
     const query2 = `
     SELECT *
     FROM (
@@ -1059,24 +1062,69 @@ export class NamespaceService {
     if(project === undefined || project === null){
       throw new BadRequestException(ErrorMessage.PROJECT_NOT_EXIST);
     }
-    const branch = await this.branchRepository.findOne({name: branchName, delete: false});
+    const branch = await this.branchRepository.findOne({name: branchName, projectId: project.id , delete: false});
     if(branch === undefined || branch == null){
       throw new BadRequestException(ErrorMessage.BRANCH_NOT_EXIST);
     }
     const projectLanguages = await this.projectLanguageRepository.find({projectId: project.id, delete: false});
     const namespaces = await this.namespaceRepository.find({projectId: project.id, delete: false});
+    const languageFlat = {};
     for (const projectLanguage of projectLanguages) {
       // 获取language name
-      const languageName = this.languageRepository.findOne({id: projectLanguage.languageId});
+      const languageName = await this.languageRepository.findOne({id: projectLanguage.languageId});
       // 获取 工程下面的namespace
+      const namespaceFlat= {};
       for (const namespace of namespaces) {
         const q = `
-        select keyname, keyid, keyvalue from ( 
-          select * from (select key_id as keyid from branch_key where branch_id=${branch.id} and delete=false) a LEFT JOIN (select name as keyname, key_id from keyname) b on a.keyid=b.key_id
-          ) c LEFT JOIN (select value as keyvalue, key_id from keyvalue where language_id=${projectLanguage.languageId} and latest=true) d on c.keyid = d.key_id`;
+        SELECT *
+        FROM (
+          SELECT  keyname, keyvalue
+          FROM ((
+            SELECT *
+            FROM (
+              SELECT k.id AS keyid, k.actual_id AS actualid
+              FROM key k
+              WHERE k.delete = false
+                AND namespace_id = ${namespace.id}
+            ) s1
+              JOIN (
+                SELECT key_id
+                FROM branch_key
+                WHERE branch_id = ${branch.id} and delete = false
+              ) s2
+              ON s1.keyid = s2.key_id
+              JOIN (
+                SELECT kn.id AS keynameid, key_id, kn.name AS keyname
+                FROM keyname kn
+                WHERE latest = true
+              ) s3
+              ON s2.key_id = s3.key_id) s4
+              LEFT JOIN (
+                SELECT kv.id AS valueid, kv.language_id AS languageid, key_id, kv.value AS keyvalue
+                FROM keyvalue kv
+                WHERE language_id = ${projectLanguage.languageId}
+                  AND latest = true
+              ) s5
+              ON s4.keyid = s5.key_id
+          ) s6
+        ) s7
+        ORDER BY keyName ASC`;
+        const logger = Log4js.getLogger();
+        logger.level = 'INFO';
+        // logger.info(`api sql is ${q}`);
+        const keyinfos = await this.namespaceRepository.query(q);
+        const keyInfo = {};
+        keyinfos.forEach((item)=>{
+          const k = item.keyname;
+          const v = item.keyvalue;
+          keyInfo[k] = v;
+        });
+        const namespaceName = namespace.name;
+        namespaceFlat[namespaceName] = keyInfo;
       }
+      languageFlat[languageName.name] = namespaceFlat;
 
     }
-    return {};
+    return {'data': languageFlat};
   }
 }

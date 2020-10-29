@@ -1,11 +1,15 @@
-import { Controller, Get, Post, Param, Body, ValidationPipe, UsePipes, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Param, Body, ValidationPipe, UsePipes, Delete, Request } from '@nestjs/common';
 import { ProjectService } from './project.service';
 import { ResponseBody } from 'src/vo/ResponseBody';
 import { ProjectVO } from 'src/vo/PorjectVO';
+import * as Log4js from 'log4js';
 
 @Controller('project')
 export class ProjectController {
-  constructor(private readonly projectService: ProjectService) {}
+  logger = Log4js.getLogger();
+  constructor(private readonly projectService: ProjectService) {
+    this.logger.level = 'info';
+  }
   /**
    * find all projects with key and languages
    */
@@ -51,7 +55,9 @@ export class ProjectController {
     }
    */
   @Delete('/:id')
-  async deleteProject(@Param('id') id: number) {
+  async deleteProject(@Param('id') id: number, @Request() req) {
+    const user = req.cookies.token;
+    this.logger.info(`user ${user} delete project id ${id}.`);
     return ResponseBody.okWithData(await this.projectService.deleteProject(id));
   }
 }

@@ -18,11 +18,16 @@ import { PermissionGuard } from '../../permission/permission.guard';
 import { Permission } from 'src/permission/permission.decorator';
 import { LoginBodyVO } from 'src/vo/LoginBodyVO';
 import { ErrorMessage, PermissionCtl } from 'src/constant/constant';
+import * as Log4js from 'log4js';
 
 @Controller('user')
 @UseGuards(PermissionGuard)
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  logger = Log4js.getLogger();
+
+  constructor(private readonly userService: UserService) {
+    this.logger.level = 'info';
+  }
 
   @Post('/query')
   async queryAll(@Body() body: any): Promise<ResponseBody> {
@@ -46,11 +51,16 @@ export class UserController {
   async resetoneuser(@Session() session, @Body() body: any, @Request() req): Promise<ResponseBody> {
     const admin: number = Number.parseInt(req.cookies.admin);
     const result = await this.userService.resetoneuser(admin, body);
+    const user = req.cookies.token;
+    const userId = body.userId;
+    this.logger.info(`user ${user} reset another user id ${userId} password.`);
     return ResponseBody.okWithMsg(result);
   }
 
   @Delete('/delete/:id')
-  async delete(@Param('id') id: number): Promise<ResponseBody> {
+  async delete(@Param('id') id: number, @Request() req): Promise<ResponseBody> {
+    const user = req.cookies.token;
+    this.logger.info(`user ${user} delete another user id ${id}.`);
     return ResponseBody.okWithMsg(await this.userService.delete(id));
   }
 
@@ -63,6 +73,8 @@ export class UserController {
   ): Promise<ResponseBody> {
     const admin: number = Number.parseInt(req.cookies.admin);
     const result = await this.userService.set(admin, id, level);
+    const user = req.cookies.token;
+    this.logger.info(`user ${user} set another user id ${id} level ${level}.`);
     return ResponseBody.okWithMsg(result);
   }
 
@@ -76,6 +88,7 @@ export class UserController {
     user.password = null;
     res.status(HttpStatus.OK);
     res.setHeader('Content-Type', 'application/json;charset=UTF-8');
+    this.logger.info(`user ${user.name} login system`);
     return res.send(JSON.stringify(ResponseBody.okWithData(user)));
   }
 
@@ -89,11 +102,13 @@ export class UserController {
     ) {
       throw new BadRequestException(ErrorMessage.PLEASE_LOGIN_FIRST);
     }
+    const user = req.cookies.token;
     req.session.cookie.maxAge = 0;
     res.cookie('token', null, { maxAge: 0 });
     res.cookie('permission', null);
     res.status(HttpStatus.OK);
     res.setHeader('Content-Type', 'application/json;charset=UTF-8');
+    this.logger.info(`user ${user} logout system`);
     return res.send(JSON.stringify(ResponseBody.okWithMsg('Logout success!')));
   }
 }
