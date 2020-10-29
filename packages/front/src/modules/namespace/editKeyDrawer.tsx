@@ -321,8 +321,6 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
     }
   }, [defaultEditDetail, editDetail]);
 
-  window.console.log(language, languages);
-
   return (
     <div>
       <Drawer
