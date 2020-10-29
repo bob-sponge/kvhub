@@ -156,14 +156,14 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
       if (languageRes.success) {
         const editLanguages: any = [];
         const detailLanguages: any[] = [];
-        languageRes.data.value.map((ele: any) => {
-          const lang = languages.find((t: any) => t.id === ele.language_id);
+        languages.map((item: any) => {
+          const lang = languageRes.data.value.find((t: any) => item.id === t.language_id);
           if (lang) {
             const obj = {
-              id: lang.id,
-              value: ele.value,
-              name: lang.name,
-              referenceLanguage: lang.referenceLanguage,
+              id: item.id,
+              value: lang.value,
+              name: item.name,
+              referenceLanguage: item.referenceLanguage,
             };
             editLanguages.push(obj);
             detailLanguages.push(obj);
@@ -320,6 +320,8 @@ const EditKeyDrawer: React.FC<EditKeyDrawerProps> = ({
       );
     }
   }, [defaultEditDetail, editDetail]);
+
+  window.console.log(language, languages);
 
   return (
     <div>
