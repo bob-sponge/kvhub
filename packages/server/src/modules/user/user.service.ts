@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ErrorMessage } from 'src/constant/constant';
 import { LoginBodyVO } from 'src/vo/LoginBodyVO';
+import { Base64 } from 'js-base64';
 
 @Injectable()
 export class UserService {
@@ -39,9 +40,9 @@ export class UserService {
   }
 
   async reset(admin: number, body: any): Promise<string> {
-    if (admin !== 0) {
-      throw new BadRequestException(ErrorMessage.MUST_ADMIN);
-    }
+    // if (admin !== 0) {
+    //   throw new BadRequestException(ErrorMessage.MUST_ADMIN);
+    // }
     const oldPass = body.oldPass;
     const newPass = body.newPass;
     const userId = body.userId;
@@ -49,10 +50,10 @@ export class UserService {
     if (null == userId || null == (user = await this.userRepository.findOne({ id: userId }))) {
       throw new BadRequestException(ErrorMessage.USER_NOT_EXIST);
     }
-    if (user.password !== oldPass) {
+    if (user.password !== this.base64enc(oldPass)) {
       throw new BadRequestException(ErrorMessage.OLD_PASSWORD_ERROR);
     }
-    user.password = newPass;
+    user.password = this.base64enc(newPass);
     await this.userRepository.save(user);
     return ErrorMessage.RESET_PASSWORD_SUCCESS;
   }
@@ -67,7 +68,7 @@ export class UserService {
     if (null == userId || null == (user = await this.userRepository.findOne({ id: userId }))) {
       throw new BadRequestException(ErrorMessage.USER_NOT_EXIST);
     }
-    user.password = newPass;
+    user.password = this.base64enc(newPass);
     await this.userRepository.save(user);
     return ErrorMessage.RESET_PASSWORD_SUCCESS;
   }
@@ -113,7 +114,7 @@ export class UserService {
     } else {
       user = userList[0];
     }
-    if (user.password !== vo.password.trim()) {
+    if (user.password !== this.base64enc(vo.password.trim())) {
       throw new BadRequestException(ErrorMessage.USER_OR_PASSWORD_IS_WRONG);
     }
     const lastTime = new Date().toLocaleString();
@@ -129,5 +130,13 @@ export class UserService {
     } else {
       return user;
     }
+  }
+
+  base64enc(pass: string){
+    return Base64.encode(pass);
+  }
+
+  base64dec(pass: string){
+    return Base64.decode(pass);
   }
 }

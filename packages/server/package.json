@@ -13,6 +13,7 @@
     "class-transformer": "^0.2.3",
     "cookie-parser": "^1.4.5",
     "express-session": "^1.17.0",
+    "js-base64": "^3.5.2",
     "log4js": "^6.2.1",
     "pg": "^8.0.2",
     "reflect-metadata": "^0.1.13",
