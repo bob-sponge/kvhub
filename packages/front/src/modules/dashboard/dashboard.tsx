@@ -3,10 +3,11 @@ import * as css from './style/dashboard.modules.less';
 import { Button, Progress, Empty, Spin, Modal, message } from 'antd';
 import { UploadOutlined, PlusOutlined, DeleteOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 import Container from '../../container';
-import { doneColor, processColor, formatNumber, timeAgo } from './constant';
+import { doneColor, processColor, formatNumber } from './constant';
 import AddOrEditProject from './addOrEditProject';
 import * as Api from '../../api';
 import { history as browserHistory } from '@ofm/history';
+import moment from 'moment';
 
 const { confirm } = Modal;
 
@@ -73,8 +74,10 @@ const Dashboard: React.SFC = () => {
             {projectList &&
               projectList.length > 0 &&
               projectList.map((item, index) => {
-                const isDone = item.translatedKeysNumber === item.KeysNumber;
-                const precent = (item.translatedKeysNumber / item.KeysNumber) * 100;
+                const { translatedKeysNumber, KeysNumber } = item;
+                const isDone = translatedKeysNumber === KeysNumber && !(translatedKeysNumber === 0 && KeysNumber === 0);
+                const precent =
+                  translatedKeysNumber === 0 && KeysNumber === 0 ? 0 : (translatedKeysNumber / KeysNumber) * 100;
                 return (
                   <div className={css.cardWapper} key={index} onClick={() => handleClick(item.id)}>
                     <div className={css.cardList}>
@@ -114,7 +117,7 @@ const Dashboard: React.SFC = () => {
                           })}
                           {` ${item.languages.length} languages`}
                         </div>
-                        <div>{timeAgo(item.time)}</div>
+                        <div>{moment(item.time).format('YYYY-MM-DD HH:mm:ss')}</div>
                       </div>
                     </div>
                   </div>
