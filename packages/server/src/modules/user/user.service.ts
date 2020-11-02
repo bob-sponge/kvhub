@@ -132,11 +132,11 @@ export class UserService {
     }
   }
 
-  base64enc(pass: string){
+  base64enc(pass: string) {
     return Base64.encode(pass);
   }
 
-  base64dec(pass: string){
+  base64dec(pass: string) {
     return Base64.decode(pass);
   }
 }

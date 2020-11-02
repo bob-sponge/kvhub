@@ -628,6 +628,7 @@ export class BranchService {
   async findKeyIdsByBranchIds(id: number): Promise<any[]> {
     return await this.branchRepository.query(
       'SELECT key.id as key_id FROM (SELECT * FROM branch LEFT JOIN branch_key ON ' +
+        // eslint-disable-next-line max-len
         'branch.id = branch_key.branch_id WHERE branch_key.delete = FALSE AND branch.master = TRUE AND branch.delete = FALSE ' +
         `AND branch.id = '${id}') a ` +
         'LEFT JOIN key ON a.key_id = key.id WHERE key.delete = FALSE AND key.id = key.actual_id',
@@ -649,6 +650,7 @@ export class BranchService {
     return await this.branchRepository.query(
       'SELECT a.project_id, a.branch_id as branchId, a.name as branch_name, a.master as is_master, key.id as key_id, ' +
         'key.actual_id, key.namespace_id FROM (SELECT * FROM branch LEFT JOIN branch_key ON ' +
+        // eslint-disable-next-line max-len
         'branch.id = branch_key.branch_id WHERE branch_key.delete = FALSE AND branch.master = TRUE AND branch.delete = FALSE ) a ' +
         'LEFT JOIN key ON a.key_id = key.id WHERE key.delete = FALSE',
     );

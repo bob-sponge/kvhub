@@ -130,7 +130,7 @@ export class NamespaceController {
         const namespaceBranchKey = namespaceMasterBranchKey.filter(
           item => namespaceAllNoMasterBranchKeyName.includes(item.keyName) === false,
         );
-        const retKV = namespaceBranchKey.sort((i, j) => i.keyName - j.keyName).slice(offset, offset + pageSize);
+        const retKV = namespaceBranchKey.sort((i, j) => this.sort(i, j)).slice(offset, offset + pageSize);
         const namespaceKey = {
           keys: retKV,
           totalNum,
@@ -147,17 +147,7 @@ export class NamespaceController {
           return noMasterKeySet.has(m.keyName) !== true;
         });
         let finalAllKv = tmpBk.concat(namespaceNoMasterBranchKey);
-        finalAllKv.sort((i, j) => {
-          const r1 = i.keyName.toUpperCase();
-          const r2 = j.keyName.toUpperCase();
-          if (r1 < r2) {
-            return -1;
-          }
-          if (r1 > r2) {
-            return 1;
-          }
-          return 0;
-        });
+        finalAllKv.sort((i, j) => this.sort(i, j));
         const totalNum = finalAllKv.length;
         const retKV = finalAllKv.slice(offset, offset + pageSize);
         const namespaceKey = {
@@ -168,6 +158,7 @@ export class NamespaceController {
       }
     }
   }
+
   /**
    * @description 获取命名空间所有语言
    * @request id namespace id
@@ -512,5 +503,17 @@ export class NamespaceController {
       return ResponseBody.error(error.message, 500);
     }
     return data;
+  }
+
+  sort(i, j) {
+    const r1 = i.keyName;
+    const r2 = j.keyName;
+    if (r1 < r2) {
+      return -1;
+    }
+    if (r1 > r2) {
+      return 1;
+    }
+    return 0;
   }
 }

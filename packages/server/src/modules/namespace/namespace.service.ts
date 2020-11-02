@@ -177,7 +177,6 @@ export class NamespaceService {
   ) {
     const logger = Log4js.getLogger();
     logger.level = 'INFO';
-
     // 增加分支是否存在merge的验证
     const existBranchMerge = await this.branchMergeRepository.find({
       where: [
@@ -200,7 +199,7 @@ export class NamespaceService {
     // await queryRunner.connect();
     // await queryRunner.startTransaction();
     const commitId = UUIDUtils.generateUUID();
-    keyName = keyName === null || keyName === undefined ? '' : keyName;
+    keyName = keyName === null || keyName === undefined ? '' : keyName.trim();
     // eslint-disable-next-line @typescript-eslint/quotes
     const zyKeyName = keyName.replace("'", "\\'");
     try {
@@ -409,8 +408,8 @@ export class NamespaceService {
       keyNameEntity.name = keyName;
       keyNameEntity.commitId = commitId;
       // throw new Error('test transaction.');
-      const insertKeyName = await this.keynameRepository.insert([keyNameEntity]);
-      const keyNameId = insertKeyName.raw[0].id;
+      // const insertKeyName = await this.keynameRepository.insert([keyNameEntity]);
+      // const keyNameId = insertKeyName.raw[0].id;
       // logger.info(`insert key name id: ${keyNameId}`);
       // this.keyRepository.query(`update key set actual_id=${keyNameId} where id=${keyEntityId}`);
       // 插入key Value 表,修改的是该语言下的，直接用新值插入，如果老的key 下面还有其他语言的，也需要用之前的值插入
@@ -1043,13 +1042,15 @@ export class NamespaceService {
               WHERE id IN (
                   SELECT key_id
                   FROM keyname
-                  WHERE name = '${keyName}' and namespace_id = '${namespaceId}' and latest = true
+                  WHERE name = '${keyName}' and latest = true
                 )
-                AND delete IS false
+                and namespace_id = '${namespaceId}' AND delete IS false
             )
             AND delete IS false)
         `;
-    // logger.info(`sameKeyName: ${sameKeyName}`);
+    const logger = Log4js.getLogger();
+    logger.level = 'INFO';
+    logger.info(`sameKeyName: ${sameKeyName}`);
     const sameNameValid = await this.keyRepository.query(sameKeyName);
     if (sameNameValid.length > 0) {
       return true;
