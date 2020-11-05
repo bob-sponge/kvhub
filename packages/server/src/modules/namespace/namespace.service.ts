@@ -847,7 +847,7 @@ export class NamespaceService {
           JOIN (
             SELECT kn.id AS keynameid, key_id, kn.name AS keyname
             FROM keyname kn
-            WHERE name LIKE '%${searchCondition}%' escape '/' and latest = true
+            WHERE name ILIKE '%${searchCondition}%' escape '/' and latest = true
           ) s3
           ON s2.key_id = s3.key_id) s4
           LEFT JOIN (
