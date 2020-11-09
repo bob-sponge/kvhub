@@ -408,7 +408,7 @@ export class NamespaceService {
       keyNameEntity.name = keyName;
       keyNameEntity.commitId = commitId;
       // throw new Error('test transaction.');
-      // const insertKeyName = await this.keynameRepository.insert([keyNameEntity]);
+      await this.keynameRepository.insert([keyNameEntity]);
       // const keyNameId = insertKeyName.raw[0].id;
       // logger.info(`insert key name id: ${keyNameId}`);
       // this.keyRepository.query(`update key set actual_id=${keyNameId} where id=${keyEntityId}`);
@@ -864,7 +864,7 @@ export class NamespaceService {
     ORDER BY keyName ASC
     ${pageCondition}
     `;
-    // logger.info(`getNamespaceTargetLanguageKeys is ${query}`);
+    logger.info(`getNamespaceTargetLanguageKeys is ${query}`);
     return await this.namespaceRepository.query(query);
   }
   async findAll(): Promise<Namespace[]> {
