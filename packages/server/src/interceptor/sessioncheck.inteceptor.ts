@@ -7,7 +7,7 @@ import { BadRequestException } from '@nestjs/common';
 export class SessionCheckInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler<any>): Observable<any> | Promise<Observable<any>> {
     const url = context.switchToHttp().getRequest().url;
-    if ('/user/login' === url || url.includes('/namespace/json/project/')) {
+    if ('/user/login' === url || url.includes('/namespace/json/project/') || url.includes('/namespace/json/old')) {
       return next.handle();
     } else {
       if (

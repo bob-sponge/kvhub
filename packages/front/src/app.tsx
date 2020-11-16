@@ -26,7 +26,7 @@ const BasicRoute = () => (
       <Route exact path="/login" component={Login} />
       <Route exact path="/user" component={User} />
       <Route exact path="/profile" component={Profile} />
-      <Route exact path="/" component={Login} />
+      <Route exact path="/kvhub" component={Login} />
       <Route exact path="/namespace/:name/:projectId/:namespaceId/:languageId" component={NamespaceView} />
       <Route exact path="/languages/:projectId" component={Languages} />
       <Route exact path="/dashboard" component={Dashboard} />

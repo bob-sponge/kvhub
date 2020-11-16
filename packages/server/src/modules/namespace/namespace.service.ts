@@ -23,6 +23,7 @@ import { ConfigService } from '@ofm/nestjs-utils';
 import { Language } from 'src/entities/Language';
 import { BranchService } from '../branch/branch.service';
 import { ProjectLanguage } from 'src/entities/ProjectLanguage';
+import { observable } from 'rxjs';
 
 @Injectable()
 export class NamespaceService {
@@ -864,7 +865,7 @@ export class NamespaceService {
     ORDER BY keyName ASC
     ${pageCondition}
     `;
-    logger.info(`getNamespaceTargetLanguageKeys is ${query}`);
+    // info(`getNamespaceTargetLanguageKeys is ${query}`);
     return await this.namespaceRepository.query(query);
   }
   async findAll(): Promise<Namespace[]> {
@@ -1127,5 +1128,165 @@ export class NamespaceService {
 
     }
     return {'data': languageFlat};
+  }
+
+  async oldNewDiff(odata: any, ndata: any) {
+    let oldAllKv = null;
+    let newAllKv = null;
+    let ret = {};
+    if (fs.existsSync(odata) && fs.existsSync(ndata)) {
+      oldAllKv = JSON.parse(fs.readFileSync(odata, 'utf8'));
+      newAllKv = JSON.parse(fs.readFileSync(ndata, 'utf8'));
+      const oebs=[];
+      const oeb = oldAllKv.data.en.backend;
+      // eslint-disable-next-line guard-for-in
+      for (const key in oeb) {
+        const ob = {
+          name: key,
+          value: oeb[key],
+        };
+        oebs.push(ob);
+      }
+      const nebs=[];
+      const neb = newAllKv.data.en.backend;
+      // eslint-disable-next-line guard-for-in
+      for (const key in neb) {
+        const ob = {
+          name: key,
+          value: neb[key],
+        };
+        nebs.push(ob);
+      }
+      let bacd = new Set();
+      oebs.forEach((item)=>{
+        const a = nebs.find((x)=>(x.name).trim() === (item.name).trim());
+        if(a === undefined){
+          bacd.add(item.name);
+        } else{
+          if(item.value !== a.value){
+            bacd.add(item.name);
+          }
+        }
+      });
+
+      const ozbs=[];
+      const ozb = oldAllKv.data.zh.backend;
+      // eslint-disable-next-line guard-for-in
+      for (const key in ozb) {
+        const ob = {
+          name: key,
+          value: ozb[key],
+        };
+        ozbs.push(ob);
+      }
+      const nzbs=[];
+      const nzb = newAllKv.data.zh.backend;
+      // eslint-disable-next-line guard-for-in
+      for (const key in nzb) {
+        const ob = {
+          name: key,
+          value: nzb[key],
+        };
+        nzbs.push(ob);
+      }
+      ozbs.forEach((item)=>{
+        const a = nzbs.find((x)=>(x.name).trim() === (item.name).trim());
+        if(a === undefined){
+          bacd.add(item.name);
+        } else{
+          if(item.value !== a.value){
+            bacd.add(item.name);
+          }
+        }
+      });
+
+
+      let comn = new Set();
+      const ozcs=[];
+      const ozc = oldAllKv.data.zh.common;
+      // eslint-disable-next-line guard-for-in
+      for (const key in ozc) {
+        const ob = {
+          name: key,
+          value: ozc[key],
+        };
+        ozcs.push(ob);
+      }
+      const nzcs=[];
+      const nzc = newAllKv.data.zh.common;
+      // eslint-disable-next-line guard-for-in
+      for (const key in nzc) {
+        const ob = {
+          name: key,
+          value: nzc[key],
+        };
+        nzcs.push(ob);
+      }
+      ozcs.forEach((item)=>{
+        const a = nzcs.find((x)=>(x.name).trim() === (item.name).trim());
+        if(a === undefined){
+          comn.add(item.name);
+        } else{
+          if(item.value !== a.value){
+            comn.add(item.name);
+          }
+        }
+      });
+
+
+      const oecs=[];
+      const oec = oldAllKv.data.en.common;
+      // eslint-disable-next-line guard-for-in
+      for (const key in oec) {
+        const ob = {
+          name: key,
+          value: oec[key],
+        };
+        oecs.push(ob);
+      }
+      const necs=[];
+      const nec = newAllKv.data.en.common;
+      // eslint-disable-next-line guard-for-in
+      for (const key in nec) {
+        const ob = {
+          name: key,
+          value: nec[key],
+        };
+        necs.push(ob);
+      }
+      oecs.forEach((item)=>{
+        const a = necs.find((x)=>(x.name).trim() === (item.name).trim());
+        if(a === undefined){
+          comn.add(item.name);
+        } else{
+          if(item.value !== a.value){
+            comn.add(item.name);
+          }
+        }
+      });
+      let bacds = [];
+      let comns = [];
+      bacd.forEach((item)=>{bacds.push(item);});
+      comn.forEach((item)=>{comns.push(item);});
+      ret = {
+        "backend": bacds,
+        "common": comns,
+      };
+    } else {
+      throw ErrorMessage.KEY_NOT_EXIST;
+    }
+    return ret;
+  }
+
+  sort(i, j) {
+    const r1 = i.name;
+    const r2 = j.name;
+    if (r1 < r2) {
+      return -1;
+    }
+    if (r1 > r2) {
+      return 1;
+    }
+    return 0;
   }
 }

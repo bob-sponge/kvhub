@@ -505,6 +505,21 @@ export class NamespaceController {
     return data;
   }
 
+  /**
+   * 老数据排序
+   */
+  @Post('/json/oldnew/diff')
+  async oldData(@Body() data: any) {
+    const odata = data.oldFile;
+    const ndata = data.newFile;
+    try {
+      data = await this.namespaceService.oldNewDiff(odata, ndata);
+    } catch (error) {
+      return ResponseBody.error(error.message, 500);
+    }
+    return data;
+  }
+
   sort(i, j) {
     const r1 = i.keyName;
     const r2 = j.keyName;

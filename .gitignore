@@ -38,3 +38,5 @@ packages/server/config/config.local.yaml
 packages/front/src/config/local.yaml
 packages/server/config/all_kv.json
 packages/server/config/all_kv_old.json
+packages/server/config/global_kv.json
+packages/server/config/local_kv.json
