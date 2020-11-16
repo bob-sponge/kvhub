@@ -9,8 +9,8 @@
     "packages/*"
   ],
   "scripts": {
-    "start-front": "cross-env-shell EXTRA_SRC=./packages/front  APP_INDEX=./packages/front/src/index.tsx PORT=3101 NODE_OPTIONS=--max_old_space_size=4096 ofm-build-tool start",
-    "build-front": "cross-env-shell EXTRA_SRC=./packages/front  APP_INDEX=./packages/front/src/index.tsx PORT=3101 NODE_OPTIONS=--max_old_space_size=4096 ofm-build-tool build",
+    "start-front": "cross-env-shell EXTRA_SRC=./packages/front APP_INDEX=./packages/front/src/index.tsx PORT=3101 NODE_OPTIONS=--max_old_space_size=4096 ofm-build-tool start",
+    "build-front": "cross-env-shell EXTRA_SRC=./packages/front  PUBLIC_URL=/kvhub APP_INDEX=./packages/front/src/index.tsx PORT=3101 NODE_OPTIONS=--max_old_space_size=4096 ofm-build-tool build",
     "test-front": "ofm-build-tool test --env=jsdom",
     "start-server": "nest start",
     "start-server:dev": "nest start --watch",
