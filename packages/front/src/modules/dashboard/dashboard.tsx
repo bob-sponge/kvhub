@@ -35,7 +35,7 @@ const Dashboard: React.SFC = () => {
   };
 
   const handleClick = (id: any) => {
-    browserHistory.push(`/languages/${id}`);
+    browserHistory.push(`/kvhub/languages/${id}`);
   };
 
   const deleteProject = (e: any, id: any) => {

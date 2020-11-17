@@ -27,7 +27,7 @@ const Login: React.FC<LoginProps> = () => {
       localStorage.setItem('userId', data.id);
       localStorage.setItem('userName', data.name);
       localStorage.setItem('userType', data.admin);
-      history.push('/dashboard');
+      history.push('/kvhub/dashboard');
     }
     // setErrorTips(true);
   };

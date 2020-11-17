@@ -74,7 +74,7 @@ const Merge = (props: ContainerProps) => {
     const { success, data } = result;
     if (success) {
       message.success(data);
-      history.push(`/mergeRequest/${projectId}`);
+      history.push(`/kvhub/mergeRequest/${projectId}`);
     }
   }, [mergeDetail, mergeList]);
 
@@ -84,7 +84,7 @@ const Merge = (props: ContainerProps) => {
     const { success, data } = result;
     if (success) {
       message.success(data);
-      history.push(`/mergeRequest/${projectId}`);
+      history.push(`/kvhub/mergeRequest/${projectId}`);
     }
   };
 

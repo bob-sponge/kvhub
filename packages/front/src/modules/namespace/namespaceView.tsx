@@ -13,10 +13,10 @@ const { Search } = Input;
 
 const NamespaceView: React.FC = () => {
   const paths = window.location.pathname.split('/');
-  const name = paths[2];
-  const projectId = parseInt(paths[3]);
-  const namespaceId = parseInt(paths[4]);
-  const languageId = parseInt(paths[5]);
+  const name = paths[3];
+  const projectId = parseInt(paths[4]);
+  const namespaceId = parseInt(paths[5]);
+  const languageId = parseInt(paths[6]);
 
   const [total, setTotal] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);

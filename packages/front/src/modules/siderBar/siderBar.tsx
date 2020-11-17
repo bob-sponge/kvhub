@@ -19,8 +19,9 @@ const SideBar: React.SFC<SideBarProps> = (props: SideBarProps) => {
   useEffect(() => {
     if (match) {
       let projectId = match.params.projectId;
+      window.console.log(menuRoute(Number(projectId)));
       menuRoute(Number(projectId)).map((item: any, index: number) => {
-        if (match.url === item) {
+        if (match.url === `/kvhub${item}`) {
           let selectIndex = (index + 1).toString();
           setSelectKeys([selectIndex]);
         }
@@ -29,12 +30,13 @@ const SideBar: React.SFC<SideBarProps> = (props: SideBarProps) => {
   }, [match]);
 
   const handleClick = (e: any) => {
-    setSelectKeys([e.key]);
-    let projectId = match.params.projectId;
-    let linkUrl = menuRoute(Number(projectId))[Number(e.key) - 1];
-    browserHistory.push(linkUrl);
     if (e.key === '5') {
       confirmDelete();
+    } else {
+      setSelectKeys([e.key]);
+      let projectId = match.params.projectId;
+      let linkUrl = menuRoute(Number(projectId))[Number(e.key) - 1];
+      browserHistory.push(`/kvhub${linkUrl}`);
     }
   };
 
@@ -49,7 +51,7 @@ const SideBar: React.SFC<SideBarProps> = (props: SideBarProps) => {
           const { success } = result;
           if (success) {
             message.success('Delete project successfully!');
-            browserHistory.push('/dashobard');
+            browserHistory.push('/kvhub/dashobard');
           }
         },
       });
@@ -69,7 +71,7 @@ const SideBar: React.SFC<SideBarProps> = (props: SideBarProps) => {
         <Menu.Item key="3">Merge Request</Menu.Item>
       </Menu.ItemGroup>
       <Menu.ItemGroup key="g2" title="Action">
-        <Menu.Item key="4">Download</Menu.Item>
+        {/* <Menu.Item key="4">Download</Menu.Item> */}
         {localStorage.getItem('userType') === '0' && <Menu.Item key="5">Delete Project</Menu.Item>}
       </Menu.ItemGroup>
     </Menu>

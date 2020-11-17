@@ -44,7 +44,7 @@ const ChangePwd: React.SFC = () => {
       message.success(data);
       form.resetFields();
       localStorage.clear();
-      browserHistory.push('/login');
+      browserHistory.push('/kvhub/login');
     }
   };
 

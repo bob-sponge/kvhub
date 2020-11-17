@@ -11,7 +11,7 @@ const Header = () => {
   const [selectTab, setSelectTab] = useState<string>('translation');
 
   useEffect(() => {
-    if (window.location.pathname === '/user' || window.location.pathname === '/profile') {
+    if (window.location.pathname === '/kvhub/user' || window.location.pathname === '/kvhub/profile') {
       setSelectTab('user');
     } else {
       setSelectTab('translation');
@@ -21,21 +21,21 @@ const Header = () => {
   const handleClick = (e: any) => {
     setSelectTab(e.key);
     if (e.key === 'translation') {
-      browserHistory.push('/dashobard');
+      browserHistory.push('/kvhub/dashboard');
     } else {
-      browserHistory.push('/user');
+      browserHistory.push('/kvhub/user');
     }
   };
 
   const getUser = () => {
-    browserHistory.push('/profile');
+    browserHistory.push('/kvhub/profile');
   };
 
   const handleLogOut = async () => {
     const result = await Api.logoutApi();
     if (result.success) {
       localStorage.clear();
-      browserHistory.push('/login');
+      browserHistory.push('/kvhub/login');
     }
   };
 

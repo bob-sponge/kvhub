@@ -46,7 +46,7 @@ const MergeRequest = (props: MergeRequestProps) => {
   };
 
   const onMerge = (record: any) => {
-    history.push(`/mergeRequest/detail/${record.id}`);
+    history.push(`/kvhub/mergeRequest/detail/${record.id}`);
   };
 
   const onResufe = async (record: any) => {
@@ -68,7 +68,7 @@ const MergeRequest = (props: MergeRequestProps) => {
     const { success, data } = result;
     if (success && data) {
       let branchId = data[0].id;
-      history.push(`/branch/compare/${branchId}`);
+      history.push(`/kvhub/branch/compare/${branchId}`);
     }
   };
 

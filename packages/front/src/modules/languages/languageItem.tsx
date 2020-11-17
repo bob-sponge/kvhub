@@ -88,7 +88,7 @@ const LanguageItem = ({ item, index, projectView, branchId, pid }: any) => {
 
   const handleJump = (id: number, languageId: number, name: string) => {
     const path = window.location.pathname.split('/');
-    history.push(`/namespace/${encodeURIComponent(name)}/${path[2]}/${id}/${languageId}`);
+    history.push(`/kvhub/namespace/${encodeURIComponent(name)}/${path[3]}/${id}/${languageId}`);
   };
 
   return (

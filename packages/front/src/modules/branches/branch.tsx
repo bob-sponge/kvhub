@@ -63,7 +63,7 @@ const Branches: React.SFC<BranchProps> = (props: BranchProps) => {
   };
 
   const onCompare = (record: any) => {
-    history.push(`/branch/compare/${record.id}`);
+    history.push(`/kvhub/branch/compare/${record.id}`);
   };
 
   const onDelete = async (record: any) => {

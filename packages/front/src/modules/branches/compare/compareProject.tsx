@@ -82,7 +82,7 @@ const CompareProject: React.FC<CompareProjectProps> = (props: CompareProjectProp
     setLoading(false);
     if (success && data) {
       message.success(data);
-      browserHistory.push(`/mergeRequest/detail/${dataId}`);
+      browserHistory.push(`/kvhub/mergeRequest/detail/${dataId}`);
     }
   };
 
