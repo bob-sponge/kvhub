@@ -48,14 +48,14 @@ function addErrorList(msg: any, cb?: Function) {
 
 let hostIp = ''; // 下载地址ip
 if (process.env.NODE_ENV === 'production') {
-  // const publicUrl = process.env.PUBLIC_URL === '' ? '' : process.env.PUBLIC_URL;
   hostIp = window.location.host;
 } else {
   hostIp = getServerIp();
 }
 
 if (process.env.NODE_ENV === 'production') {
-  baseURL = '/kvhub/kb';
+  const publicUrl = process.env.PUBLIC_URL === '' ? '' : process.env.PUBLIC_URL;
+  baseURL = `${publicUrl}/kb`;
 } else {
   baseURL = getServerIp();
 }
