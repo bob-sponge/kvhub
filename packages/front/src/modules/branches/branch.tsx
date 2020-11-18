@@ -5,7 +5,7 @@ import { PlusOutlined } from '@ant-design/icons';
 import { Button, Input, Table, Spin, message } from 'antd';
 import { columns } from './tableConfig';
 import AddorEditBranch from './addOrEditBranch';
-import { history } from '@ofm/history';
+import { history } from '../../history';
 import * as Api from '../../api/branch';
 import { projectDetailApi } from '../../api/index';
 
@@ -15,7 +15,7 @@ interface BranchProps {
   match: any;
 }
 
-const Branches: React.SFC<BranchProps> = (props: BranchProps) => {
+const Branches: React.FC<BranchProps> = (props: BranchProps) => {
   const { match } = props;
   const [visible, setVisible] = useState<boolean>(false);
   const [branchList, setBranchList] = useState<any[]>([]);
@@ -63,7 +63,7 @@ const Branches: React.SFC<BranchProps> = (props: BranchProps) => {
   };
 
   const onCompare = (record: any) => {
-    history.push(`/kvhub/branch/compare/${record.id}`);
+    history.push(`/branch/compare/${record.id}`);
   };
 
   const onDelete = async (record: any) => {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Menu, message, Modal } from 'antd';
 import * as css from './styles/sideBar.modules.less';
-import { history as browserHistory } from '@ofm/history';
+import { history } from '../../history';
 import { menuRoute } from './constant';
 import * as Api from '../../api';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
@@ -12,7 +12,7 @@ interface SideBarProps {
   match: any;
 }
 
-const SideBar: React.SFC<SideBarProps> = (props: SideBarProps) => {
+const SideBar: React.FC<SideBarProps> = (props: SideBarProps) => {
   const { match } = props;
   const [selectKeys, setSelectKeys] = useState<any[]>([]);
 
@@ -21,7 +21,7 @@ const SideBar: React.SFC<SideBarProps> = (props: SideBarProps) => {
       let projectId = match.params.projectId;
       window.console.log(menuRoute(Number(projectId)));
       menuRoute(Number(projectId)).map((item: any, index: number) => {
-        if (match.url === `/kvhub${item}`) {
+        if (match.url === `${item}`) {
           let selectIndex = (index + 1).toString();
           setSelectKeys([selectIndex]);
         }
@@ -36,7 +36,7 @@ const SideBar: React.SFC<SideBarProps> = (props: SideBarProps) => {
       setSelectKeys([e.key]);
       let projectId = match.params.projectId;
       let linkUrl = menuRoute(Number(projectId))[Number(e.key) - 1];
-      browserHistory.push(`/kvhub${linkUrl}`);
+      history.push(`${linkUrl}`);
     }
   };
 
@@ -51,7 +51,7 @@ const SideBar: React.SFC<SideBarProps> = (props: SideBarProps) => {
           const { success } = result;
           if (success) {
             message.success('Delete project successfully!');
-            browserHistory.push('/kvhub/dashobard');
+            history.push('/dashobard');
           }
         },
       });

@@ -6,12 +6,12 @@ import Container from '../../container';
 import { doneColor, processColor, formatNumber } from './constant';
 import AddOrEditProject from './addOrEditProject';
 import * as Api from '../../api';
-import { history as browserHistory } from '@ofm/history';
+import { history } from '../../history';
 import moment from 'moment';
 
 const { confirm } = Modal;
 
-const Dashboard: React.SFC = () => {
+const Dashboard: React.FC = () => {
   const [visible, setVisible] = useState<boolean>(false);
   const [projectList, setProjectList] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -35,7 +35,7 @@ const Dashboard: React.SFC = () => {
   };
 
   const handleClick = (id: any) => {
-    browserHistory.push(`/kvhub/languages/${id}`);
+    history.push(`/languages/${id}`);
   };
 
   const deleteProject = (e: any, id: any) => {

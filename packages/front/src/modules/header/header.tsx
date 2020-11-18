@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import * as css from './styles/header.modules.less';
 import { UserOutlined, ImportOutlined } from '@ant-design/icons';
 import { Menu } from 'antd';
-import { history as browserHistory } from '@ofm/history';
+import { history } from '../../history';
 import * as Api from '../../api/login';
 
 const imgSrc = require('./header.png');
@@ -21,21 +21,21 @@ const Header = () => {
   const handleClick = (e: any) => {
     setSelectTab(e.key);
     if (e.key === 'translation') {
-      browserHistory.push('/kvhub/dashboard');
+      history.push('/dashboard');
     } else {
-      browserHistory.push('/kvhub/user');
+      history.push('/user');
     }
   };
 
   const getUser = () => {
-    browserHistory.push('/kvhub/profile');
+    history.push('/profile');
   };
 
   const handleLogOut = async () => {
     const result = await Api.logoutApi();
     if (result.success) {
       localStorage.clear();
-      browserHistory.push('/kvhub/login');
+      history.push('/login');
     }
   };
 

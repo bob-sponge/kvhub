@@ -4,7 +4,7 @@ import { Select, Col, Row, Button, Form, Spin, message } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import DiffItem from './diffItem';
 import * as Api from '../../../api/branch';
-import { history as browserHistory } from '@ofm/history';
+import { history } from '../../../history';
 
 interface CompareProjectProps {
   match?: any;
@@ -82,7 +82,7 @@ const CompareProject: React.FC<CompareProjectProps> = (props: CompareProjectProp
     setLoading(false);
     if (success && data) {
       message.success(data);
-      browserHistory.push(`/kvhub/mergeRequest/detail/${dataId}`);
+      history.push(`/mergeRequest/detail/${dataId}`);
     }
   };
 

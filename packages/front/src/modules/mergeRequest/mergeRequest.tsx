@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ContainerMenu from '../../containerMenu';
 import * as css from './styles/mergeRequest.modules.less';
 import { Button, Table, message, Input } from 'antd';
-import { history } from '@ofm/history';
+import { history } from '../../history';
 import { PlusOutlined } from '@ant-design/icons';
 import { columns } from './tableConfig';
 import AddOrEdit from './addOrEdit';
@@ -46,7 +46,7 @@ const MergeRequest = (props: MergeRequestProps) => {
   };
 
   const onMerge = (record: any) => {
-    history.push(`/kvhub/mergeRequest/detail/${record.id}`);
+    history.push(`/mergeRequest/detail/${record.id}`);
   };
 
   const onResufe = async (record: any) => {
@@ -68,7 +68,7 @@ const MergeRequest = (props: MergeRequestProps) => {
     const { success, data } = result;
     if (success && data) {
       let branchId = data[0].id;
-      history.push(`/kvhub/branch/compare/${branchId}`);
+      history.push(`/branch/compare/${branchId}`);
     }
   };
 

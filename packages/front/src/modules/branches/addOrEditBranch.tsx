@@ -14,7 +14,7 @@ interface AddOrEditProjectProps {
   match: any;
 }
 
-const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProjectProps) => {
+const AddOrEditProject: React.FC<AddOrEditProjectProps> = (props: AddOrEditProjectProps) => {
   const { visible, setVisible, filter, getBranch, match } = props;
   const [form] = Form.useForm();
   const [project, setProject] = useState<any[]>([]);

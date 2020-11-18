@@ -6,7 +6,7 @@ interface CompareDiffProps {
   target: string;
 }
 
-const CompareDiff: React.SFC<CompareDiffProps> = (props: CompareDiffProps) => {
+const CompareDiff: React.FC<CompareDiffProps> = (props: CompareDiffProps) => {
   const { source, target } = props;
 
   const handleHighlight = () => {

@@ -14,7 +14,7 @@ interface AddOrEditProjectProps {
   id: string;
 }
 
-const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProjectProps) => {
+const AddOrEditProject: React.FC<AddOrEditProjectProps> = (props: AddOrEditProjectProps) => {
   const { visible, setVisible, id, getMergeRequest } = props;
   const [form] = Form.useForm();
   const [branchList, setBranchList] = useState<any>([]);

@@ -4,7 +4,7 @@ import { Button, Progress, Popover, Input, message, Popconfirm, Form } from 'ant
 import { doneColor, processColor, toThousands, getPercent, Rule } from './constant';
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import * as Api from '../../api/languages';
-import { history } from '@ofm/history';
+import { history } from '../../history';
 
 const LanguageItem = ({ item, index, projectView, branchId, pid }: any) => {
   const [form] = Form.useForm();
@@ -88,7 +88,7 @@ const LanguageItem = ({ item, index, projectView, branchId, pid }: any) => {
 
   const handleJump = (id: number, languageId: number, name: string) => {
     const path = window.location.pathname.split('/');
-    history.push(`/kvhub/namespace/${encodeURIComponent(name)}/${path[3]}/${id}/${languageId}`);
+    history.push(`/namespace/${encodeURIComponent(name)}/${path[3]}/${id}/${languageId}`);
   };
 
   return (

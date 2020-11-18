@@ -11,7 +11,7 @@ interface DiffItemProps {
   diffIndex: any;
 }
 
-const DiffItem: React.SFC<DiffItemProps> = (props: DiffItemProps) => {
+const DiffItem: React.FC<DiffItemProps> = (props: DiffItemProps) => {
   const { diffData, mergeList, setMergeList, diffIndex } = props;
   const { source, target, keyActualId, mergeDiffKey } = diffData;
 

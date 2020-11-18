@@ -9,7 +9,7 @@ interface ContainerProps {
   navs?: any;
 }
 
-const ContainerMenu: React.SFC<ContainerProps> = (props: ContainerProps) => {
+const ContainerMenu: React.FC<ContainerProps> = (props: ContainerProps) => {
   const { match, navs } = props;
 
   return (

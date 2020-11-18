@@ -2,9 +2,9 @@ import React, { useState, useCallback } from 'react';
 import { Form, Input, Button, message, Modal } from 'antd';
 import * as css from './style/index.modules.less';
 import * as Api from '../../api/user';
-import { history as browserHistory } from '@ofm/history';
+import { history } from '../../history';
 
-const ChangePwd: React.SFC = () => {
+const ChangePwd: React.FC = () => {
   const [form] = Form.useForm();
   const [resetPwd, setResetPwd] = useState<any>({});
 
@@ -44,7 +44,7 @@ const ChangePwd: React.SFC = () => {
       message.success(data);
       form.resetFields();
       localStorage.clear();
-      browserHistory.push('/kvhub/login');
+      history.push('/login');
     }
   };
 

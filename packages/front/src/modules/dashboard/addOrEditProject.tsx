@@ -12,7 +12,7 @@ interface AddOrEditProjectProps {
   getProjectAll: Function;
 }
 
-const AddOrEditProject: React.SFC<AddOrEditProjectProps> = (props: AddOrEditProjectProps) => {
+const AddOrEditProject: React.FC<AddOrEditProjectProps> = (props: AddOrEditProjectProps) => {
   const { visible, setVisible, getProjectAll } = props;
   const [form] = Form.useForm();
   const [languages, setLanguages] = useState<any[]>([]);

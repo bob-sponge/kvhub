@@ -7,7 +7,7 @@ interface NavProps {
   navs: any[];
 }
 
-const Nav: React.SFC<NavProps> = (props: NavProps) => {
+const Nav: React.FC<NavProps> = (props: NavProps) => {
   const { navs } = props;
 
   const getNavs = useCallback(() => {

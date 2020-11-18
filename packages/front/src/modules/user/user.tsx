@@ -7,7 +7,7 @@ import { columns } from './constant';
 
 interface UserProps {}
 
-const User: React.SFC<UserProps> = (_props: UserProps) => {
+const User: React.FC<UserProps> = (_props: UserProps) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState<boolean>(false);
   const [userList, setUserList] = useState<any[]>([]);

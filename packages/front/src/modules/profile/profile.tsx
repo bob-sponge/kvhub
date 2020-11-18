@@ -3,7 +3,7 @@ import * as css from './style/index.modules.less';
 import * as Api from '../../api/user';
 import moment from 'moment';
 
-const profileInfo: React.SFC = () => {
+const profileInfo: React.FC = () => {
   const [userInfo, setUserInfo] = useState<any>({});
 
   useEffect(() => {

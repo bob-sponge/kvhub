@@ -7,7 +7,7 @@ interface DiffProps {
   diffData: any;
 }
 
-const DiffItem: React.SFC<DiffProps> = (props: DiffProps) => {
+const DiffItem: React.FC<DiffProps> = (props: DiffProps) => {
   const { diffData } = props;
   const { source, target } = diffData;
 

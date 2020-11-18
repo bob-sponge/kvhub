@@ -3,7 +3,7 @@ import { Input, Form, Button } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import * as css from '../src/style/login.modules.less';
 import * as Api from './api/login';
-import { history } from '@ofm/history';
+import { history } from './history';
 const titleLogo = require('./resource/logo_smz.png');
 const i18nLogo = require('./resource/logo-i18n.png');
 
@@ -27,7 +27,7 @@ const Login: React.FC<LoginProps> = () => {
       localStorage.setItem('userId', data.id);
       localStorage.setItem('userName', data.name);
       localStorage.setItem('userType', data.admin);
-      history.push('/kvhub/dashboard');
+      history.push('/dashboard');
     }
     // setErrorTips(true);
   };

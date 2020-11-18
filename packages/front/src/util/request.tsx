@@ -3,7 +3,7 @@ import { ajax, initAjax } from '@ofm/ajax';
 import { message, Modal } from 'antd';
 import { CloseCircleOutlined } from '@ant-design/icons';
 import { getServerIp } from './url';
-import { history } from '@ofm/history';
+import { history } from '../history';
 // const Cookies = require('js-cookie');
 
 let baseURL = '';

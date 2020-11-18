@@ -9,7 +9,7 @@ const { TabPane } = Tabs;
 
 interface ProfileProps {}
 
-const Profile: React.SFC<ProfileProps> = (_props: ProfileProps) => {
+const Profile: React.FC<ProfileProps> = (_props: ProfileProps) => {
   return (
     <Container>
       <div className={css.profile}>

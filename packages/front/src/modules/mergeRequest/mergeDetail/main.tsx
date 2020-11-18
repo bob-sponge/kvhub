@@ -3,7 +3,7 @@ import * as css from '../styles/merge.modules.less';
 import { Button, message, Modal } from 'antd';
 import Container from '../../../container';
 import DiffItem from './diffItem';
-import { history } from '@ofm/history';
+import { history } from '../../../history';
 import {
   ArrowLeftOutlined,
   DownloadOutlined,
@@ -74,7 +74,7 @@ const Merge = (props: ContainerProps) => {
     const { success, data } = result;
     if (success) {
       message.success(data);
-      history.push(`/kvhub/mergeRequest/${projectId}`);
+      history.push(`/mergeRequest/${projectId}`);
     }
   }, [mergeDetail, mergeList]);
 
@@ -84,7 +84,7 @@ const Merge = (props: ContainerProps) => {
     const { success, data } = result;
     if (success) {
       message.success(data);
-      history.push(`/kvhub/mergeRequest/${projectId}`);
+      history.push(`/mergeRequest/${projectId}`);
     }
   };
 

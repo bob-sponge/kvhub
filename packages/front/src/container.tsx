@@ -7,7 +7,7 @@ interface ContainerProps {
   navs?: any;
 }
 
-const Container: React.SFC<ContainerProps> = (props: ContainerProps) => {
+const Container: React.FC<ContainerProps> = (props: ContainerProps) => {
   const { navs } = props;
   return (
     <div>
