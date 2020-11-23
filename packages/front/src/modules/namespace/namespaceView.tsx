@@ -13,10 +13,21 @@ const { Search } = Input;
 
 const NamespaceView: React.FC = () => {
   const paths = window.location.pathname.split('/');
-  const name = paths[3];
-  const projectId = parseInt(paths[4]);
-  const namespaceId = parseInt(paths[5]);
-  const languageId = parseInt(paths[6]);
+  let name: any;
+  let projectId: any;
+  let namespaceId: any;
+  let languageId: any;
+  if (process.env.NODE_ENV === 'production') {
+    name = paths[3];
+    projectId = parseInt(paths[4]);
+    namespaceId = parseInt(paths[5]);
+    languageId = parseInt(paths[6]);
+  } else {
+    name = paths[2];
+    projectId = parseInt(paths[3]);
+    namespaceId = parseInt(paths[4]);
+    languageId = parseInt(paths[5]);
+  }
 
   const [total, setTotal] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);

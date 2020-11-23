@@ -11,7 +11,13 @@ const Header = () => {
   const [selectTab, setSelectTab] = useState<string>('translation');
 
   useEffect(() => {
-    if (window.location.pathname === '/kvhub/user' || window.location.pathname === '/kvhub/profile') {
+    let isUrl;
+    if (process.env.NODE_ENV === 'production') {
+      isUrl = window.location.pathname === '/kvhub/user' || window.location.pathname === '/kvhub/profile';
+    } else {
+      isUrl = window.location.pathname === '/user' || window.location.pathname === '/profile';
+    }
+    if (isUrl) {
       setSelectTab('user');
     } else {
       setSelectTab('translation');

@@ -88,7 +88,11 @@ const LanguageItem = ({ item, index, projectView, branchId, pid }: any) => {
 
   const handleJump = (id: number, languageId: number, name: string) => {
     const path = window.location.pathname.split('/');
-    history.push(`/namespace/${encodeURIComponent(name)}/${path[3]}/${id}/${languageId}`);
+    if (process.env.NODE_ENV === 'production') {
+      history.push(`/namespace/${encodeURIComponent(name)}/${path[3]}/${id}/${languageId}`);
+    } else {
+      history.push(`/namespace/${encodeURIComponent(name)}/${path[2]}/${id}/${languageId}`);
+    }
   };
 
   return (

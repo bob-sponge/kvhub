@@ -48,7 +48,8 @@ function addErrorList(msg: any, cb?: Function) {
 
 let hostIp = ''; // 下载地址ip
 if (process.env.NODE_ENV === 'production') {
-  hostIp = window.location.host;
+  const publicUrl = process.env.PUBLIC_URL === '' ? '' : process.env.PUBLIC_URL;
+  hostIp = `${window.location.host}${publicUrl}`;
 } else {
   hostIp = getServerIp();
 }
