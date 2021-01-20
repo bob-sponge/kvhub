@@ -79,8 +79,8 @@ const Dashboard: React.FC = () => {
                 const precent =
                   translatedKeysNumber === 0 && KeysNumber === 0 ? 0 : (translatedKeysNumber / KeysNumber) * 100;
                 return (
-                  <div className={css.cardWapper} key={index} onClick={() => handleClick(item.id)}>
-                    <div className={css.cardList}>
+                  <div className={css.cardWapper} key={index}>
+                    <div className={css.cardList} onClick={() => handleClick(item.id)}>
                       <div className={css.cardTitle}>
                         <div className={css.label} style={{ WebkitBoxOrient: 'vertical' }} title={item.name}>
                           {item.name}
