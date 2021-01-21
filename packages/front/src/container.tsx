@@ -1,6 +1,7 @@
 import React from 'react';
 import Header from './modules/header';
 import Navs from './modules/commonNav';
+import { Scrollbars } from 'react-custom-scrollbars';
 
 interface ContainerProps {
   children?: React.ReactNode;
@@ -13,8 +14,10 @@ const Container: React.FC<ContainerProps> = (props: ContainerProps) => {
     <div>
       <Header />
       <div className="container">
-        <Navs navs={navs} />
-        {props.children}
+        <Scrollbars style={{ height: 'calc(100vh - 61px)' }}>
+          <Navs navs={navs} />
+          {props.children}
+        </Scrollbars>
       </div>
     </div>
   );
