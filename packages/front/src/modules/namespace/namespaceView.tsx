@@ -78,8 +78,8 @@ const NamespaceView: React.FC = () => {
   }, [filter]);
 
   const handleConditionChange = useCallback(
-    async e => {
-      filter.condition = e.target.value;
+    async value => {
+      filter.condition = value;
       filter.page = 1;
       filter.pageSize = 10;
       setCurrentPage(1);
@@ -247,7 +247,7 @@ const NamespaceView: React.FC = () => {
                 Finished
               </Radio>
             </Radio.Group>
-            <Search placeholder="Please input key" style={{ width: 200 }} onChange={handleConditionChange} />
+            <Search placeholder="Please input key" style={{ width: 200 }} onSearch={handleConditionChange} />
           </div>
         </div>
         <div className={css.namespace}>
