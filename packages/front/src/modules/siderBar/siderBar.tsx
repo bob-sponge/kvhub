@@ -70,10 +70,12 @@ const SideBar: React.FC<SideBarProps> = (props: SideBarProps) => {
         <Menu.Item key="2">Branches</Menu.Item>
         <Menu.Item key="3">Merge Request</Menu.Item>
       </Menu.ItemGroup>
-      <Menu.ItemGroup key="g2" title="Action">
-        {/* <Menu.Item key="4">Download</Menu.Item> */}
-        {localStorage.getItem('userType') === '0' && <Menu.Item key="5">Delete Project</Menu.Item>}
-      </Menu.ItemGroup>
+      {localStorage.getItem('userType') === '0' && (
+        <Menu.ItemGroup key="g2" title="Action">
+          {/* <Menu.Item key="4">Download</Menu.Item> */}
+          <Menu.Item key="5">Delete Project</Menu.Item>
+        </Menu.ItemGroup>
+      )}
     </Menu>
   );
 };
