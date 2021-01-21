@@ -97,13 +97,37 @@ export class NamespaceController {
     const pageSize = namespaceViewDetail.pageSize;
     const branchId = namespaceViewDetail.branchId;
     const branch = await this.branchService.getBranchById(branchId);
+
+    const needFilter =
+      namespaceViewDetail.condition !== null &&
+      namespaceViewDetail.condition !== undefined &&
+      namespaceViewDetail.condition !== '';
     if (branch === undefined) {
       throw new BadRequestException(ErrorMessage.BRANCH_NOT_EXIST);
     }
     const offset = (page - 1) * pageSize;
+    let end = offset + pageSize;
     //logger.info(`page: ${page}, page size: ${pageSize}, branchID: ${branchId}`);
     if (branch.master) {
-      const namespaceKey = await this.namespaceService.getKeysByCondition(namespaceViewDetail);
+      let namespaceKey = await this.namespaceService.getKeysByCondition(namespaceViewDetail);
+      if (namespaceKey.totalNum > 0 && needFilter) {
+        const filterKeys = namespaceKey.keys.filter(
+          item =>
+            item.keyName.search(namespaceViewDetail.condition.trim()) !== -1 ||
+            (item.refreLanguageValue !== undefined && item.refreLanguageValue !== null &&
+              item.refreLanguageValue.keyValue !== undefined && item.refreLanguageValue.keyValue !== null &&
+              item.refreLanguageValue.keyValue.search(namespaceViewDetail.condition.trim()) !== -1) ||
+              (item.targetLanguageValue !== undefined && item.targetLanguageValue !== null &&
+                item.targetLanguageValue.keyValue !== undefined && item.targetLanguageValue.keyValue !== null &&
+                item.targetLanguageValue.keyValue.search(namespaceViewDetail.condition.trim()) !== -1)
+        );
+        namespaceKey.totalNum = filterKeys.length;
+        namespaceKey.keys = filterKeys;
+      }
+      if (namespaceKey.totalNum < end){
+        end = namespaceKey.totalNum;
+      }
+      namespaceKey.keys = namespaceKey.keys.splice(offset,end);
       return ResponseBody.okWithData(namespaceKey);
     } else {
       // 获取 master 分支 所有的 kv
@@ -130,11 +154,29 @@ export class NamespaceController {
         const namespaceBranchKey = namespaceMasterBranchKey.filter(
           item => namespaceAllNoMasterBranchKeyName.includes(item.keyName) === false,
         );
-        const retKV = namespaceBranchKey.sort((i, j) => this.sort(i, j)).slice(offset, offset + pageSize);
+        namespaceBranchKey.sort((i, j) => this.sort(i, j));
         const namespaceKey = {
-          keys: retKV,
+          keys: namespaceBranchKey,
           totalNum,
         };
+        if (namespaceKey.totalNum > 0 && needFilter) {
+          const filterKeys = namespaceKey.keys.filter(
+            item =>
+              item.keyName.search(namespaceViewDetail.condition.trim()) !== -1 ||
+              (item.refreLanguageValue !== undefined && item.refreLanguageValue !== null &&
+                item.refreLanguageValue.keyValue !== undefined && item.refreLanguageValue.keyValue !== null &&
+                item.refreLanguageValue.keyValue.search(namespaceViewDetail.condition.trim()) !== -1) ||
+                (item.targetLanguageValue !== undefined && item.targetLanguageValue !== null &&
+                  item.targetLanguageValue.keyValue !== undefined && item.targetLanguageValue.keyValue !== null &&
+                  item.targetLanguageValue.keyValue.search(namespaceViewDetail.condition.trim()) !== -1)
+          );
+          namespaceKey.totalNum = filterKeys.length;
+          namespaceKey.keys = filterKeys;
+        }
+        if (namespaceKey.totalNum < end){
+          end = namespaceKey.totalNum;
+        }
+        namespaceKey.keys = namespaceKey.keys.splice(offset,end);
         return ResponseBody.okWithData(namespaceKey);
       } else {
         // 合并操作
@@ -149,11 +191,28 @@ export class NamespaceController {
         let finalAllKv = tmpBk.concat(namespaceNoMasterBranchKey);
         finalAllKv.sort((i, j) => this.sort(i, j));
         const totalNum = finalAllKv.length;
-        const retKV = finalAllKv.slice(offset, offset + pageSize);
         const namespaceKey = {
-          keys: retKV,
+          keys: finalAllKv,
           totalNum,
         };
+        if (namespaceKey.totalNum > 0 && needFilter) {
+        const filterKeys = namespaceKey.keys.filter(
+          item =>
+            item.keyName.search(namespaceViewDetail.condition.trim()) !== -1 ||
+            (item.refreLanguageValue !== undefined && item.refreLanguageValue !== null &&
+              item.refreLanguageValue.keyValue !== undefined && item.refreLanguageValue.keyValue !== null &&
+              item.refreLanguageValue.keyValue.search(namespaceViewDetail.condition.trim()) !== -1) ||
+              (item.targetLanguageValue !== undefined && item.targetLanguageValue !== null &&
+                item.targetLanguageValue.keyValue !== undefined && item.targetLanguageValue.keyValue !== null &&
+                item.targetLanguageValue.keyValue.search(namespaceViewDetail.condition.trim()) !== -1)
+        );
+        namespaceKey.totalNum = filterKeys.length;
+        namespaceKey.keys = filterKeys;
+      }
+      if (namespaceKey.totalNum < end){
+        end = namespaceKey.totalNum;
+      }
+      namespaceKey.keys = namespaceKey.keys.splice(offset,end);
         return ResponseBody.okWithData(namespaceKey);
       }
     }

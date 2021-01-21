@@ -334,10 +334,14 @@ export class BranchService {
     let pageResult = new PageResult();
     const start: number = (page.page - 1) * page.size;
     let data = [];
+    let count = 0;
     if (page.content === null || page.content === CommonConstant.STRING_BLANK) {
       const query = `select * from branch where project_id=${page.projectId} and delete=false and name like
        '%%' escape '/' ORDER BY name ASC LIMIT ${page.size} OFFSET ${start}`;
       data = await this.branchRepository.query(query);
+
+      const countQuery = `select count(*) from branch where project_id=${page.projectId} and delete=false `;
+      count = await this.branchRepository.query(countQuery);
     } else {
       // eslint-disable-next-line @typescript-eslint/quotes
       let condition = page.content;
@@ -363,6 +367,10 @@ export class BranchService {
        '%${page.content}%' escape '/' ORDER BY name ASC LIMIT ${page.size} OFFSET ${start}`;
       // logger.info(`query: ${query}`);
       data = await this.branchRepository.query(query);
+
+      const countQuery = `select * from branch where project_id=${page.projectId} and delete=false and name like
+      '%${page.content}%' escape '/'`;
+      count = await this.branchRepository.query(countQuery);
       // data = await this.branchRepository.findAndCount({
       //   where: { projectId: page.projectId, name: Like('%' + page.content + '%'), delete: false },
       //   order: { name: 'ASC' },
@@ -372,7 +380,7 @@ export class BranchService {
     }
     pageResult.size = page.size;
     pageResult.page = page.page;
-    pageResult.total = data.length;
+    pageResult.total = count[0].count;
     if (pageResult.total > 0) {
       pageResult.data = await this.calculateMerge(data, page.projectId);
     } else {
