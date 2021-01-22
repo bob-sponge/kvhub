@@ -1066,6 +1066,7 @@ export class NamespaceService {
     if(project === undefined || project === null){
       throw new BadRequestException(ErrorMessage.PROJECT_NOT_EXIST);
     }
+    const masterBranch = await this.branchRepository.findOne({name: 'master', projectId: project.id , delete: false});
     const branch = await this.branchRepository.findOne({name: branchName, projectId: project.id , delete: false});
     if(branch === undefined || branch == null){
       throw new BadRequestException(ErrorMessage.BRANCH_NOT_EXIST);
@@ -1079,7 +1080,36 @@ export class NamespaceService {
       // 获取 工程下面的namespace
       const namespaceFlat= {};
       for (const namespace of namespaces) {
-        const q = `
+        const q = this.fetchDataSql(namespace.id, branch.id, projectLanguage.languageId);
+        const logger = Log4js.getLogger();
+        logger.level = 'INFO';
+        // logger.info(`api sql is ${q}`);
+        const keyinfos = await this.namespaceRepository.query(q);
+        const masterSql = this.fetchDataSql(namespace.id, masterBranch.id, projectLanguage.languageId);
+        const masterKeyinfos = await this.namespaceRepository.query(masterSql);
+        const keyInfo = {};
+        masterKeyinfos.forEach(item => {
+          const k = item.keyname;
+          const v = item.keyvalue;
+          keyInfo[k] = v;
+        });
+        keyinfos.forEach((item)=>{
+          const k = item.keyname;
+          const v = item.keyvalue;
+          keyInfo[k] = v;
+        });
+
+        const namespaceName = namespace.name;
+        namespaceFlat[namespaceName] = keyInfo;
+      }
+      languageFlat[languageName.name] = namespaceFlat;
+
+    }
+    return {'data': languageFlat};
+  }
+
+  fetchDataSql(namespaceId: number, branchId: number, languageId: number){
+    const q = `
         SELECT *
         FROM (
           SELECT  keyname, keyvalue
@@ -1089,12 +1119,12 @@ export class NamespaceService {
               SELECT k.id AS keyid, k.actual_id AS actualid
               FROM key k
               WHERE k.delete = false
-                AND namespace_id = ${namespace.id}
+                AND namespace_id = ${namespaceId}
             ) s1
               JOIN (
                 SELECT key_id
                 FROM branch_key
-                WHERE branch_id = ${branch.id} and delete = false
+                WHERE branch_id = ${branchId} and delete = false
               ) s2
               ON s1.keyid = s2.key_id
               JOIN (
@@ -1106,30 +1136,14 @@ export class NamespaceService {
               LEFT JOIN (
                 SELECT kv.id AS valueid, kv.language_id AS languageid, key_id, kv.value AS keyvalue
                 FROM keyvalue kv
-                WHERE language_id = ${projectLanguage.languageId}
+                WHERE language_id = ${languageId}
                   AND latest = true
               ) s5
               ON s4.keyid = s5.key_id
           ) s6
         ) s7
         ORDER BY keyName ASC`;
-        const logger = Log4js.getLogger();
-        logger.level = 'INFO';
-        // logger.info(`api sql is ${q}`);
-        const keyinfos = await this.namespaceRepository.query(q);
-        const keyInfo = {};
-        keyinfos.forEach((item)=>{
-          const k = item.keyname;
-          const v = item.keyvalue;
-          keyInfo[k] = v;
-        });
-        const namespaceName = namespace.name;
-        namespaceFlat[namespaceName] = keyInfo;
-      }
-      languageFlat[languageName.name] = namespaceFlat;
-
-    }
-    return {'data': languageFlat};
+    return q;
   }
 
   async oldNewDiff(odata: any, ndata: any) {
