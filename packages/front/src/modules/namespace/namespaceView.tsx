@@ -194,9 +194,13 @@ const NamespaceView: React.FC = () => {
           <div>
             <span>{decodeURIComponent(name)}</span>
           </div>
-          <div>
+          <div id="select">
             {branches.length > 0 && (
-              <Select defaultValue={branches[0].id} style={{ width: '129px' }} onChange={handleBranchChange}>
+              <Select
+                defaultValue={branches[0].id}
+                style={{ width: '250px' }}
+                onChange={handleBranchChange}
+                getPopupContainer={() => document.getElementById('select')}>
                 {branches.map((item: any, index: number) => (
                   <Option key={index} value={item.id}>
                     {item.name}
@@ -226,7 +230,7 @@ const NamespaceView: React.FC = () => {
         <div className={css.title}>
           <div>
             {languages.length > 0 && (
-              <Select defaultValue={languages[0].id} style={{ width: '270px' }} onChange={handleLangChange}>
+              <Select defaultValue={languages[0].id} style={{ width: '370px' }} onChange={handleLangChange}>
                 {languages.map((lang: LanguageItem, index: number) => (
                   <Option key={index} value={lang.id}>
                     {lang.referenceLanguage ? lang.name + ' (Reference Language) ' : lang.name}
@@ -247,7 +251,7 @@ const NamespaceView: React.FC = () => {
                 Finished
               </Radio>
             </Radio.Group>
-            <Search placeholder="Please input key" style={{ width: 200 }} onSearch={handleConditionChange} />
+            <Search placeholder="Please input key" style={{ width: 300 }} onSearch={handleConditionChange} />
           </div>
         </div>
         <div className={css.namespace}>
