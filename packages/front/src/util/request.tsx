@@ -58,7 +58,7 @@ if (process.env.NODE_ENV === 'production') {
   const publicUrl = process.env.PUBLIC_URL === '' ? '' : process.env.PUBLIC_URL;
   baseURL = `${publicUrl}/kb`;
 } else {
-  baseURL = getServerIp();
+  baseURL = '/kvhub/kb';
 }
 
 // init axis
